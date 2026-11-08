@@ -9,6 +9,11 @@ import { captureGeneration } from "./model-provider";
 
 const CLASSIFICATION_MODEL = "typesafe-ai/jev";
 
+const CLASSIFICATION_PROVIDER_OPTIONS = {
+  // The privacy policy names only Typesafe AI and says it keeps nothing; DigitalOcean also serves Jev.
+  gateway: { only: ["typesafe-ai"], zeroDataRetention: true },
+};
+
 interface ClassifyOptions<K extends string> {
   user: CreditUser;
   feature: TracingFeature;
@@ -42,6 +47,7 @@ export async function classify<K extends string>({
     const result = await evaluate({
       model: gateway.evaluationModel(CLASSIFICATION_MODEL),
       state: input,
+      providerOptions: CLASSIFICATION_PROVIDER_OPTIONS,
       questions: {
         category: {
           type: "choice",

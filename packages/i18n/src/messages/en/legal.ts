@@ -167,7 +167,7 @@ export const legal = {
       expo: "<strong>Expo (app updates):</strong> The app checks Expo's servers for updates, which receive your IP address, app version and platform.",
       stores:
         "<strong>Apple App Store and Google Play:</strong> Distribute the app as separate controllers under their own privacy policies.",
-      ai: "<strong>OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway> they receive item names and expense descriptions for automatic categories, the photo or PDF when you scan a receipt (which can show anything printed on it, such as the last digits of a card or your address; we do not store it). See <dpa>Vercel's privacy policy</dpa>.",
+      ai: "<strong>Typesafe AI, OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway>, Typesafe AI receives item names and expense descriptions for automatic categories and doesn't keep them once it has answered. OpenAI and Google receive the photo or PDF when you scan a receipt (which can show anything printed on it, such as the last digits of a card or your address; we do not store it). See <dpa>Vercel's privacy policy</dpa>.",
       posthog:
         "<strong>PostHog (analytics, error reports):</strong> Stores data in Frankfurt and receives:",
       posthogWebsite:
@@ -211,7 +211,7 @@ export const legal = {
         "<strong>Not signed in:</strong> We can't recognize you, so turn on Global Privacy Control or Do Not Track in your browser. We then don't count your visits.",
     },
     international:
-      "Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe, Resend and Expo are US companies, so data may reach the USA. For providers certified under the EU-US Data Privacy Framework, the EU adequacy decision applies (Art. 45 GDPR). PostHog is certified and has also signed the EU Standard Contractual Clauses with us (Art. 46(2)(c) GDPR); ask us for a copy.",
+      "Vercel, OpenAI, Google, Typesafe AI, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe, Resend and Expo are US companies, so data may reach the USA. For providers certified under the EU-US Data Privacy Framework, the EU adequacy decision applies (Art. 45 GDPR). Typesafe AI is not certified and relies on the EU Standard Contractual Clauses (Art. 46(2)(c) GDPR). PostHog is certified and has also signed the EU Standard Contractual Clauses with us (Art. 46(2)(c) GDPR); ask us for a copy.",
     children:
       "Flatsby is not meant for children under 16. If you think a child has given us data, contact us.",
     changes:
