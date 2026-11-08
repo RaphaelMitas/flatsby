@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { localePath } from "@flatsby/i18n/locale";
 import { Button } from "@flatsby/ui/button";
+import { Card } from "@flatsby/ui/card";
 import AppleIcon from "@flatsby/ui/custom/icons/AppleIcon";
 import FlatsbyCat from "@flatsby/ui/custom/icons/FlatsbyCat";
 import GoogleIcon from "@flatsby/ui/custom/icons/GoogleIcon";
@@ -149,7 +150,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
 
   return (
     <div className="bg-background flex h-screen w-full items-center justify-center">
-      <div className="bg-muted flex w-full max-w-sm flex-col gap-6 rounded-lg p-8">
+      <Card className="flex w-full max-w-sm flex-col gap-6 p-8">
         <div className="flex flex-col items-center justify-center gap-4 text-center">
           <FlatsbyCat className="h-20 w-auto self-center" />
           <h1 className="text-4xl font-bold" data-testid="auth-login-title">
@@ -205,7 +206,6 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
                   aria-label={t("auth.login.email")}
                   aria-invalid={emailStep.error !== null}
                   placeholder={t("auth.login.emailPlaceholder")}
-                  className="bg-background"
                   data-testid="auth-login-email-input"
                   value={emailStep.email}
                   onChange={(event) =>
@@ -329,7 +329,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
             </Link>
           </p>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
