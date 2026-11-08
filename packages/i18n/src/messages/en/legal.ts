@@ -211,7 +211,7 @@ export const legal = {
         "<strong>Not signed in:</strong> We can't recognize you, so turn on Global Privacy Control or Do Not Track in your browser. We then don't count your visits.",
     },
     international:
-      "Vercel, OpenAI, Typesafe AI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe, Resend and Expo are US companies, so data may reach the USA. For providers certified under the EU-US Data Privacy Framework, the EU adequacy decision applies (Art. 45 GDPR). Typesafe AI and OpenAI only receive data through Vercel. Typesafe AI is not certified itself, but Vercel is, and under the framework may only pass data on to recipients contractually bound to the same level of protection. PostHog is certified and has also signed the EU Standard Contractual Clauses with us (Art. 46(2)(c) GDPR); ask us for a copy.",
+      "Vercel, OpenAI, Typesafe AI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe, Resend and Expo are US companies, so data may reach the USA. For providers certified under the EU-US Data Privacy Framework, the EU adequacy decision applies (Art. 45 GDPR). Typesafe AI (not certified itself) and OpenAI only receive data through Vercel, which under the framework may only pass it on with the same contractual protection. PostHog is certified and has also signed the EU Standard Contractual Clauses with us (Art. 46(2)(c) GDPR); ask us for a copy.",
     children:
       "Flatsby is not meant for children under 16. If you think a child has given us data, contact us.",
     changes:
