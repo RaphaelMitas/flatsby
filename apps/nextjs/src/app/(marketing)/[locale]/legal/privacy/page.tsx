@@ -169,14 +169,6 @@ export default function PrivacyPage() {
                       {chunks}
                     </LegalLink>
                   ),
-                  dpa: (chunks) => (
-                    <LegalLink
-                      href="https://vercel.com/legal/privacy-policy"
-                      external
-                    >
-                      {chunks}
-                    </LegalLink>
-                  ),
                 })}
               </li>
               <li id="analytics" className="scroll-mt-24">
