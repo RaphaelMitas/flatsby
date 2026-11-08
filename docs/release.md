@@ -99,8 +99,9 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   exposes the e2e-login deep link); the store binary itself comes from EAS
   and never contains e2e code.
 - The screenshot jobs run their own web app (`tooling/github/e2e-stack`) with
-  no Autumn key, so nothing they do can spend AI credits: every AI procedure
-  checks credits first and falls back when the check fails.
+  `E2E_TESTING=true`, so nothing they do can spend AI credits: every AI
+  procedure checks credits first, the check always denies there, and the
+  procedure falls back.
 - Marketing version comes from `app.config.ts`; build numbers auto-increment
   remotely on EAS (`appVersionSource: "remote"`).
 - `apps/expo/store/<locale>/` is the source of truth for listing text. Its

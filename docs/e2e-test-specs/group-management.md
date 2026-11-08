@@ -18,7 +18,7 @@ Verify the complete lifecycle of a group from creation through member management
 12. **Non-Admin Cannot Change Group Name**: Verify that a regular member cannot change the group name.
 13. **Non-Admin Cannot Invite**: Verify that a regular member sees no invite button and cannot fetch or reset the group's invite.
 14. **Non-Admin Cannot Remove Other Members**: Verify that a regular member cannot remove other members from the group.
-15. **Delete Group**: Verify that an admin can delete the group and all associated data (shopping lists, items, conversations) is removed.
+15. **Delete Group**: Verify that an admin can delete the group and all associated data (shopping lists, items) is removed.
 16. **Deleted Group Inaccessible**: Verify that after group deletion, no former members can access the group and it disappears from all dashboards.
 17. **Delete Group Clears User References**: Verify that deleting a group nulls out `lastGroupUsed` and `lastShoppingListUsed` references on affected users.
 18. **Switch Groups**: Verify that picking another group in the home's group switcher makes it the current group.

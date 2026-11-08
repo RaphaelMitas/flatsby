@@ -18,23 +18,16 @@ const SNORE_SIZES = ["text-xs", "text-sm", "text-base"];
 export function Snores({
   className,
   style,
-  drift = "left",
   textClassName = "text-foreground",
 }: {
   className?: string;
   style?: ViewStyle;
-  drift?: "left" | "right";
   textClassName?: string;
 }) {
   return (
     <View pointerEvents="none" style={style} className={className}>
       {[0, 1, 2].map((index) => (
-        <Snore
-          key={index}
-          index={index}
-          sign={drift === "left" ? -1 : 1}
-          textClassName={textClassName}
-        />
+        <Snore key={index} index={index} textClassName={textClassName} />
       ))}
     </View>
   );
@@ -42,11 +35,9 @@ export function Snores({
 
 function Snore({
   index,
-  sign,
   textClassName,
 }: {
   index: number;
-  sign: number;
   textClassName: string;
 }) {
   const t = useTranslations("home.new.cat");
@@ -64,7 +55,7 @@ function Snore({
   const style = useAnimatedStyle(() => ({
     opacity: interpolate(progress.get(), [0, 0.2, 1], [0, 1, 0]),
     transform: [
-      { translateX: sign * 16 * progress.get() },
+      { translateX: -16 * progress.get() },
       { translateY: -30 * progress.get() },
     ],
   }));

@@ -1,6 +1,4 @@
 export const errors = {
-  aiConsentRequired:
-    "Please accept AI data sharing before using the assistant.",
   notFound: {
     invite: "This invite has expired. Ask someone in the group for a new one.",
     adminMembership: "admin membership not found",
@@ -62,22 +60,14 @@ export const errors = {
     "Unable to save your PayPal.me name at this time. Please try again.",
   updateConsentFailed:
     "Unable to update consent at this time. Please try again.",
-  updateAiConsentFailed:
-    "Unable to update AI consent at this time. Please try again.",
   updateAnalyticsFailed:
     "Unable to update your analytics settings at this time. Please try again.",
   exportDataFailed:
     "Unable to export your data at this time. Please try again.",
-  conversationNotFound: "Conversation not found",
-  createConversationFailed: "Failed to create conversation",
-  createAssistantMessageFailed: "Failed to create assistant message",
-  messageNotFound: "Message not found",
-  messageNotInConversation: "Message not found in this conversation",
-  notAuthorized: "Not authorized",
   outOfCredits:
-    "You've run out of credits. Please upgrade your plan to continue.",
-  creditCheckFailed: "Error checking credits",
-  streamFailed: "Failed to stream response",
+    "You've used this month's receipt scans. They're back on the 1st.",
+  creditCheckFailed:
+    "Receipt scan isn't available right now. Please try again.",
   groupAccessDenied: "Group not found or access denied",
   groupNotFound: "Group not found",
   shoppingListNotFound: "Shopping list not found",

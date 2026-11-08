@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useCustomer } from "autumn-js/react";
 import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -21,7 +20,6 @@ import {
   useSidebar,
 } from "@flatsby/ui/sidebar";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import { getCurrentSubscription } from "@flatsby/validators/billing";
 
 import { signOutAndRedirect } from "~/auth/client";
 import { useTRPC } from "~/trpc/react";
@@ -31,14 +29,6 @@ export function SidebarUserMenu() {
   const t = useTranslations();
   const router = useRouter();
   const trpc = useTRPC();
-  const { data: customer } = useCustomer({
-    expand: ["subscriptions.plan"],
-  });
-
-  const planName =
-    getCurrentSubscription(customer?.subscriptions ?? [])?.plan?.name ??
-    t("billing.free");
-
   const { data: userWithGroups } = useQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
@@ -65,12 +55,7 @@ export function SidebarUserMenu() {
                 className="rounded-lg"
               />
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <div className="flex items-center gap-2">
-                  <span className="truncate font-semibold">{user?.name}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {planName}
-                  </span>
-                </div>
+                <span className="truncate font-semibold">{user?.name}</span>
                 <span className="text-muted-foreground truncate text-xs">
                   {user?.email}
                 </span>

@@ -18,12 +18,10 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@ai-sdk/react": "catalog:",
     "@better-auth/expo": "catalog:better-auth",
     "@better-auth/passkey": "catalog:better-auth",
     "@flatsby/api": "workspace:*",
     "@flatsby/auth": "workspace:*",
-    "@flatsby/chat": "workspace:*",
     "@flatsby/db": "workspace:*",
     "@flatsby/i18n": "workspace:*",
     "@flatsby/ui": "workspace:*",
@@ -36,8 +34,6 @@
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
-    "ai": "catalog:",
-    "autumn-js": "catalog:",
     "better-auth": "catalog:better-auth",
     "geist": "^1.9.0",
     "isbot": "^5.2.2",

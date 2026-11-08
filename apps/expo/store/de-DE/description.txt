@@ -10,7 +10,7 @@ HAUSHALTSGRUPPEN
 Eine Gruppe ist dein Haushalt. Lade Mitbewohner per Link, QR-Code oder kurzem Code ein, und sie treten mit einem Tippen bei. Jede Liste und jede Ausgabe bleibt in der Gruppe.
 
 KOSTENLOS
-Einkaufslisten, Ausgaben, Ausgleichszahlungen und Gruppen sind kostenlos, ohne Mitgliederbegrenzung. Automatische Kategorien nutzen KI-Credits: Der kostenlose Plan enthält ein monatliches Kontingent, ein Abo bringt mehr.
+Unbegrenzt viele Ausgaben, keine Werbung, kostenlos für die ganze WG. Einkaufslisten, Ausgaben, Ausgleichszahlungen, Gruppen, automatische Kategorien und Belege scannen (Beta) sind kostenlos, ohne Mitgliederbegrenzung, und zu kaufen gibt es nichts. Was heute kostenlos ist, bleibt kostenlos.
 
 Dein Konto und deine Daten sind auf jedem Gerät und im Web unter flatsby.com dieselben.
 

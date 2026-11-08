@@ -1,98 +1,13 @@
 import { z } from "zod/v4";
 
-/**
- * Autumn plan IDs
- * These should match what's configured in the Autumn dashboard
- */
-export const PLAN_IDS = {
-  FREE: "free",
-  STARTER: "starter",
-  PRO: "pro",
-  PRO_APPLE: "pro_apple",
-} as const;
-
-export type PlanId = (typeof PLAN_IDS)[keyof typeof PLAN_IDS];
-
-/**
- * Autumn billing feature IDs
- * These should match what's configured in the Autumn dashboard
- */
-export const AUTUMN_FEATURES = {
-  CREDITS: "credits",
-} as const;
-
-export type AutumnFeature =
-  (typeof AUTUMN_FEATURES)[keyof typeof AUTUMN_FEATURES];
-
-/**
- * Credits conversion rate: 1 credit = $0.00001
- */
-export const CREDITS_PER_DOLLAR = 10_000;
-
-/**
- * Convert cost (USD) to credits
- */
-export function costToCredits(cost: string | number | undefined): number {
-  if (cost == null) return 0;
-  const numCost = typeof cost === "string" ? parseFloat(cost) : cost;
-  return Math.round(numCost * CREDITS_PER_DOLLAR);
-}
-
-/**
- * Format credits for display
- */
-export function formatCredits(credits: number, locale: string): string {
-  const oneDecimal = (value: number) =>
-    value.toLocaleString(locale, {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    });
-  if (credits >= 1_000_000) {
-    return `${oneDecimal(credits / 1_000_000)}M`;
-  }
-  if (credits >= 1_000) {
-    return `${oneDecimal(credits / 1_000)}K`;
-  }
-  return credits.toLocaleString(locale);
-}
-
-/**
- * Schema for credit feature data returned from Autumn
- */
-export const creditFeatureSchema = z.object({
-  balance: z.number(),
-  usage: z.number(),
-});
-
-export type CreditFeature = z.infer<typeof creditFeatureSchema>;
-
-/**
- * Schema for usage data response
- */
+// Only released app builds call getUsage and getSubscription
 export const usageDataSchema = z.object({
-  credits: creditFeatureSchema.nullable(),
+  credits: z.object({ balance: z.number(), usage: z.number() }),
 });
 
-export type UsageData = z.infer<typeof usageDataSchema>;
-
-/**
- * Schema for subscription data from Autumn
- */
 export const subscriptionDataSchema = z.object({
   planId: z.string(),
   planName: z.string(),
 });
 
-export type SubscriptionData = z.infer<typeof subscriptionDataSchema>;
-
-export function getCurrentSubscription<
-  T extends { canceledAt: number | null; planId: string },
->(subscriptions: T[]): T | undefined {
-  return (
-    subscriptions.find(
-      (s) => s.canceledAt !== null && s.planId !== PLAN_IDS.FREE,
-    ) ??
-    subscriptions.find((s) => s.planId !== PLAN_IDS.FREE) ??
-    subscriptions[0]
-  );
-}
+export const SUPPORT_EMAIL = "support@flatsby.com";

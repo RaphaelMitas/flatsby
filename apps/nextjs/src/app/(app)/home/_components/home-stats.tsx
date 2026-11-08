@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { CheckCircle2, MessageSquare, TrendingUp, Wallet } from "lucide-react";
+import { CheckCircle2, TrendingUp, Wallet } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@flatsby/ui/card";
@@ -50,14 +50,22 @@ interface StatCardProps {
   format?: (value: number) => string;
   label: string;
   colorClass?: string;
+  className?: string;
 }
 
-function StatCard({ icon, value, format, label, colorClass }: StatCardProps) {
+function StatCard({
+  icon,
+  value,
+  format,
+  label,
+  colorClass,
+  className,
+}: StatCardProps) {
   const animatedValue = useCountUp(value);
   const displayValue = format ? format(animatedValue) : String(animatedValue);
 
   return (
-    <Card>
+    <Card className={className}>
       <CardContent className="flex flex-col items-center justify-center p-4">
         <div className={`mb-2 ${colorClass ?? "text-muted-foreground"}`}>
           {icon}
@@ -82,9 +90,9 @@ function StatsHeader() {
   );
 }
 
-function StatCardSkeleton() {
+function StatCardSkeleton({ className }: { className?: string }) {
   return (
-    <Card>
+    <Card className={className}>
       <CardContent className="flex flex-col items-center justify-center p-4">
         <Skeleton className="mb-2 h-5 w-5" />
         <Skeleton className="mb-1 h-7 w-16" />
@@ -131,7 +139,7 @@ function HomeStatsInner() {
     }
   }
 
-  const { spending, itemsCompleted, chatMessages } = statsData.data;
+  const { spending, itemsCompleted } = statsData.data;
 
   const primarySpending = spending[0];
   const spendingCents = primarySpending?.totalInCents ?? 0;
@@ -162,12 +170,7 @@ function HomeStatsInner() {
           colorClass="text-green-500"
         />
         <StatCard
-          icon={<MessageSquare className="h-5 w-5" />}
-          value={chatMessages}
-          label={t("messages")}
-          colorClass="text-purple-500"
-        />
-        <StatCard
+          className="col-span-2"
           icon={<TrendingUp className="h-5 w-5" />}
           value={balanceAmount}
           format={formatCurrency(balanceCurrency)}
@@ -200,8 +203,7 @@ export function HomeStats() {
           <div className="grid grid-cols-2 gap-3">
             <StatCardSkeleton />
             <StatCardSkeleton />
-            <StatCardSkeleton />
-            <StatCardSkeleton />
+            <StatCardSkeleton className="col-span-2" />
           </div>
         </div>
       }

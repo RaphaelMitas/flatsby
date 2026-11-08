@@ -17,5 +17,4 @@ Verify user account deletion including proper cleanup of all associated data acr
 11. **Verification Tokens Deleted**: Verify that all verification tokens associated with the deleted user's email are cleaned up.
 12. **User Record Deleted**: Verify that the user row is completely removed from the users table after account deletion.
 13. **Sign Out and Redirect After Deletion**: Verify that after successful account deletion, the user is signed out and redirected away from the app.
-14. **Conversations and Chat Messages Cascade Deleted**: Verify that conversations and chat messages belonging to the deleted user are cascade-deleted by the database.
-15. **Delete Account with Large Dataset**: Verify that account deletion completes successfully and cleans up all data even when the user has many groups, expenses, shopping lists, and items.
+14. **Delete Account with Large Dataset**: Verify that account deletion completes successfully and cleans up all data even when the user has many groups, expenses, shopping lists, and items.

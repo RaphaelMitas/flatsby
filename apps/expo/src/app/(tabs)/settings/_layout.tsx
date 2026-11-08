@@ -59,10 +59,9 @@ export default function SettingsLayout() {
           }}
         />
         <Stack.Screen
-          name="credits"
+          name="support"
           options={{
-            title: t("settings.items.buyCredits"),
-            presentation: "modal",
+            title: t("billing.support.title"),
             ...solidHeader,
           }}
         />

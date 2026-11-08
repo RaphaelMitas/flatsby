@@ -10,7 +10,6 @@ import { EveningReminderItem } from "~/components/settings/EveningReminderItem";
 import { SettingsChoiceItem } from "~/components/settings/SettingsChoiceItem";
 import { SettingsItem } from "~/components/settings/SettingsItem";
 import { SettingsSection } from "~/components/settings/SettingsSection";
-import { UsageDisplay } from "~/components/settings/UsageDisplay";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useTheme } from "~/lib/ui/theme";
@@ -136,8 +135,14 @@ export default function SettingsIndex() {
             />
           </Link>
         </SettingsSection>
-        <UsageDisplay />
         <SettingsSection>
+          <Link href="/settings/support" asChild>
+            <SettingsItem
+              testID="settings-support"
+              title={t("billing.support.title")}
+              iconName="heart"
+            />
+          </Link>
           <SettingsItem
             title={t("settings.items.rateApp")}
             iconName="star"

@@ -19,7 +19,6 @@ export interface TestUser {
 }
 
 interface SessionData extends TestUser {
-  conversationId?: string;
   cookies: TestCookie[];
 }
 

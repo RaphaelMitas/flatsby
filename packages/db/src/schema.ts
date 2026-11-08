@@ -3,7 +3,6 @@ import type {
   CalendarItemKind,
   Recurrence,
 } from "@flatsby/validators/calendar";
-import type { PersistedToolCall } from "@flatsby/validators/chat/tools";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { relations, sql } from "drizzle-orm";
 import {
@@ -17,12 +16,10 @@ import {
   pgEnum,
   pgTableCreator,
   primaryKey,
-  real,
   serial,
   text,
   time,
   timestamp,
-  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -60,8 +57,6 @@ export const users = createTable("user", {
   lastShoppingListUsed: integer("last_shopping_list_used").references(
     () => shoppingLists.id,
   ),
-  lastChatModelUsed: text("last_chat_model_used"),
-  lastToolsEnabled: boolean("last_tools_enabled"),
   // Legal consent tracking
   termsAcceptedAt: timestamp("terms_accepted_at"),
   termsVersion: varchar("terms_version", {
@@ -69,11 +64,6 @@ export const users = createTable("user", {
   }),
   privacyAcceptedAt: timestamp("privacy_accepted_at"),
   privacyVersion: varchar("privacy_version", {
-    length: MAX_CONSENT_VERSION_LENGTH,
-  }),
-  // AI consent tracking
-  aiConsentAcceptedAt: timestamp("ai_consent_accepted_at"),
-  aiConsentVersion: varchar("ai_consent_version", {
     length: MAX_CONSENT_VERSION_LENGTH,
   }),
   analyticsOptOut: boolean("analytics_opt_out").default(false).notNull(),
@@ -99,10 +89,21 @@ export const analyticsConsents = createTable(
   (table) => [index("analytics_consent_user_idx").on(table.userId)],
 );
 
+export const creditBalances = createTable(
+  "credit_balance",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    monthStart: date("month_start").notNull(),
+    used: integer("used").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.monthStart] })],
+);
+
 export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),
   groupMembers: many(groupMembers),
-  conversations: many(conversations),
   lastGroupUsed: one(groups, {
     fields: [users.lastGroupUsed],
     references: [groups.id],
@@ -461,68 +462,6 @@ export const expenseSplitsRelations = relations(expenseSplits, ({ one }) => ({
   groupMember: one(groupMembers, {
     fields: [expenseSplits.groupMemberId],
     references: [groupMembers.id],
-  }),
-}));
-
-// Chat tables
-export const conversations = createTable(
-  "conversations",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    title: text("title"),
-    model: text("model"),
-    systemPrompt: text("system_prompt"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    deletedAt: timestamp("deleted_at", { mode: "date" }),
-  },
-  (table) => [
-    index("conversations_user_updated_idx").on(table.userId, table.updatedAt),
-  ],
-);
-
-export const conversationsRelations = relations(
-  conversations,
-  ({ one, many }) => ({
-    user: one(users, {
-      fields: [conversations.userId],
-      references: [users.id],
-    }),
-    messages: many(chatMessages),
-  }),
-);
-
-export const chatMessages = createTable(
-  "chat_messages",
-  {
-    // Use text instead of uuid to accept AI SDK's nanoid-style IDs
-    id: text("id").primaryKey(),
-    conversationId: uuid("conversation_id")
-      .notNull()
-      .references(() => conversations.id, { onDelete: "cascade" }),
-    role: varchar("role", { length: 20 }).notNull(), // "user" | "assistant" | "system"
-    content: text("content").notNull().default(""),
-    status: varchar("status", { length: 20 }).default("pending").notNull(), // "pending" | "streaming" | "complete" | "error"
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    // AI generation tracking
-    generationId: text("generation_id"), // gen_<ulid> from providerMetadata.gateway
-    cost: real("cost"), // Cost in USD from providerMetadata.gateway.cost
-    model: text("model"), // Model ID used for this generation
-    // Tool calls made during this message
-    toolCalls: jsonb("tool_calls").$type<PersistedToolCall[]>(),
-  },
-  (table) => [
-    index("chat_messages_conv_idx").on(table.conversationId, table.createdAt),
-  ],
-);
-
-export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
-  conversation: one(conversations, {
-    fields: [chatMessages.conversationId],
-    references: [conversations.id],
   }),
 }));
 

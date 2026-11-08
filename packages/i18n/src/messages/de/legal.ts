@@ -116,7 +116,8 @@ export const legal = {
         "Ihre Konto-ID bei Google oder Apple, wenn Sie sich damit anmelden",
       passkeys:
         "Für jeden Passkey den öffentlichen Schlüssel, einen Namen und das Erstelldatum; der private Schlüssel bleibt auf Ihrem Gerät oder in Ihrem Passwortmanager",
-      plan: "Ihren Tarif, Ihre Käufe und Ihr KI-Guthaben",
+      aiUsage:
+        "Wie viel KI Sie pro Monat genutzt haben, für das Fair-Use-Limit",
       payment:
         "Wenn Sie ihn hinterlegen: den PayPal.me-Namen, über den Sie Geld bekommen",
     },
@@ -127,7 +128,6 @@ export const legal = {
       expenses: "Ausgaben und Ausgleichszahlungen",
       calendar: "Kalendereinträge und Aufgaben",
       groups: "Gruppen und ihre Mitglieder",
-      chat: "Chats mit dem KI-Assistenten",
     },
     technical: {
       heading: "Technische Daten",
@@ -148,9 +148,9 @@ export const legal = {
     },
     basis: {
       contract:
-        "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Bereitstellung von Flatsby, einschließlich Käufen, der automatischen KI-Kategorisierung und dem Scannen von Belegen",
+        "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Bereitstellung von Flatsby, einschließlich der automatischen KI-Kategorisierung und dem Scannen von Belegen",
       consent:
-        "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG):</strong> der KI-Assistent; Bildschirmanalyse in der App, einschließlich der dafür genutzten Geräte-ID",
+        "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG):</strong> Bildschirmanalyse in der App, einschließlich der dafür genutzten Geräte-ID",
       interests:
         "<strong>Berechtigte Interessen (Art. 6 Abs. 1 lit. f DSGVO):</strong> sicherer Betrieb der Website; Nutzungsanalyse Ihrer Aktionen auf der Website und in der App, um zu verstehen, wie Menschen Flatsby finden und nutzen; Fehlerberichte, um Fehler zu beheben (in der App, ohne etwas auf Ihrem Gerät zu speichern, § 25 Abs. 2 Nr. 2 TDDDG); KI-Nutzungsdaten, um die Kosten zu kontrollieren; Anmeldesitzungen, um Ihr Konto zu schützen; Anmeldeversuche pro IP-Adresse und pro E-Mail-Adresse (gehasht) zählen, um Missbrauch zu verhindern",
       obligations:
@@ -171,11 +171,11 @@ export const legal = {
       resend:
         "<strong>Resend (E-Mail):</strong> Verschickt Anmeldecodes und erhält dafür Ihre E-Mail-Adresse und den Code. Die E-Mails gehen von Irland aus; Protokolle und Metadaten speichert Resend in den USA.",
       billing:
-        "<strong>Autumn, Stripe und RevenueCat (Tarife und KI-Guthaben):</strong> Autumn (Web) erhält Ihre Konto-ID, Ihren Namen und Ihre E-Mail-Adresse, RevenueCat (App) Ihre Konto-ID, beide mit Ihren Käufen. Autumn nutzt Stripe für Zahlungen.",
+        "<strong>RevenueCat (frühere In-App-Käufe):</strong> Ältere App-Versionen senden bei der Anmeldung Ihre Konto-ID an RevenueCat. Aktuelle Versionen verkaufen nichts und nutzen RevenueCat nicht.",
       expo: "<strong>Expo (App-Updates):</strong> Die App fragt bei den Servern von Expo nach Updates; diese erhalten Ihre IP-Adresse, App-Version und Plattform.",
       stores:
-        "<strong>Apple App Store und Google Play:</strong> Vertreiben die App und wickeln In-App-Käufe als eigene Verantwortliche nach ihren eigenen Datenschutzbestimmungen ab.",
-      ai: "<strong>OpenAI und Google (KI):</strong> Über das <gateway>Vercel AI Gateway</gateway> erhalten sie Artikelnamen und Ausgabenbeschreibungen für die automatische Kategorisierung, das Foto oder PDF, wenn Sie einen Beleg scannen (es kann alles zeigen, was darauf steht, etwa die letzten Ziffern einer Karte oder Ihre Adresse; wir speichern es nicht), und, wenn Sie den KI-Assistenten nutzen, Ihre Nachrichten sowie die dafür nötigen Listen-, Ausgaben- und Mitgliederdaten. Siehe die <dpa>Datenschutzerklärung von Vercel</dpa>.",
+        "<strong>Apple App Store und Google Play:</strong> Vertreiben die App als eigene Verantwortliche nach ihren eigenen Datenschutzbestimmungen.",
+      ai: "<strong>OpenAI und Google (KI):</strong> Über das <gateway>Vercel AI Gateway</gateway> erhalten sie Artikelnamen und Ausgabenbeschreibungen für die automatische Kategorisierung, das Foto oder PDF, wenn Sie einen Beleg scannen (es kann alles zeigen, was darauf steht, etwa die letzten Ziffern einer Karte oder Ihre Adresse; wir speichern es nicht). Siehe die <dpa>Datenschutzerklärung von Vercel</dpa>.",
       posthog:
         "<strong>PostHog (Analyse, Fehlerberichte):</strong> Speichert Daten in Frankfurt und erhält:",
       posthogWebsite:
@@ -191,11 +191,11 @@ export const legal = {
       intro:
         "Wir speichern Ihre Daten, solange Ihr Konto besteht. Wenn Sie es löschen:",
       personal:
-        "werden Ihr Konto, Ihr Profil und Ihre Chats sofort aus unserer Datenbank gelöscht",
+        "werden Ihr Konto und Ihr Profil sofort aus unserer Datenbank gelöscht",
       content:
         "können Artikel und Ausgaben, die Sie angelegt haben, anonymisiert für die anderen Gruppenmitglieder erhalten bleiben",
       outro:
-        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Anmeldecodes gelten 5 Minuten; Zähler für Anmeldeversuche werden nach Ablauf ihres Zeitfensters von höchstens einer Stunde gelöscht. PostHog löscht Analyseereignisse nach 12 Monaten. Ihr Profil bei PostHog und Ihre Kundendaten bei Autumn und RevenueCat bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
+        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Anmeldecodes gelten 5 Minuten; Zähler für Anmeldeversuche werden nach Ablauf ihres Zeitfensters von höchstens einer Stunde gelöscht. PostHog löscht Analyseereignisse nach 12 Monaten. Ihr Profil bei PostHog und Ihre Kundendaten bei RevenueCat sowie bei Autumn und Stripe (bis November 2026 unsere Abrechnungsanbieter) bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
     },
     rights: {
       access: "<strong>Auskunft:</strong> eine Kopie Ihrer Daten erhalten",

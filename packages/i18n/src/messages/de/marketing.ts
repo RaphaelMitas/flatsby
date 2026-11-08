@@ -14,7 +14,6 @@ export const marketing = {
     calendar: "Putzplan",
     expenses: "Ausgaben",
     expenseSplitting: "Kosten teilen",
-    aiAssistant: "KI-Assistent",
     splitwiseAlternative: "Splitwise-Alternative",
     flatasticAlternative: "Flatastic-Alternative",
     pricing: "Preise",
@@ -40,7 +39,7 @@ export const marketing = {
   },
   features: {
     heading: "Alles, was du für deinen Haushalt brauchst",
-    examples: "Die Listen, Ausgaben und der Chat unten sind Beispiele.",
+    examples: "Die Listen und Ausgaben unten sind Beispiele.",
     calendar: {
       title: "Putzplan und Kalender",
       body: "Leg Aufgaben wie Bad putzen oder Müll rausbringen einmal an und wähl, wer sich in welcher Reihenfolge abwechselt. Jede Person sieht, wann sie dran ist, auch Wochen im Voraus, und im Verlauf steht, wer was erledigt hat. Termine wie die WG-Versammlung kommen in denselben Kalender.",
@@ -48,15 +47,11 @@ export const marketing = {
     },
     lists: {
       title: "Gemeinsame Einkaufslisten",
-      body: "So viele Listen, wie ihr braucht, nach Kategorien sortiert wie im Laden. Die Kategorie wählst du selbst, oder Flatsby schlägt sie mit KI-Credits vor, von denen jeden Monat ein Kontingent kostenlos ist. Wer einkauft, hakt ab. Die anderen sehen neue Artikel, sobald die Liste neu lädt: beim Öffnen der App oder wenn sie die Liste herunterziehen.",
+      body: "So viele Listen, wie ihr braucht, nach Kategorien sortiert wie im Laden. Die Kategorie wählst du selbst, oder Flatsby schlägt sie vor. Wer einkauft, hakt ab. Die anderen sehen neue Artikel, sobald die Liste neu lädt: beim Öffnen der App oder wenn sie die Liste herunterziehen.",
     },
     expenses: {
       title: "Kosten teilen",
       body: "Trag ein, was du bezahlt hast, und teil es gleichmäßig, nach Prozent, nach Anteilen oder mit genauen Beträgen, etwa die Miete nach Zimmergröße oder nach Einkommen. Kein Tageslimit für Ausgaben. Flatsby zeigt, wer wem was schuldet, und rechnet aus, mit welchen wenigen Zahlungen alle wieder bei null sind. Von Splitwise nimmst du deinen Verlauf per CSV-Import mit.",
-    },
-    assistant: {
-      title: "Extra: KI-Assistent im Web",
-      body: "Frag in normaler Sprache, etwa wie viel ihr letzten Monat für Lebensmittel ausgegeben habt. Er antwortet mit Diagrammen und Tabellen, kann Artikel oder Ausgaben für dich hinzufügen, fragt vorher nach deiner Einwilligung und ist optional.",
     },
     groups: {
       title: "Ein Haushalt, alle Geräte",
@@ -85,7 +80,7 @@ export const marketing = {
     },
     about: {
       title: "Wer Flatsby macht",
-      body: "Flatsby wird von Raphael Mitas entwickelt, einem unabhängigen Entwickler aus Darmstadt. Der Code ist Open Source auf GitHub, und Releases gehen aus demselben Repository ins Web, in den App Store und zu Google Play.",
+      body: "Flatsby wird von Raphael Mitas entwickelt, einem unabhängigen Entwickler aus Darmstadt. Der Code ist Open Source auf GitHub, und Releases gehen aus demselben Repository ins Web, in den App Store und zu Google Play. Der Betrieb von Flatsby kostet etwa 10 Euro im Monat.",
     },
   },
   facts: {
@@ -108,7 +103,7 @@ export const marketing = {
     price: {
       label: "Preis",
       value:
-        "Kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Kategorien wählst du kostenlos selbst. Bezahlt wird nur für zusätzliche KI-Credits, mit denen der KI-Assistent, die automatischen Kategorien und das Scannen von Belegen arbeiten. Ein monatliches Kontingent ist kostenlos.",
+        "Kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Zu kaufen gibt es nichts. Was heute kostenlos ist, bleibt kostenlos, auch Belege scannen (Beta) und automatische Kategorien. Für KI-Funktionen gibt es ein monatliches Fair-Use-Limit, das weit über normaler Nutzung liegt.",
     },
     signIn: { label: "Anmeldung", value: "Google- oder Apple-Konto." },
     splitting: {
@@ -128,7 +123,7 @@ export const marketing = {
     data: {
       label: "Deine Daten",
       value:
-        "Datenbank und Server in Frankfurt, bei Cloud-Anbietern mit EU-Region, Nutzungsstatistik ohne Werbe-Tracking. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Einen gescannten Beleg bekommt OpenAI als Foto oder PDF, Flatsby speichert ihn nicht. Export und Kontolöschung jederzeit in den Einstellungen, Details in der Datenschutzerklärung.",
+        "Datenbank und Server in Frankfurt, bei Cloud-Anbietern mit EU-Region, Nutzungsstatistik ohne Werbe-Tracking. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Einen gescannten Beleg bekommt OpenAI als Foto oder PDF, Flatsby speichert ihn nicht. Export und Kontolöschung jederzeit in den Einstellungen, Details in der Datenschutzerklärung.",
     },
     source: {
       label: "Quellcode",
@@ -141,7 +136,7 @@ export const marketing = {
     free: {
       question: "Ist Flatsby wirklich kostenlos und werbefrei?",
       answer:
-        "Ja. Putzplan, Einkaufslisten, Ausgaben, Ausgleichszahlungen und Gruppen sind kostenlos, ohne Werbung und ohne Mitgliederbegrenzung. Geld verdient Flatsby nur mit optionalen KI-Credits. Der KI-Assistent, die automatischen Kategorien und das Scannen von Belegen nutzen Credits: {freeCredits, number} im Monat kostenlos, {starterCredits, number} mit Starter ({starterPrice, number, ::currency/USD} im Monat) und {proCredits, number} mit Pro ({proPrice, number, ::currency/USD} im Monat im Web). Auf dem iPhone kostet Pro {proAppStorePrice, number, ::currency/USD} im Monat im US-App-Store.",
+        "Ja. Putzplan, Einkaufslisten, Ausgaben, Ausgleichen, Belege scannen (Beta), automatische Kategorien, Export und Import sind kostenlos, ohne Werbung und ohne Mitgliederbegrenzung, und das bleibt so. Es gibt keine Bezahltarife und nichts zu kaufen. Für KI-Funktionen gibt es ein monatliches Fair-Use-Limit, das weit über normaler Nutzung liegt. Sollte Flatsby je etwas kosten, dann nur etwas Neues, keine Funktion, die du schon nutzt.",
     },
     android: {
       question: "Funktioniert Flatsby auf Android?",
@@ -171,22 +166,17 @@ export const marketing = {
     web: {
       question: "Ist die Web-App dieselbe wie die Handy-Apps?",
       answer:
-        "Fast. Listen, Ausgaben, Ausgleichszahlungen und Gruppeneinstellungen funktionieren im Web, auf dem iPhone und auf Android. Den KI-Assistenten gibt es vorerst nur im Web.",
+        "Ja. Listen, Ausgaben, Ausgleichszahlungen und Gruppeneinstellungen funktionieren im Web, auf dem iPhone und auf Android.",
     },
     realtime: {
       question: "Aktualisieren sich Einkaufslisten in Echtzeit?",
       answer:
         "Nicht sofort. Alle teilen dieselben Listen, und die Änderungen eines Mitbewohners erscheinen, wenn du die Liste erneut öffnest, zur App oder zum Tab zurückkehrst oder die Liste in der App herunterziehst.",
     },
-    assistant: {
-      question: "Was macht der KI-Assistent?",
-      answer:
-        "In der Web-App fragst du in ganz normaler Sprache nach deinem Haushalt. Er liest deine Listen und Ausgaben, antwortet mit Diagrammen und Tabellen und kann Artikel oder Ausgaben für dich hinzufügen.",
-    },
     privacy: {
       question: "Wer kann die Daten meines Haushalts sehen?",
       answer:
-        "Innerhalb von Flatsby nur die Mitglieder deiner Gruppe. Die in der Datenschutzerklärung genannten Hosting-, Analyse- und KI-Anbieter verarbeiten sie, um die App zu betreiben. Drei Funktionen senden Daten über das Vercel AI Gateway. Der KI-Assistent fragt vorher nach deiner Einwilligung, nutzt Modelle von OpenAI oder Google, und seine Daten werden nicht zum Training dieser Modelle verwendet. Die automatischen Kategorien senden die Namen von Einkaufsartikeln und Ausgaben an ein Klassifizierungsmodell. Beim Scannen eines Belegs geht sein Foto oder PDF an ein Modell von OpenAI, das Betrag, Datum und Geschäft liest; Flatsby behält es nicht. Du kannst alle deine Daten exportieren oder dein Konto in deinen Einstellungen löschen.",
+        "Innerhalb von Flatsby nur die Mitglieder deiner Gruppe. Die in der Datenschutzerklärung genannten Hosting-, Analyse- und KI-Anbieter verarbeiten sie, um die App zu betreiben. Zwei Funktionen senden Daten über das Vercel AI Gateway an Modelle von OpenAI oder Google. Die automatischen Kategorien senden die Namen von Einkaufsartikeln und Ausgaben an ein Klassifizierungsmodell. Beim Scannen eines Belegs geht sein Foto oder PDF an ein Modell von OpenAI, das Betrag, Datum und Geschäft liest; Flatsby behält es nicht. Du kannst alle deine Daten exportieren oder dein Konto in deinen Einstellungen löschen.",
     },
     chores: {
       question: "Kann Flatsby einen Putzplan führen?",
@@ -219,8 +209,6 @@ export const marketing = {
     webLists: "Eine gemeinsame Einkaufsliste in der Flatsby-Web-App",
     webExpenses:
       "Liste gemeinsamer Ausgaben mit Angabe, wer bezahlt hat und wie geteilt wurde",
-    webChat:
-      "Der KI-Assistent beantwortet eine Frage zu Ausgaben mit einem Diagramm",
     iosList: "Eine gemeinsame Einkaufsliste auf dem iPhone",
     iosSplit: "Eine Ausgabe unter Mitbewohnern aufteilen auf dem iPhone",
     iosCalendar:
@@ -231,16 +219,8 @@ export const marketing = {
     yes: "Ja",
     no: "Nein",
     none: "Keine",
-    noLimit: "Unbegrenzt",
     pro: "Pro",
     platforms: "Web, iPhone, Android",
-  },
-  plans: {
-    free: "Kostenlos",
-    starter: "Starter",
-    pro: "Pro",
-    credits: "{credits, number}",
-    perMonth: "{price, number, ::currency/USD} im Monat",
   },
   pages: {
     shoppingLists: {
@@ -255,7 +235,7 @@ export const marketing = {
         lists:
           "Leg so viele Listen an, wie dein Haushalt braucht, zum Beispiel eine für Lebensmittel und eine für den Baumarkt. Alle in der Gruppe können Artikel hinzufügen, bearbeiten oder abhaken.",
         categories:
-          "Jeder Artikel hat eine Kategorie wie Obst und Gemüse, Milchprodukte oder Backwaren, sodass sich die Liste so sortiert, wie ein Laden aufgebaut ist. Wenn du einen Artikel hinzufügst, kann Flatsby die Kategorie vorschlagen, indem es den Artikelnamen an ein Klassifizierungsmodell sendet, und du kannst sie ändern. Das verbraucht KI-Credits.",
+          "Jeder Artikel hat eine Kategorie wie Obst und Gemüse, Milchprodukte oder Backwaren, sodass sich die Liste so sortiert, wie ein Laden aufgebaut ist. Wenn du einen Artikel hinzufügst, kann Flatsby die Kategorie vorschlagen, indem es den Artikelnamen an ein Klassifizierungsmodell sendet, und du kannst sie ändern.",
       },
       devices: {
         heading: "Dieselbe Liste auf jedem Gerät",
@@ -303,36 +283,6 @@ export const marketing = {
         body: "Es gibt noch keine wiederkehrenden Ausgaben. Trag die Miete jeden Monat als neue Ausgabe ein.",
       },
     },
-    aiAssistant: {
-      title: "KI-Assistent für deinen Haushalt | Flatsby",
-      description:
-        "Frag im Web in ganz normaler Sprache nach euren gemeinsamen Listen und Ausgaben. Bekomm Diagramme und Tabellen, oder lass Artikel und Ausgaben für dich hinzufügen.",
-      headline: "Frag deinen Haushalt, was du willst",
-      intro:
-        "Der Assistent liest die Einkaufslisten und Ausgaben deiner Gruppe und antwortet in ganz normaler Sprache, mit Diagrammen und Tabellen, wenn Zahlen helfen. Es gibt ihn in der Web-App, die Apps für iPhone und Android haben ihn noch nicht.",
-      questions: {
-        heading: "Was du fragen kannst",
-        groceries:
-          "Wie viel haben wir letzten Monat für Lebensmittel ausgegeben?",
-        paidMost: "Wer hat dieses Jahr am meisten bezahlt?",
-        addItems: "Setz Nudeln, Tomaten und Parmesan auf die Einkaufsliste.",
-        logExpense:
-          "Trag 45 Euro für Lebensmittel ein, von mir bezahlt, gleichmäßig geteilt.",
-      },
-      data: {
-        heading: "Deine Daten und die KI-Anbieter",
-        consent:
-          "Der Assistent fragt nach deiner Einwilligung, bevor er etwas sendet. Deine Nachrichten sowie die Listenartikel, Ausgaben und Mitgliedernamen, die eine Frage braucht, gehen über das Vercel AI Gateway an OpenAI oder Google, um die Antwort zu erzeugen.",
-        categories:
-          "Die automatischen Kategorien sind vom Assistenten getrennt: Wenn du einen Einkaufsartikel oder eine Ausgabe hinzufügst, geht ihr Name über dasselbe Gateway an ein Klassifizierungsmodell, damit Flatsby eine Kategorie vorschlagen kann. Beim Scannen eines Belegs geht das Foto oder PDF über dasselbe Gateway an OpenAI, damit es gelesen werden kann; Flatsby speichert es nicht.",
-        training:
-          "Deine E-Mail-Adresse und deine Anmeldedaten werden nicht an die KI-Anbieter gesendet. Daten, die für den Assistenten gesendet werden, dienen dazu, die Antwort zu erzeugen, nicht zum Training von Modellen. KI-Nutzungszahlen wie das Modell und die Anzahl der Tokens gehen ohne deine Nachrichten zur Analyse an PostHog.",
-      },
-      credits: {
-        heading: "Credits",
-        body: "Der Assistent, die automatischen Kategorien und das Scannen von Belegen nutzen Credits: {freeCredits, number} im Monat im kostenlosen Tarif, mehr mit Starter und Pro. Wenn die Credits aufgebraucht sind, bekommen neue Artikel bis zum nächsten Monat die Kategorie Sonstiges. Listen, Ausgaben und Ausgleichen brauchen nie Credits.",
-      },
-    },
     splitwise: {
       title: "Splitwise-Alternative für Mitbewohner | Flatsby",
       description:
@@ -355,9 +305,8 @@ export const marketing = {
         currency: "Währungsumrechnung",
         currencyFlatsby: "Nein, Kontostände pro Währung",
         receipts: "Belege scannen",
-        receiptsFlatsby: "Summe, Datum und Geschäft (verbraucht Credits)",
+        receiptsFlatsby: "Summe, Datum und Geschäft (Beta, kostenlos)",
         charts: "Ausgabendiagramme",
-        chartsFlatsby: "Über den KI-Assistenten (verbraucht Credits)",
         outside: "Ausgaben außerhalb einer Gruppe",
         platforms: "Plattformen",
         openSource: "Open Source",
@@ -463,7 +412,7 @@ export const marketing = {
       },
       free: {
         heading: "Was bei Flatsby kostenlos ist",
-        body: "Kostenlos sind: beliebig viele Einkaufslisten, der Putzplan mit Verlauf, der Kalender, Ausgaben und Ausgleichszahlungen und der Datenexport. Ohne Werbung und ohne Mitgliederbegrenzung. Bezahlpläne gibt es nur für zusätzliche KI-Credits, also für den KI-Assistenten, die automatische Sortierung in Kategorien und das Scannen von Belegen.",
+        body: "Kostenlos sind: beliebig viele Einkaufslisten, der Putzplan mit Verlauf, der Kalender, Ausgaben und Ausgleichszahlungen, automatische Kategorien, Belege scannen (Beta) und der Datenexport. Ohne Werbung und ohne Mitgliederbegrenzung. Es gibt nichts zu kaufen, und was heute kostenlos ist, bleibt kostenlos.",
       },
       rent: {
         heading: "Für Mieten, die nicht gleich verteilt sind",
@@ -475,7 +424,7 @@ export const marketing = {
       },
       data: {
         heading: "Deine Daten",
-        body: "Datenbank und Server stehen in Frankfurt, bei Cloud-Anbietern mit EU-Region, die Nutzungsstatistik kommt ohne Werbe-Tracking aus. Der KI-Assistent schickt Daten erst nach deiner Einwilligung an OpenAI oder Google. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Einen gescannten Beleg bekommt OpenAI als Foto oder PDF, Flatsby speichert ihn nicht. Du kannst alles exportieren oder dein Konto in den Einstellungen löschen, Details stehen in der Datenschutzerklärung. Der Code ist Open Source, und Flatsby wird von Raphael Mitas gebaut, einem unabhängigen Entwickler aus Darmstadt.",
+        body: "Datenbank und Server stehen in Frankfurt, bei Cloud-Anbietern mit EU-Region, die Nutzungsstatistik kommt ohne Werbe-Tracking aus. Für die automatische Kategorie geht nur der Name eines neuen Artikels oder einer Ausgabe an ein KI-Modell, und wählst du die Kategorie selbst, geht nichts raus. Einen gescannten Beleg bekommt OpenAI als Foto oder PDF, Flatsby speichert ihn nicht. Du kannst alles exportieren oder dein Konto in den Einstellungen löschen, Details stehen in der Datenschutzerklärung. Der Code ist Open Source, und Flatsby wird von Raphael Mitas gebaut, einem unabhängigen Entwickler aus Darmstadt.",
       },
       moving: {
         heading: "Von Flatastic zu Flatsby wechseln",
@@ -488,34 +437,39 @@ export const marketing = {
       },
     },
     pricing: {
-      title:
-        "Flatsby-Preise: kostenlos, mit den optionalen Tarifen Starter und Pro",
+      title: "Flatsby-Preise: kostenlos, ohne Werbung und ohne Bezahltarife",
       description:
-        "Einkaufslisten, Ausgaben, Ausgleichszahlungen und Gruppen sind kostenlos, ohne Mitgliederbegrenzung und ohne Werbung. Starter ({starterPrice, number, ::currency/USD}) und Pro ({proPrice, number, ::currency/USD}) bringen zusätzliche KI-Credits.",
-      headline: "Kostenlos für den ganzen Haushalt",
+        "Unbegrenzt viele Ausgaben, keine Werbung, kostenlos für die ganze WG. Listen, Ausgaben, Putzplan, Ausgleichen, Belege scannen und automatische Kategorien sind kostenlos, ohne Mitgliederbegrenzung. Zu kaufen gibt es nichts.",
+      headline: "Flatsby ist kostenlos, und das bleibt so",
       intro:
-        "Alles, was eine WG braucht, ist kostenlos: Einkaufslisten, Ausgaben, Ausgleichen und Gruppen, ohne Mitgliederbegrenzung und ohne Werbung. Du zahlst nur für zusätzliche KI-Credits.",
-      table: {
-        caption: "Tarife und monatliche KI-Credits",
-        core: "Einkaufslisten, Ausgaben und Ausgleichszahlungen",
-        members: "Mitglieder pro Haushalt",
-        ads: "Werbung",
-        credits: "KI-Credits pro Monat",
-        price: "Preis im Web",
+        "Unbegrenzt viele Ausgaben, keine Werbung, kostenlos für die ganze WG. Es gibt keine Bezahltarife und keine In-App-Käufe. Hier steht, was kostenlos ist, wo die eine Grenze liegt und was passiert, falls Flatsby je eingestellt wird.",
+      free: {
+        heading: "Was kostenlos ist",
+        lists: "Einkaufslisten, so viele ihr braucht",
+        expenses: "Ausgaben und Ausgleichen, ohne Tageslimit",
+        chores: "Der Putzplan und der Kalender",
+        receipts: "Belege scannen (Beta)",
+        categories: "Automatische Kategorien",
+        transfer: "Export deiner Daten und Import aus Splitwise",
+        body: "Keine Werbung und keine Mitgliederbegrenzung. Alles, was heute kostenlos ist, bleibt kostenlos. Sollte Flatsby je etwas kosten, dann nur etwas Neues, keine Funktion, die du schon nutzt.",
       },
-      credits: {
-        heading: "Wofür Credits da sind",
-        body: "Der KI-Assistent, die automatischen Kategorien und das Scannen von Belegen nutzen Credits. Wenn sie aufgebraucht sind, pausieren der Assistent und das Scannen, und neue Artikel bekommen bis zum nächsten Monat die Kategorie Sonstiges. Sonst verbraucht nichts in Flatsby Credits.",
+      fairUse: {
+        heading: "Ein Fair-Use-Limit für KI-Funktionen",
+        body: "Automatische Kategorien und Belege scannen schicken Daten an ein KI-Modell, und jede Anfrage kostet ein bisschen. Deshalb gibt es dafür ein monatliches Fair-Use-Limit, das weit über normaler Nutzung liegt. Erreichst du es, pausiert das Scannen von Belegen, und neue Artikel bekommen bis zum nächsten Monat die Kategorie Sonstiges. Eine Kategorie selbst wählen kannst du immer.",
       },
-      buy: {
-        heading: "Wo du kaufen kannst",
-        body: "Öffne im Web nach der Anmeldung die Abrechnung, um Starter oder Pro zu wählen. Die Android-App verlinkt auf diese Seite. Auf dem iPhone ist Pro ein In-App-Kauf für {proAppStorePrice, number, ::currency/USD} im Monat im US-App-Store.",
+      shutdown: {
+        heading: "Falls Flatsby je eingestellt wird",
+        body: "Du erfährst es 90 Tage vorher, per E-Mail und in der App. Jedes Mitglied kann dann die Ausgaben und Kontostände der Gruppe herunterladen.",
+      },
+      funding: {
+        heading: "Wie Flatsby bezahlt wird",
+        body: "Flatsby wird von einer Person in Darmstadt gebaut, und der Betrieb kostet etwa 10 Euro im Monat. Es gibt nichts zu kaufen. Wenn du etwas beisteuern möchtest, schreib an {email}.",
       },
     },
     faq: {
       title: "Flatsby-FAQ: gemeinsame Einkaufslisten und Kostenteilung",
       description:
-        "Antworten zu Flatsby: Preis, Android und iPhone, Miete nach Prozent teilen, Wechsel von Splitwise, Datenschutz und der KI-Assistent.",
+        "Antworten zu Flatsby: Preis, Android und iPhone, Miete nach Prozent teilen, Wechsel von Splitwise und Datenschutz.",
       headline: "Fragen zu Flatsby",
       intro:
         "Kurze Antworten auf das, was Leute fragen, bevor sie ihren Haushalt in Flatsby umziehen.",
@@ -528,9 +482,5 @@ export const marketing = {
     eggs: "Eier",
     groceries: "Lebensmittel",
     electricity: "Stromrechnung",
-    chatRequest: "Setz Milch und Brot auf die Einkaufsliste",
-    chatReply:
-      "Erledigt! Ich habe die Artikel auf deine Einkaufsliste gesetzt.",
-    chatPlaceholder: "Frag mich etwas...",
   },
 } satisfies Messages["marketing"];

@@ -12,7 +12,6 @@ export const marketing = {
     calendar: "Chore rota",
     expenses: "Expenses",
     expenseSplitting: "Expense splitting",
-    aiAssistant: "AI assistant",
     splitwiseAlternative: "Splitwise alternative",
     flatasticAlternative: "Flatastic alternative",
     pricing: "Pricing",
@@ -38,7 +37,7 @@ export const marketing = {
   },
   features: {
     heading: "Everything you need to run your household",
-    examples: "The lists, expenses and chat below are examples.",
+    examples: "The lists and expenses below are examples.",
     calendar: {
       title: "Chore rota and calendar",
       body: "Set up chores like cleaning the bathroom or taking out the bins once, and pick who takes turns in which order. Everyone sees when it's their turn, weeks ahead, and the history shows who did what. Events like the house meeting go in the same calendar.",
@@ -46,15 +45,11 @@ export const marketing = {
     },
     lists: {
       title: "Shared shopping lists",
-      body: "As many lists as you need, sorted by category like the shop. You pick the category yourself, or Flatsby suggests one with AI credits, part of which are free every month. Whoever shops ticks items off. The others see new items once the list reloads: when they open the app or pull the list down.",
+      body: "As many lists as you need, sorted by category like the shop. You pick the category yourself, or Flatsby suggests one. Whoever shops ticks items off. The others see new items once the list reloads: when they open the app or pull the list down.",
     },
     expenses: {
       title: "Expense splitting",
       body: "Log what you paid and split it equally, by percentage, by shares or by exact amounts, such as rent by room size or by income. No daily limit on expenses. Flatsby shows who owes whom and works out the fewest payments that settle everyone up. Coming from Splitwise, a CSV import brings your history along.",
-    },
-    assistant: {
-      title: "Extra: AI assistant on the web",
-      body: "Ask in plain language, for example how much you spent on groceries last month. It answers with charts and tables, can add items or expenses for you, asks for your consent first and is optional.",
     },
     groups: {
       title: "One household, every device",
@@ -83,7 +78,7 @@ export const marketing = {
     },
     about: {
       title: "Who makes Flatsby",
-      body: "Flatsby is built by Raphael Mitas, an independent developer in Darmstadt, Germany. The code is open source on GitHub, and releases ship to the web, the App Store and Google Play from the same repository.",
+      body: "Flatsby is built by Raphael Mitas, an independent developer in Darmstadt, Germany. The code is open source on GitHub, and releases ship to the web, the App Store and Google Play from the same repository. Running Flatsby costs about 10 euros a month.",
     },
   },
   facts: {
@@ -105,7 +100,7 @@ export const marketing = {
     price: {
       label: "Price",
       value:
-        "Free, without ads and without a member limit. Picking categories yourself is free. You only pay for extra AI credits, which the AI assistant, automatic categories and receipt scanning use. A monthly allowance is free.",
+        "Free, without ads, without a member limit and with nothing to buy. What's free today stays free, receipt scan (beta) and automatic categories included. AI features have a monthly fair-use limit far above normal use.",
     },
     signIn: { label: "Sign in", value: "Google or Apple account." },
     splitting: {
@@ -122,7 +117,7 @@ export const marketing = {
     data: {
       label: "Your data",
       value:
-        "Database and servers in Frankfurt, with cloud providers in their EU region, and usage analytics without ad tracking. The AI assistant only sends data to OpenAI or Google after you consent. For automatic categories, only the name of a new item or expense goes to an AI model, and if you pick the category yourself, nothing is sent. A receipt you scan goes to OpenAI as a photo or PDF, and Flatsby doesn't store it. Export everything or delete your account in settings at any time, details in the privacy policy.",
+        "Database and servers in Frankfurt, with cloud providers in their EU region, and usage analytics without ad tracking. For automatic categories, only the name of a new item or expense goes to an AI model, and if you pick the category yourself, nothing is sent. A receipt you scan goes to OpenAI as a photo or PDF, and Flatsby doesn't store it. Export everything or delete your account in settings at any time, details in the privacy policy.",
     },
     source: {
       label: "Source code",
@@ -135,7 +130,7 @@ export const marketing = {
     free: {
       question: "Is Flatsby really free and ad-free?",
       answer:
-        "Yes. The chore rota, shopping lists, expenses, settlements and groups are free, without ads and with no member limit. Flatsby only makes money from optional AI credits. The AI assistant, automatic categories and receipt scanning use credits: {freeCredits, number} a month for free, {starterCredits, number} on Starter ({starterPrice, number, ::currency/USD} a month) and {proCredits, number} on Pro ({proPrice, number, ::currency/USD} a month on the web). On iPhone, Pro is {proAppStorePrice, number, ::currency/USD} a month in the US App Store.",
+        "Yes. The chore rota, shopping lists, expenses, settling up, receipt scan (beta), automatic categories, export and import are free, without ads and with no member limit, and they stay free. There are no paid plans and nothing to buy. AI features have a monthly fair-use limit far above normal use. If Flatsby ever charges for something, it will be something new, not a feature you already use.",
     },
     android: {
       question: "Does Flatsby work on Android?",
@@ -165,22 +160,17 @@ export const marketing = {
     web: {
       question: "Is the web app the same as the phone apps?",
       answer:
-        "Almost. Lists, expenses, settlements and group settings work on the web, iPhone and Android. The AI assistant is web only for now.",
+        "Yes. Lists, expenses, settlements and group settings work on the web, iPhone and Android.",
     },
     realtime: {
       question: "Do shopping lists update in real time?",
       answer:
         "Not instantly. Everyone shares the same lists, and a flatmate's changes show up when you open the list again, come back to the app or tab, or pull the list down in the app.",
     },
-    assistant: {
-      question: "What does the AI assistant do?",
-      answer:
-        "In the web app, you ask about your household in plain language. It reads your lists and expenses, answers with charts and tables, and can add items or expenses for you.",
-    },
     privacy: {
       question: "Who can see my household's data?",
       answer:
-        "Inside Flatsby, only members of your group. The hosting, analytics and AI providers listed in the privacy policy process it to run the app. Three features send data through the Vercel AI Gateway. The AI assistant asks for consent first, uses OpenAI or Google models, and its data is not used to train them. Automatic categories send the names of shopping items and expenses to a classification model. Scanning a receipt sends its photo or PDF to an OpenAI model to read the amount, date and store, and Flatsby doesn't keep it. You can export all of your data or delete your account from your settings.",
+        "Inside Flatsby, only members of your group. The hosting, analytics and AI providers listed in the privacy policy process it to run the app. Two features send data through the Vercel AI Gateway to OpenAI or Google models. Automatic categories send the names of shopping items and expenses to a classification model. Scanning a receipt sends its photo or PDF to an OpenAI model to read the amount, date and store, and Flatsby doesn't keep it. You can export all of your data or delete your account from your settings.",
     },
     chores: {
       question: "Can Flatsby run a chore rota?",
@@ -212,7 +202,6 @@ export const marketing = {
     webHome: "Flatsby home screen on the web",
     webLists: "A shared grocery list in the Flatsby web app",
     webExpenses: "List of shared expenses with who paid and how it was split",
-    webChat: "The AI assistant answering a spending question with a chart",
     iosList: "A shared shopping list on iPhone",
     iosSplit: "Splitting an expense between flatmates on iPhone",
     iosCalendar:
@@ -223,16 +212,8 @@ export const marketing = {
     yes: "Yes",
     no: "No",
     none: "None",
-    noLimit: "No limit",
     pro: "Pro",
     platforms: "Web, iPhone, Android",
-  },
-  plans: {
-    free: "Free",
-    starter: "Starter",
-    pro: "Pro",
-    credits: "{credits, number}",
-    perMonth: "{price, number, ::currency/USD} a month",
   },
   pages: {
     shoppingLists: {
@@ -247,7 +228,7 @@ export const marketing = {
         lists:
           "Create as many lists as your household needs, for example one for groceries and one for the hardware store. Anyone in the group can add, edit or tick off items.",
         categories:
-          "Each item has a category such as produce, dairy or bakery, so the list sorts itself the way a shop is laid out. When you add an item, Flatsby can suggest the category by sending the item name to a classification model, and you can change it. This uses AI credits.",
+          "Each item has a category such as produce, dairy or bakery, so the list sorts itself the way a shop is laid out. When you add an item, Flatsby can suggest the category by sending the item name to a classification model, and you can change it.",
       },
       devices: {
         heading: "The same list on every device",
@@ -292,34 +273,6 @@ export const marketing = {
         body: "There are no recurring expenses yet. Add rent as a new expense each month.",
       },
     },
-    aiAssistant: {
-      title: "AI assistant for your household | Flatsby",
-      description:
-        "Ask about your shared lists and expenses in plain language on the web. Get charts and tables, or have it add items and expenses for you.",
-      headline: "Ask your household anything",
-      intro:
-        "The assistant reads your group's shopping lists and expenses and answers in plain language, with charts and tables when numbers help. It is in the web app; the iPhone and Android apps don't have it yet.",
-      questions: {
-        heading: "What you can ask",
-        groceries: "How much did we spend on groceries last month?",
-        paidMost: "Who has paid the most this year?",
-        addItems: "Add pasta, tomatoes and parmesan to the shopping list.",
-        logExpense: "Log 45 euros for groceries, paid by me, split equally.",
-      },
-      data: {
-        heading: "Your data and the AI providers",
-        consent:
-          "The assistant asks for your consent before it sends anything. Your messages, and the list items, expenses and member names a question needs, go to OpenAI or Google through the Vercel AI Gateway to generate the answer.",
-        categories:
-          "Automatic categories are separate from the assistant: when you add a shopping item or an expense, its name goes through the same gateway to a classification model so Flatsby can suggest a category. Scanning a receipt sends the photo or PDF through the same gateway to OpenAI to read it; Flatsby doesn't store it.",
-        training:
-          "Your email address and sign-in details are not sent to the AI providers. Data sent for the assistant is used to generate the answer, not to train models. AI usage numbers such as the model and token counts, without your messages, go to PostHog for analytics.",
-      },
-      credits: {
-        heading: "Credits",
-        body: "The assistant, automatic categories and receipt scanning use credits: {freeCredits, number} a month on the free plan, more on Starter and Pro. When credits run out, new items get the category Other until the next month. Lists, expenses and settling up never need credits.",
-      },
-    },
     splitwise: {
       title: "Splitwise alternative for flatmates | Flatsby",
       description:
@@ -341,9 +294,8 @@ export const marketing = {
         currency: "Currency conversion",
         currencyFlatsby: "No, balances per currency",
         receipts: "Receipt scanning",
-        receiptsFlatsby: "Total, date and store (uses credits)",
+        receiptsFlatsby: "Total, date and store (beta, free)",
         charts: "Spending charts",
-        chartsFlatsby: "Through the AI assistant (uses credits)",
         outside: "Expenses outside a group",
         platforms: "Platforms",
         openSource: "Open source",
@@ -450,7 +402,7 @@ export const marketing = {
       },
       free: {
         heading: "What's free in Flatsby",
-        body: "Free: unlimited shopping lists, the chore rota with history, the calendar, expenses and settlements, and the data export. Without ads and with no member limit. Paid plans only add AI credits, for the AI assistant, automatic sorting into categories and receipt scanning.",
+        body: "Free: unlimited shopping lists, the chore rota with history, the calendar, expenses and settlements, automatic categories, receipt scan (beta) and the data export. Without ads and with no member limit. There is nothing to buy, and what's free today stays free.",
       },
       rent: {
         heading: "For rent that isn't split evenly",
@@ -462,7 +414,7 @@ export const marketing = {
       },
       data: {
         heading: "Your data",
-        body: "Database and servers are in Frankfurt, with cloud providers in their EU region, and usage analytics work without ad tracking. The AI assistant only sends data to OpenAI or Google after you consent. For automatic categories, only the name of a new item or expense goes to an AI model, and if you pick the category yourself, nothing is sent. A receipt you scan goes to OpenAI as a photo or PDF, and Flatsby doesn't store it. You can export everything or delete your account in settings, with details in the privacy policy. The code is open source, and Flatsby is built by Raphael Mitas, an independent developer in Darmstadt.",
+        body: "Database and servers are in Frankfurt, with cloud providers in their EU region, and usage analytics work without ad tracking. For automatic categories, only the name of a new item or expense goes to an AI model, and if you pick the category yourself, nothing is sent. A receipt you scan goes to OpenAI as a photo or PDF, and Flatsby doesn't store it. You can export everything or delete your account in settings, with details in the privacy policy. The code is open source, and Flatsby is built by Raphael Mitas, an independent developer in Darmstadt.",
       },
       moving: {
         heading: "Switching from Flatastic to Flatsby",
@@ -474,33 +426,39 @@ export const marketing = {
       },
     },
     pricing: {
-      title: "Flatsby pricing: free, with optional Starter and Pro plans",
+      title: "Flatsby pricing: free, without ads or paid plans",
       description:
-        "Shopping lists, expenses, settlements and groups are free with no member limit and no ads. Starter ({starterPrice, number, ::currency/USD}) and Pro ({proPrice, number, ::currency/USD}) add AI credits.",
-      headline: "Free for the whole household",
+        "Unlimited expenses, no ads, free for the whole flat. Lists, expenses, chores, settling up, receipt scan and automatic categories are free, with no member limit and nothing to buy.",
+      headline: "Flatsby is free, and it stays that way",
       intro:
-        "Everything a shared flat needs is free: shopping lists, expenses, settling up and groups, with no member limit and no ads. You only pay for more AI credits.",
-      table: {
-        caption: "Plans and monthly AI credits",
-        core: "Shopping lists, expenses and settlements",
-        members: "Members per household",
-        ads: "Ads",
-        credits: "AI credits per month",
-        price: "Price on the web",
+        "Unlimited expenses, no ads, free for the whole flat. There are no paid plans and no in-app purchases. Here's what's free, where the one limit is and what happens if Flatsby ever shuts down.",
+      free: {
+        heading: "What's free",
+        lists: "Shopping lists, as many as you need",
+        expenses: "Expenses and settling up, with no daily limit",
+        chores: "The chore rota and the calendar",
+        receipts: "Receipt scan (beta)",
+        categories: "Automatic categories",
+        transfer: "Exporting your data and importing from Splitwise",
+        body: "No ads and no member limit. Everything that's free today stays free. If Flatsby ever charges for something, it will be something new, not a feature you already use.",
       },
-      credits: {
-        heading: "What credits are for",
-        body: "The AI assistant, automatic categories and receipt scanning use credits. When they run out, the assistant and receipt scanning pause, and new items get the category Other until the next month. Nothing else in Flatsby uses credits.",
+      fairUse: {
+        heading: "A fair-use limit on AI features",
+        body: "Automatic categories and receipt scan send data to an AI model, and every request costs a little. So they have a monthly fair-use limit, set far above normal use. If you reach it, receipt scan pauses and new items get the category Other until the next month. Picking a category yourself always works.",
       },
-      buy: {
-        heading: "Where to buy",
-        body: "On the web, open Billing after you sign in to choose Starter or Pro. The Android app links to that page. On iPhone, Pro is an in-app purchase at {proAppStorePrice, number, ::currency/USD} a month in the US App Store.",
+      shutdown: {
+        heading: "If Flatsby ever shuts down",
+        body: "You'll hear about it 90 days ahead, by email and in the app. Every member will be able to download the group's expenses and balances.",
+      },
+      funding: {
+        heading: "How Flatsby is paid for",
+        body: "Flatsby is built by one person in Darmstadt and costs about 10 euros a month to run. There's nothing to buy. If you'd like to chip in, write to {email}.",
       },
     },
     faq: {
       title: "Flatsby FAQ: shared shopping lists and bill splitting",
       description:
-        "Answers about Flatsby: price, Android and iPhone, splitting rent by percentage, moving from Splitwise, privacy and the AI assistant.",
+        "Answers about Flatsby: price, Android and iPhone, splitting rent by percentage, moving from Splitwise and privacy.",
       headline: "Questions about Flatsby",
       intro:
         "Short answers to what people ask before they move their household into Flatsby.",
@@ -513,8 +471,5 @@ export const marketing = {
     eggs: "Eggs",
     groceries: "Groceries",
     electricity: "Electricity Bill",
-    chatRequest: "Add milk and bread to the shopping list",
-    chatReply: "Done! I've added those items to your shopping list.",
-    chatPlaceholder: "Ask me anything...",
   },
 };

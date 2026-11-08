@@ -1,8 +1,6 @@
 import type { Messages } from "../../messages";
 
 export const errors = {
-  aiConsentRequired:
-    "Bitte stimme der Datenweitergabe an die KI zu, bevor du den Assistenten nutzt.",
   notFound: {
     invite:
       "Diese Einladung ist abgelaufen. Bitte jemanden in der Gruppe um eine neue.",
@@ -67,22 +65,14 @@ export const errors = {
     "Dein PayPal.me-Name konnte gerade nicht gespeichert werden. Bitte versuch es noch einmal.",
   updateConsentFailed:
     "Deine Einwilligung konnte gerade nicht gespeichert werden. Bitte versuch es noch einmal.",
-  updateAiConsentFailed:
-    "Deine KI-Einwilligung konnte gerade nicht gespeichert werden. Bitte versuch es noch einmal.",
   updateAnalyticsFailed:
     "Deine Analyse-Einstellungen konnten gerade nicht gespeichert werden. Bitte versuch es noch einmal.",
   exportDataFailed:
     "Deine Daten konnten gerade nicht exportiert werden. Bitte versuch es noch einmal.",
-  conversationNotFound: "Unterhaltung nicht gefunden",
-  createConversationFailed: "Unterhaltung konnte nicht erstellt werden",
-  createAssistantMessageFailed: "Antwort konnte nicht erstellt werden",
-  messageNotFound: "Nachricht nicht gefunden",
-  messageNotInConversation: "Nachricht in dieser Unterhaltung nicht gefunden",
-  notAuthorized: "Keine Berechtigung",
   outOfCredits:
-    "Deine Credits sind aufgebraucht. Wechsle auf einen größeren Tarif, um weiterzumachen.",
-  creditCheckFailed: "Deine Credits konnten nicht geprüft werden",
-  streamFailed: "Die Antwort konnte nicht geladen werden",
+    "Du hast die Belegscans für diesen Monat aufgebraucht. Am 1. sind sie wieder da.",
+  creditCheckFailed:
+    "Belegscan ist gerade nicht verfügbar. Bitte versuch es noch einmal.",
   groupAccessDenied: "Gruppe nicht gefunden oder kein Zugriff",
   groupNotFound: "Gruppe nicht gefunden",
   shoppingListNotFound: "Einkaufsliste nicht gefunden",

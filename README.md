@@ -67,16 +67,6 @@ everyone sees who did it.
   <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/01a-calendar.png" alt="Calendar on iOS" width="200">
 </p>
 
-## AI assistant
-
-Ask about your household in plain language. The assistant reads your lists
-and expenses, answers with charts and tables, and can add items or expenses
-for you.
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-chat.png" alt="AI chat with spending chart on web" width="760">
-</p>
-
 ## Groups
 
 A group is your household. Invite flatmates with a link, QR code or short code,
@@ -105,7 +95,6 @@ apps/nextjs      Next.js web app, and the tRPC API
 packages/api     tRPC routers, procedures, group access helpers
 packages/auth    Better Auth config, shared by both clients
 packages/db      Drizzle schema and migrations
-packages/chat    AI chat feature
 packages/ui      Shared web components, shadcn based
 packages/validators  Shared Zod schemas
 tooling/         Shared configs and the GitHub Actions setup

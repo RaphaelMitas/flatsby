@@ -107,20 +107,6 @@
   transform: none;
 }
 
-.rs-zee {
-  position: absolute;
-  font-weight: 700;
-  color: var(--muted-foreground);
-  opacity: 0;
-  animation: rs-zee 2.4s ease-in infinite;
-}
-.rs-zee:nth-of-type(2) {
-  animation-delay: 0.8s;
-}
-.rs-zee:nth-of-type(3) {
-  animation-delay: 1.6s;
-}
-
 @keyframes rs-walk {
   0.0% {
     transform: translate(
@@ -261,16 +247,6 @@
   }
 }
 
-@keyframes rs-zee {
-  20% {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-    transform: translate(0.6em, -1.6em);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .rs-tag {
     animation: rs-fade 0.2s;
@@ -279,8 +255,7 @@
   .rs-mark,
   .rs-nod,
   .rs-cat .fc-pupil,
-  .rs-stage[data-phase="failing"] .rs-cat > *,
-  .rs-zee {
+  .rs-stage[data-phase="failing"] .rs-cat > * {
     animation: none;
   }
   .rs-lens {

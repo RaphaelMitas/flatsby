@@ -1,11 +1,11 @@
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, eq, inArray, isNotNull, isNull, ne, or } from "@flatsby/db";
+import { and, eq, inArray, isNotNull, ne, or } from "@flatsby/db";
 import {
   accounts,
   analyticsConsents,
-  conversations,
+  creditBalances,
   expenses,
   expenseSplits,
   groupMembers,
@@ -15,50 +15,35 @@ import {
   users,
   verificationTokens,
 } from "@flatsby/db/schema";
-import { requiresAIConsent } from "@flatsby/validators/ai-consent";
 import {
-  getCurrentSubscription,
-  PLAN_IDS,
   subscriptionDataSchema,
   usageDataSchema,
 } from "@flatsby/validators/billing";
 import { groupSchema } from "@flatsby/validators/group";
-import { chatModelSchema } from "@flatsby/validators/models";
 import { paypalHandleInputSchema } from "@flatsby/validators/payment";
 import { shoppingListSchema } from "@flatsby/validators/shopping-list";
 import {
   logAnalyticsConsentInputSchema,
   setAnalyticsOptOutInputSchema,
-  updateAIConsentInputSchema,
   updateConsentInputSchema,
   updateUserNameFormSchema,
   userDataExportSchema,
   userSchema,
 } from "@flatsby/validators/user";
 
-import { run, runResult } from "../effect/runtime";
+import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
-import { report } from "../effect/toApiResult";
 import { Errors, getApiResultZod } from "../errors";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { GroupUtils, memberName } from "../utils";
-import { autumn, checkCredits } from "../utils/autumn";
+import { getCreditUsage } from "../utils/credits";
 
-const freePlan = {
-  planId: PLAN_IDS.FREE,
-  // i18n-ignore: plan names are Autumn product names like "Pro", not copy
+// Released iOS builds open the paywall for "free"; any other id sends them to a harmless screen
+const includedPlan = {
+  planId: "included",
+  // i18n-ignore
   planName: "Free",
 };
-
-const autumnOr = <A, B>(
-  operation: string,
-  request: () => Promise<A>,
-  fallback: B,
-) =>
-  Effect.tryPromise({
-    try: request,
-    catch: (cause) => Errors.externalService("autumn", operation, cause),
-  }).pipe(Effect.catch((error) => Effect.as(report(error), fallback)));
 
 export const userRouter = createTRPCRouter({
   getCurrentUser: protectedProcedure.query(({ ctx }) => {
@@ -66,49 +51,17 @@ export const userRouter = createTRPCRouter({
     return user;
   }),
 
-  getUsage: protectedProcedure.output(usageDataSchema).query(async ({ ctx }) =>
-    run(
-      ctx,
-      autumnOr(
-        "check credits",
-        async () => {
-          const result = await checkCredits(ctx.session.user);
-          return {
-            credits: {
-              balance: result.balance?.remaining ?? 0,
-              usage: result.balance?.usage ?? 0,
-            },
-          };
-        },
-        { credits: null },
-      ),
-    ),
-  ),
+  getUsage: protectedProcedure
+    .output(usageDataSchema)
+    .query(async ({ ctx }) => {
+      const { balance, usage } = await getCreditUsage(ctx.session.user.id);
+      // Released builds show a bundled upgrade card at 0; a capped scan still fails with the server's message
+      return { credits: { balance: Math.max(balance, 1), usage } };
+    }),
 
   getSubscription: protectedProcedure
     .output(subscriptionDataSchema)
-    .query(async ({ ctx }) =>
-      run(
-        ctx,
-        autumnOr(
-          "get customer",
-          async () => {
-            const customer = await autumn.customers.getOrCreate({
-              customerId: ctx.session.user.id,
-              name: ctx.session.user.name,
-              email: ctx.session.user.email,
-              expand: ["subscriptions.plan"],
-            });
-            const activeSub = getCurrentSubscription(customer.subscriptions);
-            return {
-              planId: activeSub?.planId ?? freePlan.planId,
-              planName: activeSub?.plan?.name ?? freePlan.planName,
-            };
-          },
-          freePlan,
-        ),
-      ),
-    ),
+    .query(() => includedPlan),
 
   getCurrentUserWithGroups: protectedProcedure
     .output(
@@ -174,9 +127,6 @@ export const userRouter = createTRPCRouter({
                     activeGroupIds.has(user.lastShoppingListUsed.groupId)
                       ? user.lastShoppingListUsed
                       : null,
-                  lastChatModelUsed: chatModelSchema.safeParse(
-                    user.lastChatModelUsed,
-                  ).data,
                 }
               : undefined,
             groups: groups.map((g) => g.group),
@@ -408,61 +358,6 @@ export const userRouter = createTRPCRouter({
       ),
     ),
 
-  getAIConsentStatus: protectedProcedure
-    .output(
-      z.object({
-        hasConsent: z.boolean(),
-        aiConsentAcceptedAt: z.date().nullable(),
-        aiConsentVersion: z.string().nullable(),
-      }),
-    )
-    .query(async ({ ctx }) => {
-      const user = await ctx.db.query.users.findFirst({
-        where: eq(users.id, ctx.session.user.id),
-        columns: {
-          aiConsentAcceptedAt: true,
-          aiConsentVersion: true,
-        },
-      });
-
-      const hasConsent = !!user && !requiresAIConsent(user);
-
-      return {
-        hasConsent,
-        aiConsentAcceptedAt: user?.aiConsentAcceptedAt ?? null,
-        aiConsentVersion: user?.aiConsentVersion ?? null,
-      };
-    }),
-
-  updateAIConsent: protectedProcedure
-    .input(updateAIConsentInputSchema)
-    .output(getApiResultZod(z.object({ success: z.boolean() })))
-    .mutation(async ({ ctx, input }) =>
-      runResult(
-        ctx,
-        Effect.gen(function* () {
-          const database = yield* Database;
-          return yield* database.query(
-            "update AI consent",
-            async (db) => {
-              if (input.accepted) {
-                await db
-                  .update(users)
-                  .set({
-                    aiConsentAcceptedAt: new Date(),
-                    aiConsentVersion: input.version,
-                  })
-                  .where(eq(users.id, ctx.session.user.id));
-              }
-
-              return { success: true };
-            },
-            { messageKey: "errors.updateAiConsentFailed", table: "users" },
-          );
-        }),
-      ),
-    ),
-
   setAnalyticsOptOut: protectedProcedure
     .input(setAnalyticsOptOutInputSchema)
     .output(getApiResultZod(z.object({ success: z.boolean() })))
@@ -535,8 +430,6 @@ export const userRouter = createTRPCRouter({
                   termsVersion: true,
                   privacyAcceptedAt: true,
                   privacyVersion: true,
-                  aiConsentAcceptedAt: true,
-                  aiConsentVersion: true,
                   analyticsOptOut: true,
                   paypalHandle: true,
                 },
@@ -567,6 +460,11 @@ export const userRouter = createTRPCRouter({
                     createdAt: true,
                   },
                 });
+
+              const aiUsage = await db.query.creditBalances.findMany({
+                where: eq(creditBalances.userId, userId),
+                columns: { monthStart: true, used: true },
+              });
 
               const userSessions = await db.query.sessions.findMany({
                 where: eq(sessions.userId, userId),
@@ -683,35 +581,13 @@ export const userRouter = createTRPCRouter({
                     })
                   : [];
 
-              const userConversations = await db.query.conversations.findMany({
-                where: and(
-                  eq(conversations.userId, userId),
-                  isNull(conversations.deletedAt),
-                ),
-                columns: {
-                  id: true,
-                  title: true,
-                  systemPrompt: true,
-                  createdAt: true,
-                },
-                with: {
-                  messages: {
-                    columns: {
-                      role: true,
-                      content: true,
-                      createdAt: true,
-                    },
-                    orderBy: (message, { asc }) => [asc(message.createdAt)],
-                  },
-                },
-              });
-
               return {
                 exportedAt: new Date(),
                 user,
                 signInMethods,
                 passkeys: userPasskeys,
                 analyticsConsents: analyticsConsentLog,
+                aiUsage,
                 sessions: userSessions,
                 groups: userGroups.map((g) => ({
                   id: g.group.id,
@@ -735,7 +611,6 @@ export const userRouter = createTRPCRouter({
                   ...expense,
                   splits: expenseSplits,
                 })),
-                conversations: userConversations,
               };
             },
             { messageKey: "errors.exportDataFailed", table: "users" },

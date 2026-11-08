@@ -49,6 +49,15 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
     return NextResponse.redirect(store.url, 302);
   }
 
+  // The assistant page is gone, but old links and search results still point there
+  const retiredIn = locales.find(
+    (locale) => pathname === localePath(locale, "/features/ai-assistant"),
+  );
+  if (retiredIn) {
+    url.pathname = localePath(retiredIn, "/");
+    return NextResponse.redirect(url, 308);
+  }
+
   if (startsWithSegment(pathname, prefix)) {
     url.pathname = pathname.slice(prefix.length) || "/";
     return NextResponse.redirect(url, 308);

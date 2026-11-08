@@ -103,7 +103,6 @@ apps/nextjs      Next.js web app, and the tRPC API
 packages/api     tRPC routers, procedures, group access helpers
 packages/auth    Better Auth config, shared by both clients
 packages/db      Drizzle schema and migrations
-packages/chat    AI chat feature
 packages/ui      Shared web components, shadcn based
 packages/validators  Shared Zod schemas
 tooling/         Shared configs, and the composite GitHub Actions setup

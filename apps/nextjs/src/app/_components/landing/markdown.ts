@@ -9,7 +9,6 @@ import {
   GITHUB_URL,
   HOME_FAQ,
   LEGAL_PAGES,
-  PLANS,
   SECTIONS,
   SITE_URL,
   STEPS,
@@ -24,7 +23,7 @@ const t = marketingTranslator("en");
 export const englishContentPages = contentPages(t);
 
 const facts = FACTS.map(
-  (fact) => `- ${t(`facts.${fact}.label`)}: ${t(`facts.${fact}.value`, PLANS)}`,
+  (fact) => `- ${t(`facts.${fact}.label`)}: ${t(`facts.${fact}.value`)}`,
 ).join("\n");
 
 const legalLinks = LEGAL_PAGES.map(

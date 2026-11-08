@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { AutumnProvider } from "autumn-js/react";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
@@ -66,11 +65,7 @@ export function RootShell(props: { lang: string; children: React.ReactNode }) {
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <TRPCReactProvider>
-            <AutumnProvider pathPrefix="/api/autumn" includeCredentials>
-              {props.children}
-            </AutumnProvider>
-          </TRPCReactProvider>
+          <TRPCReactProvider>{props.children}</TRPCReactProvider>
           <Toaster />
         </ThemeProvider>
       </body>

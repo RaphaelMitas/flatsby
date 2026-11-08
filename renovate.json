@@ -134,11 +134,6 @@
       "enabled": false
     },
     {
-      "description": "Group RevenueCat",
-      "groupName": "revenuecat",
-      "matchPackageNames": ["/^react-native-purchases/"]
-    },
-    {
       "description": "Bundle every minor/patch/digest bump into a single PR. Must come after the per-library groups above so they only apply to majors",
       "groupName": "all non-major dependencies",
       "groupSlug": "all-minor-patch",

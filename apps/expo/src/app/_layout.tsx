@@ -33,7 +33,6 @@ import { ThemeProvider } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { IntlProvider } from "~/utils/intl-provider";
-import { RevenueCatProvider } from "~/utils/revenuecat/revenuecat-provider";
 import {
   ShoppingStoreProvider,
   useShoppingStore,
@@ -64,12 +63,10 @@ export default function RootLayout() {
                     void queryClient.resumePausedMutations();
                   }}
                 >
-                  <RevenueCatProvider>
-                    <ShoppingStoreProvider>
-                      <StackLayout />
-                      <StatusBar />
-                    </ShoppingStoreProvider>
-                  </RevenueCatProvider>
+                  <ShoppingStoreProvider>
+                    <StackLayout />
+                    <StatusBar />
+                  </ShoppingStoreProvider>
                 </PersistQueryClientProvider>
               </ThemeProvider>
             </SafeAreaProvider>

@@ -10,10 +10,9 @@ runs:
     # variable, so this is what keeps an ambient DATABASE_URL from taking the
     # schema push somewhere real, and turbo hashes the environment rather than
     # the file (E2E_TESTING and the auth base URL both change the build).
-    # The OAuth credentials are never exercised — no flow signs in through a
-    # provider — but better-auth rejects an undefined clientId at init. No
-    # Autumn key by design: every AI procedure checks credits first, so the
-    # check failing is what keeps the suite from ever calling a model.
+    # The OAuth credentials are never exercised (no flow signs in through a
+    # provider), but better-auth rejects an undefined clientId at init. No AI
+    # key by design; E2E_TESTING denies every credit check.
     - name: Write the stack's configuration
       shell: bash
       run: |

@@ -35,7 +35,7 @@ import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/valida
 
 import type { ApiError } from "../errors";
 import type { Database as DbClient } from "../types";
-import type { CreditUser } from "../utils/autumn";
+import type { CreditUser } from "../utils/credits";
 import { getExpenseWithAccess } from "../effect/expenses";
 import {
   getGroupWithAccess,
@@ -284,7 +284,7 @@ export const expenseRouter = createTRPCRouter({
                 return { ...expense, splits };
               }),
           );
-          // Chat and app builds before conversion never send the field, so they'd all count as kept
+          // App builds before conversion never send the field, so they'd all count as kept
           if (
             input.currency !== group.currency &&
             input.convertedCurrency !== undefined &&

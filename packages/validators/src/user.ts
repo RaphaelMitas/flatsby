@@ -2,8 +2,6 @@ import { z } from "zod/v4";
 
 import { msg } from "@flatsby/i18n/message-key";
 
-import { chatModelSchema } from "./models";
-
 export const MAX_CONSENT_VERSION_LENGTH = 20;
 
 export const userNameSchema = z
@@ -61,15 +59,11 @@ export const userSchema = z.object({
   updatedAt: z.date(),
   lastGroupUsed: z.number().optional().nullable(),
   lastShoppingListUsed: z.number().optional().nullable(),
-  lastChatModelUsed: chatModelSchema.optional(),
-  lastToolsEnabled: z.boolean().optional().nullable(),
   // Legal consent tracking
   termsAcceptedAt: z.date().optional().nullable(),
   termsVersion: z.string().optional().nullable(),
   privacyAcceptedAt: z.date().optional().nullable(),
   privacyVersion: z.string().optional().nullable(),
-  aiConsentAcceptedAt: z.date().optional().nullable(),
-  aiConsentVersion: z.string().optional().nullable(),
   analyticsOptOut: z.boolean().optional(),
 });
 export type User = z.infer<typeof userSchema>;
@@ -91,16 +85,6 @@ export const updateConsentInputSchema = z.object({
   version: z.string().max(MAX_CONSENT_VERSION_LENGTH),
 });
 export type UpdateConsentInput = z.infer<typeof updateConsentInputSchema>;
-
-/**
- * Schema for updating AI consent
- * Used when user accepts AI data sharing terms
- */
-export const updateAIConsentInputSchema = z.object({
-  accepted: z.boolean(),
-  version: z.string().max(MAX_CONSENT_VERSION_LENGTH),
-});
-export type UpdateAIConsentInput = z.infer<typeof updateAIConsentInputSchema>;
 
 /** Bump when the consent sheet's wording changes, so the log shows which text a choice was made on */
 export const ANALYTICS_CONSENT_VERSION = "2";
@@ -131,11 +115,10 @@ export const userDataExportSchema = z.object({
     termsVersion: z.string().nullable(),
     privacyAcceptedAt: z.date().nullable(),
     privacyVersion: z.string().nullable(),
-    aiConsentAcceptedAt: z.date().nullable(),
-    aiConsentVersion: z.string().nullable(),
     analyticsOptOut: z.boolean(),
     paypalHandle: z.string().nullable(),
   }),
+  aiUsage: z.array(z.object({ monthStart: z.string(), used: z.number() })),
   signInMethods: z.array(
     z.object({
       providerId: z.string(),
@@ -220,21 +203,6 @@ export const userDataExportSchema = z.object({
           amountInCents: z.number(),
           percentage: z.number().nullable(),
           shares: z.number().nullable(),
-        }),
-      ),
-    }),
-  ),
-  conversations: z.array(
-    z.object({
-      id: z.string(),
-      title: z.string().nullable(),
-      systemPrompt: z.string().nullable(),
-      createdAt: z.date(),
-      messages: z.array(
-        z.object({
-          role: z.string(),
-          content: z.string(),
-          createdAt: z.date(),
         }),
       ),
     }),

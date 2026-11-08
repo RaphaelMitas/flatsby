@@ -32,8 +32,6 @@ export const groupSchema = z.object({
 export const groupFormSchema = groupSchema.pick({ name: true });
 export type GroupFormValues = z.infer<typeof groupFormSchema>;
 
-export const updateGroupSchema = groupSchema.pick({ name: true, id: true });
-
 export const updateGroupSettingsSchema = groupSchema
   .pick({ name: true, currency: true, convertAutomatically: true })
   .partial()

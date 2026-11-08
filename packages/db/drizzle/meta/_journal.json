@@ -99,6 +99,13 @@
       "when": 1793409203798,
       "tag": "0013_auth_rate_limits_and_passkeys",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794088819582,
+      "tag": "0014_credit_balance",
+      "breakpoints": true
     }
   ]
 }

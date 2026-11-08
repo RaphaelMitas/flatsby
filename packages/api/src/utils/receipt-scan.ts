@@ -7,9 +7,9 @@ import { Effect } from "effect";
 import { receiptScanFrom } from "@flatsby/validators/expenses/receipt-scan";
 
 import type { ApiError } from "../errors";
-import type { CreditUser } from "./autumn";
+import type { CreditUser } from "./credits";
 import { Errors, ExternalServiceError, fail } from "../errors";
-import { chargeAIUsage, checkCredits } from "./autumn";
+import { chargeAIUsage, checkCredits } from "./credits";
 import { errorSummary, readReceipt } from "./model-provider";
 
 export type ReceiptScanner = (
@@ -24,7 +24,7 @@ export const scanReceipt: ReceiptScanner = (user, file) =>
       catch: (cause) =>
         new ExternalServiceError({
           messageKey: "errors.creditCheckFailed",
-          service: "autumn",
+          service: "credits",
           operation: "check credits",
           cause,
         }),
@@ -52,7 +52,7 @@ export const scanReceipt: ReceiptScanner = (user, file) =>
     return receiptScanFrom(reading);
   });
 
-// CI has no gateway or Autumn keys, so e2e reads this receipt instead of calling a model
+// CI never reaches a model, so e2e reads this receipt
 export const e2eReceiptScanner: ReceiptScanner = () =>
   Effect.succeed({
     amountInCents: 2347,

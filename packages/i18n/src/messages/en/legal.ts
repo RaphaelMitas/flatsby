@@ -110,7 +110,7 @@ export const legal = {
       identifier: "Your Google or Apple account ID, if you sign in with them",
       passkeys:
         "For each passkey, its public key, a name and the date it was created; the private key stays on your device or in your password manager",
-      plan: "Your plan, purchases and AI credit balance",
+      aiUsage: "How much AI you used each month, for the fair-use limit",
       payment: "If you add it: the PayPal.me name you get paid with",
     },
     userContent: {
@@ -120,7 +120,6 @@ export const legal = {
       expenses: "Expenses and settlements",
       calendar: "Calendar entries and chores",
       groups: "Groups and their members",
-      chat: "Chats with the AI assistant",
     },
     technical: {
       heading: "Technical Data",
@@ -141,9 +140,9 @@ export const legal = {
     },
     basis: {
       contract:
-        "<strong>Contract (Art. 6(1)(b) GDPR):</strong> providing Flatsby, including purchases, automatic AI categories and receipt scanning",
+        "<strong>Contract (Art. 6(1)(b) GDPR):</strong> providing Flatsby, including automatic AI categories and receipt scanning",
       consent:
-        "<strong>Consent (Art. 6(1)(a) GDPR, § 25(1) TDDDG):</strong> the AI assistant; screen analytics in the app, including the device ID it uses",
+        "<strong>Consent (Art. 6(1)(a) GDPR, § 25(1) TDDDG):</strong> screen analytics in the app, including the device ID it uses",
       interests:
         "<strong>Legitimate interests (Art. 6(1)(f) GDPR):</strong> running the website securely; usage analytics of your actions on the website and in the app, to learn how people find and use Flatsby; error reports, to fix bugs (in the app without storing anything on your device, § 25(2) no. 2 TDDDG); AI usage metrics, to control costs; login session records, to protect your account; counting sign-in attempts per IP address and per email address (hashed), to stop abuse",
       obligations:
@@ -164,11 +163,11 @@ export const legal = {
       resend:
         "<strong>Resend (email):</strong> Sends sign-in codes and receives your email address and the code for that. Emails are sent from Ireland; Resend stores logs and metadata in the USA.",
       billing:
-        "<strong>Autumn, Stripe and RevenueCat (plans and AI credits):</strong> Autumn (web) receives your account ID, name and email address, RevenueCat (app) your account ID, both with your purchases. Autumn uses Stripe for payments.",
+        "<strong>RevenueCat (former in-app purchases):</strong> Older app versions send your account ID to RevenueCat when you sign in. Current versions sell nothing and don't use it.",
       expo: "<strong>Expo (app updates):</strong> The app checks Expo's servers for updates, which receive your IP address, app version and platform.",
       stores:
-        "<strong>Apple App Store and Google Play:</strong> Distribute the app and handle in-app purchases as separate controllers under their own privacy policies.",
-      ai: "<strong>OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway> they receive item names and expense descriptions for automatic categories, the photo or PDF when you scan a receipt (which can show anything printed on it, such as the last digits of a card or your address; we do not store it), and, if you use the AI assistant, your messages and the list, expense and member data it needs. See <dpa>Vercel's privacy policy</dpa>.",
+        "<strong>Apple App Store and Google Play:</strong> Distribute the app as separate controllers under their own privacy policies.",
+      ai: "<strong>OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway> they receive item names and expense descriptions for automatic categories, the photo or PDF when you scan a receipt (which can show anything printed on it, such as the last digits of a card or your address; we do not store it). See <dpa>Vercel's privacy policy</dpa>.",
       posthog:
         "<strong>PostHog (analytics, error reports):</strong> Stores data in Frankfurt and receives:",
       posthogWebsite:
@@ -183,11 +182,11 @@ export const legal = {
     retention: {
       intro: "We keep your data while your account exists. When you delete it:",
       personal:
-        "Your account, profile and chats are deleted from our database immediately",
+        "Your account and profile are deleted from our database immediately",
       content:
         "List items and expenses you created may remain, anonymized, for the other group members",
       outro:
-        "Backups are overwritten after a short restore window. Login sessions are deleted when you sign out, at the latest with your account. Sign-in codes are valid for 5 minutes; sign-in attempt counters are deleted once their window of at most an hour has passed. PostHog deletes analytics events after 12 months. Your PostHog profile and customer records at Autumn and RevenueCat remain after account deletion until you ask us to delete them. Invoices and payment records are kept as long as tax and commercial law requires (up to 10 years).",
+        "Backups are overwritten after a short restore window. Login sessions are deleted when you sign out, at the latest with your account. Sign-in codes are valid for 5 minutes; sign-in attempt counters are deleted once their window of at most an hour has passed. PostHog deletes analytics events after 12 months. Your PostHog profile and customer records at RevenueCat, and at Autumn and Stripe (our billing providers until November 2026), remain after account deletion until you ask us to delete them. Invoices and payment records are kept as long as tax and commercial law requires (up to 10 years).",
     },
     rights: {
       access: "<strong>Access:</strong> get a copy of your data",

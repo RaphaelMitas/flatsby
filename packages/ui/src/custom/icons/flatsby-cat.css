@@ -141,9 +141,6 @@
   .fc-squint .fc-eye-open {
     transform: scaleY(0.42);
   }
-  .fc-asleep .fc-eye-open {
-    transform: scaleY(0.06);
-  }
   .flatsby-cat .fc-monocle {
     transition: opacity 0.2s;
   }

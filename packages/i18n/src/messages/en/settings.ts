@@ -13,7 +13,6 @@ export const settings = {
     home: "Home screen",
     homeClassic: "Classic",
     homeNew: "New",
-    buyCredits: "Buy Credits",
     theme: "Theme",
     changeGroup: "Change Group",
     profileSubtitle: "Your name and PayPal.me",
@@ -131,9 +130,6 @@ export const settings = {
   },
   page: {
     title: "User Settings",
-    billingTitle: "Billing & Subscription",
-    billingDescription: "Manage your subscription and payment methods",
-    manageBilling: "Manage Billing",
     dataTitle: "Your Data",
     dataDescription: "Download a copy of your personal data (GDPR Article 20)",
     exportData: "Export My Data",

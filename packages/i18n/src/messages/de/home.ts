@@ -64,7 +64,6 @@ export const home = {
     balanced: "ausgeglichen",
     items: "Artikel",
     last30Days: "Letzte 30 Tage",
-    messages: "Nachrichten",
     owedToYou: "bekommst du",
     spent: "ausgegeben",
     youOwe: "schuldest du",
