@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { after } from "next/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { getHTTPStatusCodeFromError } from "@trpc/server/http";
 
@@ -8,6 +9,7 @@ import {
   createTRPCContext,
   e2eReceiptScanner,
 } from "@flatsby/api";
+import { posthog } from "@flatsby/api/posthog";
 
 import { auth } from "~/auth/server";
 import { env } from "~/env";
@@ -32,6 +34,8 @@ export const OPTIONS = () => {
 };
 
 const handler = async (req: NextRequest) => {
+  // Vercel freezes the instance after the response, with batched events still queued
+  after(() => posthog?.flush());
   const response = await fetchRequestHandler({
     endpoint: "/api/trpc",
     router: appRouter,

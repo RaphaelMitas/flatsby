@@ -3,10 +3,12 @@ import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
 import { appRouter, createTRPCContext } from "@flatsby/api";
+import { posthog } from "@flatsby/api/posthog";
 
 import { auth } from "~/auth/server";
 import { createQueryClient } from "./query-client";
@@ -18,6 +20,7 @@ import { createQueryClient } from "./query-client";
 const createContext = cache(async () => {
   const heads = new Headers(await headers());
   heads.set("x-trpc-source", "rsc");
+  after(() => posthog?.flush());
 
   return createTRPCContext({
     headers: heads,
