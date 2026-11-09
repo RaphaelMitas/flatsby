@@ -175,7 +175,7 @@ catalogs:
       version: 1.7.18
   default:
     '@ai-sdk/provider':
-      specifier: ^4.0.36
+      specifier: ^4.0.37
       version: 4.0.37
     '@biomejs/biome':
       specifier: 2.6.6
@@ -220,7 +220,7 @@ catalogs:
       specifier: ^26.6.6
       version: 26.6.6
     ai:
-      specifier: ^7.0.164
+      specifier: ^7.0.165
       version: 7.0.165
     babel-plugin-react-compiler:
       specifier: ^1.0.0
