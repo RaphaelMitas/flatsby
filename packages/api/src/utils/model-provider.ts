@@ -14,8 +14,8 @@ type ProviderOptions = NonNullable<
 const RECEIPT_MODEL = "openai/gpt-6-luna";
 
 const RECEIPT_PROVIDER_OPTIONS = {
-  // The privacy policy names only OpenAI and Google; without this the gateway also routes GPT models to Azure and Bedrock.
-  gateway: { only: ["openai", "google", "vertex"] },
+  // The privacy policy names only OpenAI and says it keeps nothing; the gateway also serves GPT models through Azure and Bedrock.
+  gateway: { only: ["openai"], zeroDataRetention: true },
   openai: { reasoningEffort: "none" },
 } satisfies ProviderOptions;
 

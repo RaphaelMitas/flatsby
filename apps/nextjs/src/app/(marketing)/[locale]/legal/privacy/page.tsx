@@ -29,7 +29,7 @@ import { legalMetadata, LegalShell } from "../_components/legal-shell";
 export const dynamicParams = false;
 
 const PATH = "/legal/privacy";
-const PRIVACY_VERSION = "1.7";
+const PRIVACY_VERSION = "1.8";
 
 const SECTIONS = [
   { id: "data-controller", key: "controller" },
@@ -164,14 +164,6 @@ export default function PrivacyPage() {
                   gateway: (chunks) => (
                     <LegalLink
                       href="https://vercel.com/docs/ai-gateway"
-                      external
-                    >
-                      {chunks}
-                    </LegalLink>
-                  ),
-                  dpa: (chunks) => (
-                    <LegalLink
-                      href="https://vercel.com/legal/privacy-policy"
                       external
                     >
                       {chunks}

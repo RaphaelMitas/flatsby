@@ -148,7 +148,7 @@ export const legal = {
     },
     basis: {
       contract:
-        "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Bereitstellung von Flatsby, einschließlich der automatischen KI-Kategorisierung und dem Scannen von Belegen",
+        "<strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Bereitstellung von Flatsby, einschließlich der automatischen KI-Kategorisierung und des Scannens von Belegen",
       consent:
         "<strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG):</strong> Bildschirmanalyse in der App, einschließlich der dafür genutzten Geräte-ID",
       interests:
@@ -175,7 +175,7 @@ export const legal = {
       expo: "<strong>Expo (App-Updates):</strong> Die App fragt bei den Servern von Expo nach Updates; diese erhalten Ihre IP-Adresse, App-Version und Plattform.",
       stores:
         "<strong>Apple App Store und Google Play:</strong> Vertreiben die App als eigene Verantwortliche nach ihren eigenen Datenschutzbestimmungen.",
-      ai: "<strong>OpenAI und Google (KI):</strong> Über das <gateway>Vercel AI Gateway</gateway> erhalten sie Artikelnamen und Ausgabenbeschreibungen für die automatische Kategorisierung, das Foto oder PDF, wenn Sie einen Beleg scannen (es kann alles zeigen, was darauf steht, etwa die letzten Ziffern einer Karte oder Ihre Adresse; wir speichern es nicht). Siehe die <dpa>Datenschutzerklärung von Vercel</dpa>.",
+      ai: "<strong>Typesafe AI und OpenAI (KI):</strong> Über das <gateway>Vercel AI Gateway</gateway> erhält Typesafe AI Artikelnamen und Ausgabenbeschreibungen für die automatische Kategorisierung. Wenn Sie einen Beleg scannen, erhält OpenAI das Foto oder PDF; es kann alles zeigen, was darauf steht, etwa die letzten Ziffern einer Karte oder Ihre Adresse. Beide arbeiten im Auftrag von Vercel, trainieren nicht mit den Daten und speichern sie nicht über die Antwort hinaus, außer ein Gesetz verlangt es; OpenAI kann sie außerdem zur Missbrauchserkennung aufbewahren. Wir speichern den Beleg nicht.",
       posthog:
         "<strong>PostHog (Analyse, Fehlerberichte):</strong> Speichert Daten in Frankfurt und erhält:",
       posthogWebsite:
@@ -195,7 +195,7 @@ export const legal = {
       content:
         "können Artikel und Ausgaben, die Sie angelegt haben, anonymisiert für die anderen Gruppenmitglieder erhalten bleiben",
       outro:
-        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Anmeldecodes gelten 5 Minuten; Zähler für Anmeldeversuche werden nach Ablauf ihres Zeitfensters von höchstens einer Stunde gelöscht. PostHog löscht Analyseereignisse nach 12 Monaten. Ihr Profil bei PostHog und Ihre Kundendaten bei RevenueCat sowie bei Autumn und Stripe (bis November 2026 unsere Abrechnungsanbieter) bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
+        "Backups werden nach einem kurzen Wiederherstellungszeitraum überschrieben. Anmeldesitzungen werden beim Abmelden gelöscht, spätestens mit Ihrem Konto. Anmeldecodes gelten 5 Minuten; Zähler für Anmeldeversuche werden nach Ablauf ihres Zeitfensters von höchstens einer Stunde gelöscht. PostHog löscht Analyseereignisse nach 12 Monaten. Ihr Profil bei PostHog und Ihre Kundendaten bei RevenueCat sowie bei Autumn (bis November 2026 unser Abrechnungsanbieter) bleiben nach der Kontolöschung bestehen, bis Sie uns um Löschung bitten. Rechnungen und Zahlungsbelege bewahren wir auf, solange Steuer- und Handelsrecht es verlangen (bis zu 10 Jahre).",
     },
     rights: {
       access: "<strong>Auskunft:</strong> eine Kopie Ihrer Daten erhalten",
@@ -221,7 +221,7 @@ export const legal = {
         "<strong>Nicht angemeldet:</strong> Wir können Sie nicht wiedererkennen. Aktivieren Sie daher Global Privacy Control oder Do Not Track in Ihrem Browser. Dann zählen wir Ihre Besuche nicht.",
     },
     international:
-      "Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe, Resend und Expo sind US-Unternehmen; Daten können daher in die USA gelangen. Für Anbieter, die nach dem EU-US Data Privacy Framework zertifiziert sind, gilt der Angemessenheitsbeschluss der EU-Kommission (Art. 45 DSGVO). PostHog ist zertifiziert und hat mit uns zusätzlich die EU-Standardvertragsklauseln vereinbart (Art. 46 Abs. 2 lit. c DSGVO); eine Kopie erhalten Sie auf Anfrage.",
+      "Vercel, OpenAI, Typesafe AI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Resend und Expo sind US-Unternehmen; Daten können daher in die USA gelangen. Für Anbieter, die nach dem EU-US Data Privacy Framework zertifiziert sind, gilt der Angemessenheitsbeschluss der EU-Kommission (Art. 45 DSGVO). Typesafe AI (selbst nicht zertifiziert) und OpenAI erhalten Daten nur über Vercel, das sie nach dem Framework nur unter gleichem vertraglichen Schutz weitergeben darf. PostHog ist zertifiziert und hat mit uns zusätzlich die EU-Standardvertragsklauseln vereinbart (Art. 46 Abs. 2 lit. c DSGVO); eine Kopie erhalten Sie auf Anfrage.",
     children:
       "Flatsby richtet sich nicht an Kinder unter 16 Jahren. Wenn Sie glauben, dass ein Kind uns Daten gegeben hat, kontaktieren Sie uns.",
     changes:

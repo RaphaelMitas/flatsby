@@ -167,7 +167,7 @@ export const legal = {
       expo: "<strong>Expo (app updates):</strong> The app checks Expo's servers for updates, which receive your IP address, app version and platform.",
       stores:
         "<strong>Apple App Store and Google Play:</strong> Distribute the app as separate controllers under their own privacy policies.",
-      ai: "<strong>OpenAI and Google (AI):</strong> Via <gateway>Vercel AI Gateway</gateway> they receive item names and expense descriptions for automatic categories, the photo or PDF when you scan a receipt (which can show anything printed on it, such as the last digits of a card or your address; we do not store it). See <dpa>Vercel's privacy policy</dpa>.",
+      ai: "<strong>Typesafe AI and OpenAI (AI):</strong> Via <gateway>Vercel AI Gateway</gateway>, Typesafe AI receives item names and expense descriptions for automatic categories. When you scan a receipt, OpenAI receives the photo or PDF, which can show anything printed on it, such as the last digits of a card or your address. Both work on Vercel's behalf, don't train on the data and don't keep it after answering unless the law requires it; OpenAI may also keep it to detect abuse. We don't store the receipt.",
       posthog:
         "<strong>PostHog (analytics, error reports):</strong> Stores data in Frankfurt and receives:",
       posthogWebsite:
@@ -186,7 +186,7 @@ export const legal = {
       content:
         "List items and expenses you created may remain, anonymized, for the other group members",
       outro:
-        "Backups are overwritten after a short restore window. Login sessions are deleted when you sign out, at the latest with your account. Sign-in codes are valid for 5 minutes; sign-in attempt counters are deleted once their window of at most an hour has passed. PostHog deletes analytics events after 12 months. Your PostHog profile and customer records at RevenueCat, and at Autumn and Stripe (our billing providers until November 2026), remain after account deletion until you ask us to delete them. Invoices and payment records are kept as long as tax and commercial law requires (up to 10 years).",
+        "Backups are overwritten after a short restore window. Login sessions are deleted when you sign out, at the latest with your account. Sign-in codes are valid for 5 minutes; sign-in attempt counters are deleted once their window of at most an hour has passed. PostHog deletes analytics events after 12 months. Your PostHog profile and customer records at RevenueCat, and at Autumn (our billing provider until November 2026), remain after account deletion until you ask us to delete them. Invoices and payment records are kept as long as tax and commercial law requires (up to 10 years).",
     },
     rights: {
       access: "<strong>Access:</strong> get a copy of your data",
@@ -211,7 +211,7 @@ export const legal = {
         "<strong>Not signed in:</strong> We can't recognize you, so turn on Global Privacy Control or Do Not Track in your browser. We then don't count your visits.",
     },
     international:
-      "Vercel, OpenAI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Stripe, Resend and Expo are US companies, so data may reach the USA. For providers certified under the EU-US Data Privacy Framework, the EU adequacy decision applies (Art. 45 GDPR). PostHog is certified and has also signed the EU Standard Contractual Clauses with us (Art. 46(2)(c) GDPR); ask us for a copy.",
+      "Vercel, OpenAI, Typesafe AI, Google, Apple, Neon, PostHog, RevenueCat, Autumn, Resend and Expo are US companies, so data may reach the USA. For providers certified under the EU-US Data Privacy Framework, the EU adequacy decision applies (Art. 45 GDPR). Typesafe AI (not certified itself) and OpenAI only receive data through Vercel, which under the framework may only pass it on with the same contractual protection. PostHog is certified and has also signed the EU Standard Contractual Clauses with us (Art. 46(2)(c) GDPR); ask us for a copy.",
     children:
       "Flatsby is not meant for children under 16. If you think a child has given us data, contact us.",
     changes:
