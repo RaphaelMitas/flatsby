@@ -38,6 +38,7 @@ export async function createAndSelectGroup(
   const idFromMatch = match?.[1];
   const groupId = idFromMatch !== undefined ? parseInt(idFromMatch, 10) : 0;
 
+  await waitForHydration(groupCard);
   await groupCard.click();
   await page.waitForURL("/home");
 
