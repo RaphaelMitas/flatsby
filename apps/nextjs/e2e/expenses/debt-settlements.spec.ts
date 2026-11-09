@@ -13,6 +13,11 @@ async function openSeededDebts(page: Page, baseURL: string | undefined) {
   await expect(page.getByTestId("debt-summary-title")).toBeVisible();
 }
 
+// SSR renders the mobile layout; its streamed copy lingers hidden after the desktop swap.
+function expenseDebtCard(page: Page) {
+  return page.getByTestId("expense-debt-card").filter({ visible: true });
+}
+
 function directDebtRow(page: Page, name: string) {
   return page.getByTestId("direct-debt-row").filter({ hasText: name });
 }
@@ -22,8 +27,9 @@ test.describe("Debt & Settlements", () => {
     authPage,
   }) => {
     await authPage.goto("/expenses");
-    const card = authPage.getByTestId("expense-debt-card");
+    const card = expenseDebtCard(authPage);
     await expect(card).toHaveText("You're all square");
+    await waitForHydration(card);
     await card.click();
 
     await expect(authPage.getByTestId("debt-summary-title")).toHaveText(
@@ -40,8 +46,9 @@ test.describe("Debt & Settlements", () => {
     await createAuthSession(page, baseURL, { seed: "debts" });
     await page.goto("/expenses");
 
-    const card = page.getByTestId("expense-debt-card");
+    const card = expenseDebtCard(page);
     await expect(card).toContainText("+€30.50");
+    await waitForHydration(card);
     await card.click();
     await expect(page.getByTestId("debt-summary-title")).toBeVisible();
   });
