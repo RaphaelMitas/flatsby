@@ -97,6 +97,9 @@ function runFlow({ file, locale }, index) {
       "test",
       ...(process.env.E2E_DEVICE ? ["--device", process.env.E2E_DEVICE] : []),
       ...(reinstallDriver ? [] : ["--no-reinstall-driver"]),
+      // Maestro's random driver port is bound on the device and can collide
+      // with the emulator's ephemeral ports (mobile-dev-inc/Maestro#3684).
+      ...(platform === "android" ? ["--driver-host-port", "7001"] : []),
       "-e",
       `APP_ID=${appId}`,
       "-e",
