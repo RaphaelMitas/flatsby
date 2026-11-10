@@ -39,6 +39,7 @@ function demoExpense({
   subcategory: ExpenseWithSplitsAndMembers["subcategory"];
   payer: Member;
 }): ExpenseWithSplitsAndMembers {
+  // A date-only string parses as UTC midnight, the previous day west of UTC
   const createdAt = new Date(`${date}T12:00`);
   return {
     id,
