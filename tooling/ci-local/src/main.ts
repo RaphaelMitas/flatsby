@@ -7,6 +7,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { arch } from "node:os";
 import { join, relative } from "node:path";
 import { parseArgs, parseEnv } from "node:util";
 
@@ -20,10 +21,10 @@ import {
   androidImage,
   avdmanager,
   emulatorBin,
+  IOS_MODEL,
   sweepDeadRuns,
 } from "./devices.ts";
 import {
-  alive,
   cacheDir,
   capture,
   claimPorts,
@@ -50,6 +51,12 @@ Devices are throwaway simulators and emulators unless SIMLOCK_URL and
 SIMLOCK_TOKEN name a Simlock gateway to lease them from.`;
 
 const STACK = "tooling/github/e2e-stack/stack.sh";
+
+const stackPortEnv = (web: number) => ({
+  PORT: String(web),
+  PG_PORT: String(web + 1),
+  DB_WSPROXY_PORT: String(web + 2),
+});
 
 // Mirrors the jobs in .github/workflows/ci.yml.
 const CHECKS: [string, string[]][] = [
@@ -102,14 +109,17 @@ function unsupportedReason(
 ): string | undefined {
   const mac = process.platform === "darwin";
   const needs: string[] = [];
-  // Without Docker, stack.sh only has Zonky's macOS Postgres.
-  if (target !== "checks" && !mac && !works("docker", ["info"]))
+  // Without Docker, stack.sh only has Zonky's Apple-silicon Postgres.
+  const zonky = mac && arch() === "arm64";
+  if (target !== "checks" && !zonky && !works("docker", ["info"]))
     needs.push("Docker");
   if (target === "ios") {
     if (!mac || !works("xcrun", ["--find", "simctl"]))
       needs.push("macOS with Xcode");
     if (!works("pod", ["--version"])) needs.push("CocoaPods");
     if (!works("java", ["-version"])) needs.push("Java, for Maestro");
+    if (!works("node", ["tooling/github/ios-simulator/pick.mjs", IOS_MODEL]))
+      needs.push("an iOS runtime with an iPhone Pro Max");
   }
   if (target === "android") {
     if (!existsSync(adb))
@@ -131,22 +141,17 @@ async function sweepDeadStacks(log: string): Promise<void> {
   if (!existsSync(claims)) return;
   for (const web of readdirSync(claims)) {
     const claim = join(claims, web);
-    const read = (file: string) =>
-      existsSync(join(claim, file))
-        ? readFileSync(join(claim, file), "utf8")
-        : "";
-    const pid = Number(read("pid"));
-    if (!pid || alive(pid)) continue;
-    await run("bash", [STACK, "stop"], {
-      log,
-      env: {
-        PORT: web,
-        PG_PORT: String(Number(web) + 1),
-        DB_WSPROXY_PORT: String(Number(web) + 2),
-        STACK_DIR: read("stack-dir") || claim,
-      },
-    });
-    rmSync(claim, { recursive: true, force: true });
+    const dirFile = join(claim, "stack-dir");
+    const stackDir = existsSync(dirFile) ? readFileSync(dirFile, "utf8") : "";
+    // Taken over first, so two runs never sweep the same stack.
+    const release = tryLock(claim);
+    if (typeof release === "number") continue;
+    if (stackDir)
+      await run("bash", [STACK, "stop"], {
+        log,
+        env: { ...stackPortEnv(Number(web)), STACK_DIR: stackDir },
+      });
+    release();
   }
 }
 
@@ -180,7 +185,9 @@ function cleanUp(): Promise<void> {
         console.error(`cleanup failed: ${String(error)}`),
       );
     }
-  })();
+  })().finally(() => {
+    cleaning = undefined;
+  });
   return cleaning;
 }
 
@@ -232,15 +239,17 @@ async function main(): Promise<number> {
     );
     return 2;
   }
+  let interrupted = 1;
   for (const [signal, code] of [
     ["SIGINT", 130],
     ["SIGTERM", 143],
     ["SIGHUP", 129],
   ] as const) {
     process.on(signal, () => {
-      // A second Ctrl-C would otherwise abandon devices mid-cleanup.
-      if (cleaning !== undefined)
+      // A second Ctrl-C would abandon devices mid-cleanup; a third means it.
+      if (cleaning !== undefined && ++interrupted < 3)
         return console.log(`${signal}: still cleaning up`);
+      if (cleaning !== undefined) process.exit(code);
       console.log(`\n${signal}: cleaning up`);
       stopRunning();
       void cleanUp().finally(() => process.exit(code));
@@ -248,12 +257,9 @@ async function main(): Promise<number> {
   }
 
   const runs = join(repoRoot, ".ci-local");
-  // Earlier runs' emulator disks are gigabytes; their results stay.
-  for (const entry of readdirSync(runs, { withFileTypes: true }))
-    if (entry.isDirectory())
-      for (const avd of readdirSync(join(runs, entry.name)))
-        if (avd.startsWith("avd-"))
-          rmSync(join(runs, entry.name, avd), { recursive: true, force: true });
+  // Emulator disks are gigabytes, and a killed run leaves its own behind.
+  const avdDir = join(runs, "avd");
+  rmSync(avdDir, { recursive: true, force: true });
   const runDir = join(runs, new Date().toISOString().replace(/[:.]/g, "-"));
   mkdirSync(runDir, { recursive: true });
   const logOf = (name: string) => join(runDir, `${name}.log`);
@@ -264,49 +270,32 @@ async function main(): Promise<number> {
   );
   const needsStack = targets.some((t) => t !== "checks");
 
-  // Derived from the worktree, so turbo's cache of the web build (which hashes
-  // the auth URL) hits on the next run in the same worktree.
-  const seed = Number.parseInt(
-    createHash("sha256").update(repoRoot).digest("hex").slice(0, 6),
-    16,
-  );
-  const blocks = Array.from(
-    { length: 50 },
-    (_, i) => 40_000 + ((seed + i) % 2000) * 4,
-  );
-  const ports = await claimPorts("stack-ports", blocks, 3);
-  cleanups.push(async () => ports.unclaim());
-  const stackDir = join(runDir, "stack");
-  writeFileSync(join(ports.dir, "stack-dir"), stackDir);
-  const stackEnv: NodeJS.ProcessEnv = {
-    ...parseEnv(
-      capture("bash", [STACK, "env"], {
-        env: {
-          PORT: String(ports.port),
-          PG_PORT: String(ports.port + 1),
-          DB_WSPROXY_PORT: String(ports.port + 2),
-        },
-      }),
-    ),
-    CI: "true",
-    STACK_DIR: stackDir,
-  };
-  const apiUrl = `http://localhost:${ports.port}`;
-  console.log(
-    [
-      `Running ${targets.join(", ")}${results.length ? `; skipping ${results.map((r) => `${r.target} (${r.detail})`).join(", ")}` : ""}`,
-      platforms.length
-        ? `Devices: ${deviceCount} per platform, ${gateway ? "leased from the Simlock gateway" : "throwaway"}`
-        : "",
-      needsStack ? `Stack: ${apiUrl}` : "",
-      `Results: ${relative(repoRoot, runDir)}`,
-    ]
-      .filter(Boolean)
-      .join("\n"),
-  );
-
+  let stackEnv: NodeJS.ProcessEnv = {};
+  let apiUrl = "";
   let stack: Promise<void> | undefined;
   if (needsStack) {
+    // Derived from the worktree, so turbo's cache of the web build (which
+    // hashes the auth URL) hits on the next run in the same worktree.
+    const seed = Number.parseInt(
+      createHash("sha256").update(repoRoot).digest("hex").slice(0, 6),
+      16,
+    );
+    const blocks = Array.from(
+      { length: 50 },
+      (_, i) => 40_000 + ((seed + i) % 2000) * 4,
+    );
+    const ports = await claimPorts("stack-ports", blocks, 3);
+    cleanups.push(async () => ports.unclaim());
+    const stackDir = join(runDir, "stack");
+    writeFileSync(join(ports.dir, "stack-dir"), stackDir);
+    stackEnv = {
+      ...parseEnv(
+        capture("bash", [STACK, "env"], { env: stackPortEnv(ports.port) }),
+      ),
+      CI: "true",
+      STACK_DIR: stackDir,
+    };
+    apiUrl = `http://localhost:${ports.port}`;
     cleanups.push(() =>
       run("bash", [STACK, "stop"], {
         env: stackEnv,
@@ -321,6 +310,18 @@ async function main(): Promise<number> {
     // Every target that needs the stack reports its failure.
     stack.catch(() => {});
   }
+  console.log(
+    [
+      `Running ${targets.join(", ")}${results.length ? `; skipping ${results.map((r) => `${r.target} (${r.detail})`).join(", ")}` : ""}`,
+      platforms.length
+        ? `Devices: ${deviceCount} per platform, ${gateway ? "leased from the Simlock gateway" : "throwaway"}`
+        : "",
+      needsStack ? `Stack: ${apiUrl}` : "",
+      `Results: ${relative(repoRoot, runDir)}`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  );
 
   const toolEnv: NodeJS.ProcessEnv = {
     ANDROID_HOME: androidHome,
@@ -351,7 +352,7 @@ async function main(): Promise<number> {
     await mustRun("node", ["e2e/validate-flows.mjs"], { cwd: e2eDir, log });
     const devices = await acquireDevices(deviceCount, {
       platform,
-      dir: runDir,
+      avdDir,
       log,
       gateway,
       onCleanup: (release) => cleanups.push(release),
@@ -391,9 +392,16 @@ async function main(): Promise<number> {
     );
     await stack;
     // Not through turbo: its strict env mode drops PLAYWRIGHT_WORKERS.
-    await mustRun("pnpm", ["-F", "@flatsby/nextjs", "test:e2e"], {
+    // Results into the run dir: a report left in apps/nextjs breaks its typecheck.
+    const results = ["--output", join(runDir, "web-results")];
+    await mustRun("pnpm", ["-F", "@flatsby/nextjs", "test:e2e", ...results], {
       log: logOf("web"),
-      env: { ...stackEnv, BASE_URL: apiUrl, PLAYWRIGHT_WORKERS: "4" },
+      env: {
+        ...stackEnv,
+        BASE_URL: apiUrl,
+        PLAYWRIGHT_WORKERS: "4",
+        PLAYWRIGHT_HTML_OUTPUT_DIR: join(runDir, "web-report"),
+      },
     });
   };
 
@@ -418,6 +426,8 @@ async function main(): Promise<number> {
     return [];
   });
   results.push(...(await Promise.all(e2e)));
+  // A target that failed early can leave its native build running.
+  await Promise.allSettled(apps.values());
   await cleanUp();
   // Last, with devices and the stack gone: beside them it overloads the
   // machine, and its turbo runs would race the stack's build.

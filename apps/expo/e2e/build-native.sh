@@ -11,7 +11,6 @@ platform=${1:?usage: build-native.sh ios|android <out-dir> [abi]}
 mkdir -p "${2:?out-dir required}"
 out=$(cd "$2" && pwd)
 cd "$(dirname "$0")/.."
-# app.config.ts reads it.
 export E2E_TESTING=true
 
 # --clean: a native folder left over from a dev build would otherwise end up

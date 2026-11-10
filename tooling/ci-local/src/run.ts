@@ -33,15 +33,21 @@ export interface RunOptions {
 const running = new Set<number>();
 let stopping = false;
 
+/** False when the process is gone; a process we may not signal still exists. */
+export function signal(pid: number, sig: NodeJS.Signals | 0): boolean {
+  try {
+    process.kill(pid, sig);
+    return true;
+  } catch (error) {
+    return error instanceof Error && "code" in error && error.code === "EPERM";
+  }
+}
+
+export const alive = (pid: number) => signal(pid, 0);
+
 export function stopRunning(): void {
   stopping = true;
-  for (const pid of running) {
-    try {
-      process.kill(-pid, "SIGTERM");
-    } catch {
-      // Already gone.
-    }
-  }
+  for (const pid of running) signal(-pid, "SIGTERM");
 }
 
 export function run(
@@ -118,15 +124,6 @@ export function tryCapture(cmd: string, args: string[]): string | undefined {
 
 export const sleep = (ms: number) =>
   new Promise<void>((done) => setTimeout(done, ms));
-
-export function alive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 /**
  * A directory lock that outlives a crash: a lock whose owner process is gone

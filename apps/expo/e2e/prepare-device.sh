@@ -30,8 +30,6 @@ for scale in window_animation_scale transition_animation_scale animator_duration
   shell settings put global "$scale" 0 || true
 done
 adb -s "$device" install -r "$app"
-# The first launch pays JIT/dex warm-up, which stalls past the first flow's
-# wait if it happens inside Maestro.
 shell monkey -p com.flatcove.app -c android.intent.category.LAUNCHER 1 || true
 sleep 15
 shell am force-stop com.flatcove.app || true

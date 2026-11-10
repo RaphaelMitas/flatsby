@@ -13,11 +13,13 @@ shift
 
 # The runner's only emulator.
 serial=$(adb devices | awk 'NR > 1 && $2 == "device" { print $1; exit }')
-bash "$(dirname "$0")/prepare-device.sh" android "$serial" "$apk" || exit 1
-
 cd "$(dirname "$0")/.."
-E2E_DEVICE=$serial node e2e/run-flows.mjs "$@"
-status=$?
+if bash e2e/prepare-device.sh android "$serial" "$apk"; then
+  E2E_DEVICE=$serial node e2e/run-flows.mjs "$@"
+  status=$?
+else
+  status=1
+fi
 mkdir -p e2e/results/diagnostics
 adb logcat -d > e2e/results/diagnostics/logcat.txt || true
 

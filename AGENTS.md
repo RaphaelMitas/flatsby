@@ -158,7 +158,8 @@ hangs or says not signed in, ask rather than retry.
 ports derived from the worktree, so several worktrees can run at once. Devices
 are throwaway simulators and emulators, or leased from a Simlock gateway when
 `SIMLOCK_URL` and `SIMLOCK_TOKEN` are set. Each run writes its logs and a
-`summary.json` to `.ci-local/<run>/`.
+`summary.json` to `.ci-local/<run>/`. A native build it can't take from the
+cache regenerates the worktree's `apps/expo/ios` and `android` folders.
 - `pnpm install` runs `pnpm lint:ws` as a postinstall hook.
 - `pnpm dev:next` is `turbo watch dev`, so shared packages rebuild on change without  
 you restarting anything.

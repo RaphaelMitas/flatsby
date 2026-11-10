@@ -8,7 +8,6 @@ import {
 } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { ChildProcess } from "node:child_process";
 import { z } from "zod/v4";
 
 import type { Platform } from "./app.ts";
@@ -19,6 +18,7 @@ import {
   claimPorts,
   mustRun,
   run,
+  signal,
   sleep,
   tryCapture,
 } from "./run.ts";
@@ -30,7 +30,7 @@ export interface Gateway {
 
 export interface DeviceContext {
   platform: Platform;
-  dir: string;
+  avdDir: string;
   log: string;
   gateway: Gateway | undefined;
   /** Registered as soon as a device exists, before it is ready. */
@@ -52,18 +52,34 @@ export const avdmanager = join(
 );
 
 // CI's models: e2e.yml's simulator and android-emulator-runner's profile.
-const IOS_MODEL = "^iPhone [0-9]+ Pro Max$";
+export const IOS_MODEL = "^iPhone [0-9]+ Pro Max$";
 const ANDROID_MODEL = "Pixel 7";
 const BOOT_TIMEOUT_MS = 10 * 60_000;
 
 const note = (log: string, line: string) => appendFileSync(log, `${line}\n`);
 
-function kill(pid: number, signal: NodeJS.Signals): void {
-  try {
-    process.kill(pid, signal);
-  } catch {
-    // Already gone, maybe killed by another run's sweep.
-  }
+function deleteSimulator(udid: string, log: string) {
+  const opts = { log, cleanup: true };
+  return run("xcrun", ["simctl", "shutdown", udid], opts).then(() =>
+    run("xcrun", ["simctl", "delete", udid], opts),
+  );
+}
+
+function emulatorPids(avd: string): number[] {
+  return capture("ps", ["-eo", "pid=,command="])
+    .split("\n")
+    .flatMap((line) => {
+      const [, pid, command] = /^\s*(\d+) (.*)$/.exec(line) ?? [];
+      return pid && command?.includes(`-avd ${avd} `) ? [Number(pid)] : [];
+    });
+}
+
+// The emulator alone, not its process group: the first emulator started on a
+// machine also hosts netsimd, which every other emulator's network goes through.
+async function stopEmulator(avd: string): Promise<void> {
+  for (const pid of emulatorPids(avd)) signal(pid, "SIGTERM");
+  for (let i = 0; i < 30 && emulatorPids(avd).length; i++) await sleep(1000);
+  for (const pid of emulatorPids(avd)) signal(pid, "SIGKILL");
 }
 
 function iosModel(): { type: string; runtime: string; name: string } {
@@ -105,13 +121,8 @@ async function throwawaySimulator(
     model.type,
     model.runtime,
   ]);
-  ctx.onCleanup(async () => {
-    const opts = { log: ctx.log, cleanup: true };
-    await run("xcrun", ["simctl", "shutdown", udid], opts);
-    await run("xcrun", ["simctl", "delete", udid], opts);
-  });
+  ctx.onCleanup(() => deleteSimulator(udid, ctx.log));
   await mustRun("xcrun", ["simctl", "boot", udid], { log: ctx.log });
-  await mustRun("xcrun", ["simctl", "bootstatus", udid], { log: ctx.log });
   return udid;
 }
 
@@ -125,20 +136,14 @@ async function throwawayEmulator(
       `No google_apis ${localAndroidAbi} system image in ${androidHome}`,
     );
   // Its own AVD home keeps the AVD out of Android Studio's list.
-  const avdHome = join(ctx.dir, `avd-${name}`);
+  const avdHome = join(ctx.avdDir, name);
   // Claimed so two runs never drive one emulator; 5560-5584 sits in the range
   // the default adb server scans.
   const ports = Array.from({ length: 13 }, (_, i) => 5560 + i * 2);
   const { port, unclaim } = await claimPorts("emulator-ports", ports, 2);
   const serial = `emulator-${port}`;
-  let emulator: ChildProcess | undefined;
-  let exited = Promise.resolve();
   ctx.onCleanup(async () => {
-    if (emulator?.pid && emulator.exitCode === null) {
-      kill(-emulator.pid, "SIGTERM");
-      await Promise.race([exited, sleep(30_000)]);
-      if (emulator.exitCode === null) kill(-emulator.pid, "SIGKILL");
-    }
+    await stopEmulator(name);
     rmSync(avdHome, { recursive: true, force: true });
     unclaim();
   });
@@ -177,14 +182,9 @@ async function throwawayEmulator(
       detached: true,
     },
   );
-  emulator = child;
   let failed: string | undefined;
-  exited = new Promise((done) => {
-    child.once("exit", () => done());
-    child.once("error", (error) => {
-      failed = error.message;
-      done();
-    });
+  child.once("error", (error) => {
+    failed = error.message;
   });
   child.unref();
 
@@ -202,12 +202,8 @@ async function throwawayEmulator(
         "getprop",
         "sys.boot_completed",
       ]) === "1"
-    ) {
-      const avd = tryCapture(adb, ["-s", serial, "emu", "avd", "name"]);
-      if (avd?.split("\n")[0]?.trim() !== name)
-        throw new Error(`${serial} is not this run's emulator`);
+    )
       return serial;
-    }
     await sleep(3000);
   }
   throw new Error(`${name} did not finish booting in 10 minutes`);
@@ -275,16 +271,16 @@ async function leaseDevice(
       method: "POST",
       body: JSON.stringify({ ...body, ttlMs: 15 * 60_000 }),
     });
+    // Another run on this token is waiting, or the token is at its lease limit.
     if (created.error?.code === "REQUESTER_ALREADY_LEASED") {
-      if (held > 0)
-        throw new Error(
-          `The gateway lets this token hold ${held} ${ctx.platform} lease(s); raise its lease.maxPerRequester or pass --devices ${held}`,
-        );
       if (Date.now() > waitUntil)
         throw new Error(
-          "Another run on this token kept its lease request for 30 minutes",
+          `No ${ctx.platform} lease in 30 minutes with ${held} held: another run on this token kept waiting, or the gateway's lease.maxPerRequester is below --devices`,
         );
-      note(ctx.log, "Another run on this token is waiting; retrying in 10s");
+      note(
+        ctx.log,
+        "The gateway says this token is at its limit; retrying in 10s",
+      );
       await sleep(10_000);
       continue;
     }
@@ -307,7 +303,6 @@ async function leaseDevice(
     lease = request.lease;
   }
   const leaseId = lease.id;
-  // A lease that stops renewing expires mid-run and can go to someone else.
   const renewFailed = (reason: string) =>
     note(ctx.log, `Renewing lease ${leaseId} failed: ${reason}`);
   renew = setInterval(() => {
@@ -335,7 +330,8 @@ async function leaseDevice(
   ctx.onCleanup(() =>
     run(adb, ["disconnect", serial], { log: ctx.log, cleanup: true }),
   );
-  await run(adb, ["connect", serial], { log: ctx.log });
+  if ((await run(adb, ["connect", serial], { log: ctx.log })) !== 0)
+    throw new Error(`adb connect ${serial} failed, see ${ctx.log}`);
   // Another worker's emulator can have the same port as one on this machine.
   if (
     tryCapture(adb, [
@@ -380,14 +376,12 @@ export async function sweepDeadRuns(log: string): Promise<void> {
     for (const line of devices.split("\n")) {
       const [, pid, udid] =
         /ci-local-(\d+)-\S+ \(([0-9A-F-]{36})\)/.exec(line) ?? [];
-      if (!udid || !dead(pid)) continue;
-      await run("xcrun", ["simctl", "shutdown", udid], { log });
-      await run("xcrun", ["simctl", "delete", udid], { log });
+      if (udid && dead(pid)) await deleteSimulator(udid, log);
     }
   }
   for (const line of capture("ps", ["-eo", "pid=,command="]).split("\n")) {
     const [, emulatorPid, pid] =
       /^\s*(\d+) .*-avd ci-local-(\d+)-/.exec(line) ?? [];
-    if (emulatorPid && dead(pid)) kill(Number(emulatorPid), "SIGKILL");
+    if (emulatorPid && dead(pid)) signal(Number(emulatorPid), "SIGKILL");
   }
 }

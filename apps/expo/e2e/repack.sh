@@ -16,7 +16,6 @@ platform=$1
 target=$(absolute "$2")
 [ "$platform" = android ] && cached_res=$(absolute "$3")
 cd "$(dirname "$0")/.."
-# app.config.ts reads it.
 export E2E_TESTING=true
 work=$(mktemp -d)
 
