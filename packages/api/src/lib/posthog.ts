@@ -185,8 +185,7 @@ export function buildPostHogProperties(headers: Headers, page?: PageUrls) {
   );
 }
 
-// DrizzleQueryError's message embeds the query params, which hold user data,
-// and wrappers like TRPCError copy or quote their cause's message
+// Wrappers like TRPCError copy or quote their cause's message, params included
 export function withoutQueryParams(error: unknown): unknown {
   if (!(error instanceof Error)) return error;
   const cause = withoutQueryParams(error.cause);

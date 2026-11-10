@@ -1,6 +1,6 @@
 export { DrizzleQueryError } from "drizzle-orm/errors";
 
-// Matched by message: Next bundles drizzle once per runtime, so instanceof misses errors from another
+// Matched by message: Next bundles drizzle once per runtime, so instanceof misses errors from another copy
 const QUERY_PARAMS = /(Failed query: [\s\S]*?\nparams: )[\s\S]*/;
 
 export const redactQueryParams = (message: string) =>

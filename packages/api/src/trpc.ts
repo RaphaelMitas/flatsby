@@ -80,7 +80,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
     const translate = translatorFor(ctx?.locale ?? defaultLocale);
     return {
       ...shape,
-      // DrizzleQueryError's message embeds the query params, which hold user data
+      // A failed query's message carries its SQL and params, which hold user data
       message:
         redactQueryParams(shape.message) === shape.message
           ? translateIfKey(translate, shape.message)

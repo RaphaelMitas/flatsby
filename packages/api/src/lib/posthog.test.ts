@@ -47,7 +47,6 @@ describe("browserExceptionProperties", () => {
 
 describe("withoutQueryParams", () => {
   it("redacts the params of a query error from another drizzle copy", async () => {
-    // Next bundles drizzle once per runtime, so a page's error isn't the class this module sees
     const copy: typeof DrizzleErrors = await import(
       /* @vite-ignore */ `${import.meta.resolve("drizzle-orm/errors")}?copy`
     );
