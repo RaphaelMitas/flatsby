@@ -65,14 +65,19 @@ function deleteSimulator(udid: string, log: string) {
   );
 }
 
-function emulatorPids(avd: string): number[] {
+function processes(): { pid: number; command: string }[] {
   return capture("ps", ["-eo", "pid=,command="])
     .split("\n")
     .flatMap((line) => {
       const [, pid, command] = /^\s*(\d+) (.*)$/.exec(line) ?? [];
-      return pid && command?.includes(`-avd ${avd} `) ? [Number(pid)] : [];
+      return pid && command ? [{ pid: Number(pid), command }] : [];
     });
 }
+
+const emulatorPids = (avd: string) =>
+  processes()
+    .filter(({ command }) => command.includes(`-avd ${avd} `))
+    .map(({ pid }) => pid);
 
 // The emulator alone, not its process group: the first emulator started on a
 // machine also hosts netsimd, which every other emulator's network goes through.
@@ -230,10 +235,21 @@ const LeaseRequest = z.object({
   error: SimlockError.optional(),
 });
 
+// This machine's worker label, if it runs a Simlock worker.
+function localWorker(): string | undefined {
+  try {
+    const config: unknown = JSON.parse(
+      capture("simlock", ["config", "get", "gateway"]),
+    );
+    return z.object({ label: z.string() }).parse(config).label;
+  } catch {
+    return undefined;
+  }
+}
+
 async function leaseDevice(
   ctx: DeviceContext,
   gateway: Gateway,
-  held: number,
 ): Promise<string> {
   const api = async (path: string, init: RequestInit = {}) => {
     const response = await fetch(`${gateway.url}${path}`, {
@@ -266,21 +282,20 @@ async function leaseDevice(
   });
 
   const waitUntil = Date.now() + 30 * 60_000;
+  let waitingSaid = false;
   while (!lease) {
     const created = await api("/v1/lease-requests", {
       method: "POST",
       body: JSON.stringify({ ...body, ttlMs: 15 * 60_000 }),
     });
-    // Another run on this token is waiting, or the token is at its lease limit.
     if (created.error?.code === "REQUESTER_ALREADY_LEASED") {
+      const why =
+        "another run on this token is waiting, or the gateway's lease.maxPerRequester is below --devices";
       if (Date.now() > waitUntil)
-        throw new Error(
-          `No ${ctx.platform} lease in 30 minutes with ${held} held: another run on this token kept waiting, or the gateway's lease.maxPerRequester is below --devices`,
-        );
-      note(
-        ctx.log,
-        "The gateway says this token is at its limit; retrying in 10s",
-      );
+        throw new Error(`No ${ctx.platform} lease in 30 minutes: ${why}`);
+      if (!waitingSaid)
+        console.log(`${ctx.platform}: waiting for a lease, ${why}`);
+      waitingSaid = true;
       await sleep(10_000);
       continue;
     }
@@ -312,16 +327,22 @@ async function leaseDevice(
   }, lease.ttlMs / 3);
   renew.unref();
 
-  const elsewhere = new Error(
-    `Leased a device on worker ${lease.worker?.label ?? "?"}, but ci:local only drives devices on this machine`,
-  );
+  // Maestro has to run beside the device, and device names repeat across
+  // workers, so the lease must be on this machine's own worker.
+  const worker = lease.worker?.label;
+  if (!worker || worker !== localWorker())
+    throw new Error(
+      `Leased a device on worker ${worker ?? "?"}, but ci:local only drives devices on this machine`,
+    );
   if (ctx.platform === "ios") {
     if (
       !capture("xcrun", ["simctl", "list", "devices"]).includes(
         `(${lease.udid})`,
       )
     )
-      throw elsewhere;
+      throw new Error(
+        "The worker keeps its simulators outside Xcode's device set, where Maestro can't reach them: run `simlock config set drivers.ios.deviceSet default` on it",
+      );
     return lease.udid;
   }
   // Simlock's emulators sit on Simlock's own adb server, and Maestro only
@@ -332,17 +353,6 @@ async function leaseDevice(
   );
   if ((await run(adb, ["connect", serial], { log: ctx.log })) !== 0)
     throw new Error(`adb connect ${serial} failed, see ${ctx.log}`);
-  // Another worker's emulator can have the same port as one on this machine.
-  if (
-    tryCapture(adb, [
-      "-s",
-      serial,
-      "shell",
-      "getprop",
-      "ro.boot.qemu.avd_name",
-    ]) !== lease.udid
-  )
-    throw elsewhere;
   return serial;
 }
 
@@ -354,8 +364,7 @@ export async function acquireDevices(
   if (gateway) {
     // A token may wait on one request per platform, so lease in turn.
     const ids: string[] = [];
-    for (let held = 0; held < count; held++)
-      ids.push(await leaseDevice(ctx, gateway, held));
+    for (let i = 0; i < count; i++) ids.push(await leaseDevice(ctx, gateway));
     return ids;
   }
   const make = ctx.platform === "ios" ? throwawaySimulator : throwawayEmulator;
@@ -379,9 +388,8 @@ export async function sweepDeadRuns(log: string): Promise<void> {
       if (udid && dead(pid)) await deleteSimulator(udid, log);
     }
   }
-  for (const line of capture("ps", ["-eo", "pid=,command="]).split("\n")) {
-    const [, emulatorPid, pid] =
-      /^\s*(\d+) .*-avd ci-local-(\d+)-/.exec(line) ?? [];
-    if (emulatorPid && dead(pid)) signal(Number(emulatorPid), "SIGKILL");
+  for (const { pid, command } of processes()) {
+    const [, runner] = /-avd ci-local-(\d+)-/.exec(command) ?? [];
+    if (dead(runner)) signal(pid, "SIGKILL");
   }
 }

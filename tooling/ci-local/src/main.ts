@@ -141,9 +141,9 @@ async function sweepDeadStacks(log: string): Promise<void> {
   if (!existsSync(claims)) return;
   for (const web of readdirSync(claims)) {
     const claim = join(claims, web);
+    // Read before tryLock: taking over a dead claim deletes it.
     const dirFile = join(claim, "stack-dir");
     const stackDir = existsSync(dirFile) ? readFileSync(dirFile, "utf8") : "";
-    // Taken over first, so two runs never sweep the same stack.
     const release = tryLock(claim);
     if (typeof release === "number") continue;
     if (stackDir)
@@ -185,9 +185,7 @@ function cleanUp(): Promise<void> {
         console.error(`cleanup failed: ${String(error)}`),
       );
     }
-  })().finally(() => {
-    cleaning = undefined;
-  });
+  })();
   return cleaning;
 }
 
@@ -239,17 +237,15 @@ async function main(): Promise<number> {
     );
     return 2;
   }
-  let interrupted = 1;
+  let interrupts = 0;
   for (const [signal, code] of [
     ["SIGINT", 130],
     ["SIGTERM", 143],
     ["SIGHUP", 129],
   ] as const) {
     process.on(signal, () => {
-      // A second Ctrl-C would abandon devices mid-cleanup; a third means it.
-      if (cleaning !== undefined && ++interrupted < 3)
-        return console.log(`${signal}: still cleaning up`);
-      if (cleaning !== undefined) process.exit(code);
+      // Earlier ones wait for the cleanup to release devices; a third means it.
+      if (++interrupts >= 3) process.exit(code);
       console.log(`\n${signal}: cleaning up`);
       stopRunning();
       void cleanUp().finally(() => process.exit(code));

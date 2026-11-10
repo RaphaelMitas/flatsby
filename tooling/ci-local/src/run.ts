@@ -30,7 +30,8 @@ export interface RunOptions {
   cleanup?: boolean;
 }
 
-const running = new Set<number>();
+// Process groups still running, and whether each one is cleanup work.
+const running = new Map<number, boolean>();
 let stopping = false;
 
 /** False when the process is gone; a process we may not signal still exists. */
@@ -47,7 +48,7 @@ export const alive = (pid: number) => signal(pid, 0);
 
 export function stopRunning(): void {
   stopping = true;
-  for (const pid of running) signal(-pid, "SIGTERM");
+  for (const [pid, cleanup] of running) if (!cleanup) signal(-pid, "SIGTERM");
 }
 
 export function run(
@@ -73,7 +74,7 @@ export function run(
       log ? "pipe" : "inherit",
     ],
   });
-  if (child.pid) running.add(child.pid);
+  if (child.pid) running.set(child.pid, options.cleanup ?? false);
   child.stdin?.end(options.input);
   if (log) {
     child.stdout?.pipe(log, { end: false });
@@ -110,6 +111,8 @@ export function capture(
     cwd: options.cwd ?? repoRoot,
     env: { ...process.env, ...options.env },
     encoding: "utf8",
+    // `ps` lists a few hundred processes per booted simulator.
+    maxBuffer: 64 * 1024 * 1024,
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
 }

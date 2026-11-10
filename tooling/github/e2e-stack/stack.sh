@@ -47,7 +47,6 @@ if [ "$cmd" = env ]; then
   exit
 fi
 dir=${STACK_DIR:?STACK_DIR is required}
-mkdir -p "$dir"
 
 # Zonky's binaries, not brew: brew install stalls for minutes behind a booting
 # simulator.
@@ -93,6 +92,7 @@ start_postgres() {
 }
 
 start() {
+  mkdir -p "$dir"
   start_postgres
 
   # Push, not migrate: migration 0000 is a no-op baseline (the schema predates
@@ -131,6 +131,10 @@ stop() {
   elif has_docker; then
     docker rm -f "$container" >/dev/null 2>&1 || true
   fi
+  # A Zonky Postgres whose run folder is gone; only postgres itself, never
+  # Docker's port forwarder.
+  pids=$(lsof -a -c postgres -nP -tiTCP:"$pg_port" -sTCP:LISTEN 2>/dev/null || true)
+  [ -n "$pids" ] && kill $pids || true
 }
 
 "$cmd"
