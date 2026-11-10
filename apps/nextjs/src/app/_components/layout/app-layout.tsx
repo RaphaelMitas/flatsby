@@ -21,7 +21,8 @@ export async function AppLayout({ children }: AppLayoutProps) {
   await getCurrentUserWithGroups();
 
   return (
-    <HydrateClient>
+    // The page streams its own pending queries; here they would reach the sidebar before SSR saw them
+    <HydrateClient settledOnly>
       <SidebarProvider>
         <GroupContextProvider>
           <AppSidebar />

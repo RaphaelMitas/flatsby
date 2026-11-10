@@ -39,7 +39,7 @@ function demoExpense({
   subcategory: ExpenseWithSplitsAndMembers["subcategory"];
   payer: Member;
 }): ExpenseWithSplitsAndMembers {
-  const createdAt = new Date(date);
+  const createdAt = new Date(`${date}T12:00`);
   return {
     id,
     groupId: 1,
