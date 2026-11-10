@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Each push runs E2E on all five macOS runners, so regular updates wait for a nightly window; security fixes and lock file maintenance are exempt below",
+  "description": "Each push runs E2E on all five macOS runners, so regular updates wait for a nightly window",
   "extends": [
     "config:recommended",
     ":separateMajorReleases",
