@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Each push runs E2E on all five macOS runners, so regular updates wait for a nightly window",
+  "description": "Each push runs E2E on all five macOS runners, so regular updates wait for a nightly window; it is four hours wide because automerge only runs inside it too",
   "extends": [
     "config:recommended",
     ":separateMajorReleases",
@@ -10,7 +10,7 @@
   "baseBranchPatterns": ["main"],
   "prConcurrentLimit": 2,
   "timezone": "Europe/Berlin",
-  "schedule": ["* 2-3 * * *"],
+  "schedule": ["* 1-4 * * *"],
   "updateNotScheduled": false,
   "minimumReleaseAge": "2 days",
   "rangeStrategy": "bump",
@@ -28,7 +28,7 @@
     "schedule": []
   },
   "lockFileMaintenance": {
-    "description": "Its window is one night a month, so without this the first lockfile conflict would park it until the next one",
+    "description": "Its window is one night a month, so updateNotScheduled lets it rebase on a conflict instead of waiting a month",
     "enabled": true,
     "updateNotScheduled": true,
     "schedule": ["before 5am on the first day of the month"]
