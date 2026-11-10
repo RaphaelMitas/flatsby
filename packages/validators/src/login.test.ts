@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   callbackOutcome,
@@ -8,6 +8,8 @@ import {
   loginErrorCode,
   passkeyCancelled,
   signInCodeError,
+  startSignIn,
+  thrownFailureCode,
 } from "./login";
 
 const redirect = (query: string) =>
@@ -122,5 +124,75 @@ describe("passkeyCancelled", () => {
       false,
     );
     expect(passkeyCancelled({ status: 500 })).toBe(false);
+  });
+});
+
+describe("thrownFailureCode", () => {
+  it("reads an unreachable server as a network failure on every client", () => {
+    for (const message of [
+      "Failed to fetch",
+      "NetworkError when attempting to fetch resource.",
+      "Load failed",
+      "Network request failed",
+    ]) {
+      expect(thrownFailureCode(new TypeError(message))).toBe("network");
+    }
+    for (const reason of [
+      'java.net.UnknownHostException: Unable to resolve host "www.flatsby.com"',
+      "Aufgrund eines TLS-Fehlers ist die sichere Verbindung fehlgeschlagen.",
+    ]) {
+      expect(thrownFailureCode(new Error(`fetch failed: ${reason}`))).toBe(
+        "network",
+      );
+    }
+  });
+
+  it("keeps a bug an exception, even a TypeError", () => {
+    expect(
+      thrownFailureCode(
+        new TypeError("Cannot read properties of undefined (reading 'url')"),
+      ),
+    ).toBe("exception");
+    expect(thrownFailureCode("fetch failed: not an Error")).toBe("exception");
+  });
+});
+
+describe("startSignIn", () => {
+  it("counts a lost connection as a failure without throwing", async () => {
+    const onFailed = vi.fn();
+    const started = await startSignIn(
+      () => Promise.reject(new TypeError("Failed to fetch")),
+      onFailed,
+    );
+    expect(started).toBe(false);
+    expect(onFailed).toHaveBeenCalledWith("network");
+  });
+
+  it("rethrows anything else so error tracking sees it", async () => {
+    const onFailed = vi.fn();
+    const bug = new TypeError("x is not a function");
+    await expect(startSignIn(() => Promise.reject(bug), onFailed)).rejects.toBe(
+      bug,
+    );
+    expect(onFailed).toHaveBeenCalledWith("exception");
+  });
+
+  it("reports a refused start by its code", async () => {
+    const onFailed = vi.fn();
+    const started = await startSignIn(
+      () =>
+        Promise.resolve({ error: { code: "PROVIDER_NOT_FOUND", status: 404 } }),
+      onFailed,
+    );
+    expect(started).toBe(false);
+    expect(onFailed).toHaveBeenCalledWith("provider_not_found");
+  });
+
+  it("starts when the server answers without an error", async () => {
+    const onFailed = vi.fn();
+    expect(
+      await startSignIn(() => Promise.resolve({ error: null }), onFailed),
+    ).toBe(true);
+    expect(onFailed).not.toHaveBeenCalled();
   });
 });

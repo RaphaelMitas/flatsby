@@ -16,7 +16,7 @@ import PasskeyIcon from "@flatsby/ui/custom/icons/PasskeyIcon";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
 import { Input } from "@flatsby/ui/input";
 import { Separator } from "@flatsby/ui/separator";
-import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
+import { startSignIn } from "@flatsby/validators/login";
 import { usePasskey } from "@flatsby/validators/usePasskey";
 import { useSendSignInCode } from "@flatsby/validators/useSignInCode";
 
@@ -130,19 +130,17 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
         error_code: errorCode,
       });
     try {
-      const { error } = await signIn
-        .social({
-          provider,
-          callbackURL,
-          additionalData: {
-            login: { attemptId: attempt.attempt_id } satisfies LoginAttempt,
-          },
-        })
-        .catch((thrown: unknown) => {
-          failed(thrownFailureCode(thrown));
-          throw thrown;
-        });
-      if (error) failed(startFailureCode(error));
+      await startSignIn(
+        () =>
+          signIn.social({
+            provider,
+            callbackURL,
+            additionalData: {
+              login: { attemptId: attempt.attempt_id } satisfies LoginAttempt,
+            },
+          }),
+        failed,
+      );
     } finally {
       setLoading("false");
     }

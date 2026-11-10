@@ -10,7 +10,7 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { appRouter, createTRPCContext } from "@flatsby/api";
 import { posthog } from "@flatsby/api/posthog";
 
-import { auth } from "~/auth/server";
+import { auth, getSession } from "~/auth/server";
 import { createQueryClient } from "./query-client";
 
 /**
@@ -59,10 +59,14 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
 
 export const caller = appRouter.createCaller(createContext);
 
-export const getCurrentUserWithGroups = () =>
-  getQueryClient().fetchQuery(
+// Next renders a page in parallel with its layout, so the auth guard lives here
+export async function getCurrentUserWithGroups() {
+  const session = await getSession();
+  if (!session?.user) redirect("/auth/login");
+  return getQueryClient().fetchQuery(
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
+}
 
 export const noGroups = (
   result: Awaited<ReturnType<typeof getCurrentUserWithGroups>>,
