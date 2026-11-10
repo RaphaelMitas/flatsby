@@ -40,6 +40,21 @@ test.describe("Login page", () => {
     );
   });
 
+  for (const path of [
+    "/home",
+    "/calendar",
+    "/expenses",
+    "/shopping-list",
+    "/group/settings",
+  ]) {
+    test(`sends a signed-out visit to ${path} to login`, async ({ page }) => {
+      await page.goto(path);
+
+      await expect(page).toHaveURL(/\/auth\/login/);
+      await expect(page.getByTestId("auth-login-title")).toBeVisible();
+    });
+  }
+
   test("shows tagline", async ({ page }) => {
     await page.goto("/auth/login");
 

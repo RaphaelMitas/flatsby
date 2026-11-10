@@ -8,6 +8,7 @@ import {
   loginErrorCode,
   passkeyCancelled,
   signInCodeError,
+  thrownFailureCode,
 } from "./login";
 
 const redirect = (query: string) =>
@@ -122,5 +123,25 @@ describe("passkeyCancelled", () => {
       false,
     );
     expect(passkeyCancelled({ status: 500 })).toBe(false);
+  });
+});
+
+describe("thrownFailureCode", () => {
+  it("reads an unreachable server as a network failure on web and native", () => {
+    expect(thrownFailureCode(new TypeError("Failed to fetch"))).toBe("network");
+    expect(
+      thrownFailureCode(
+        new Error(
+          'fetch failed: java.net.UnknownHostException: Unable to resolve host "www.flatsby.com"',
+        ),
+      ),
+    ).toBe("network");
+  });
+
+  it("keeps anything else an exception", () => {
+    expect(thrownFailureCode(new Error("Cannot read property"))).toBe(
+      "exception",
+    );
+    expect(thrownFailureCode("fetch failed: not an Error")).toBe("exception");
   });
 });

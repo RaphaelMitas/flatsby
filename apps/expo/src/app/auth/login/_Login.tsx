@@ -118,7 +118,7 @@ const Login = () => {
         error_code: errorCode,
       });
     try {
-      const { error } = await signIn
+      const started = await signIn
         .social({
           provider,
           callbackURL,
@@ -132,10 +132,12 @@ const Login = () => {
           },
         })
         .catch((thrown: unknown) => {
-          failed(thrownFailureCode(thrown));
-          throw thrown;
+          const code = thrownFailureCode(thrown);
+          failed(code);
+          if (code !== "network") throw thrown;
         });
-      if (error) return failed(startFailureCode(error));
+      if (!started) return;
+      if (started.error) return failed(startFailureCode(started.error));
       // The Expo plugin drops the browser's result, so whether a session came back is all we can know
       const session = await authClient.getSession();
       if (!session.data && !session.error) {

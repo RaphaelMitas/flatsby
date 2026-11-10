@@ -130,7 +130,7 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
         error_code: errorCode,
       });
     try {
-      const { error } = await signIn
+      const started = await signIn
         .social({
           provider,
           callbackURL,
@@ -139,10 +139,11 @@ const Login = ({ callbackURL }: { callbackURL: string }) => {
           },
         })
         .catch((thrown: unknown) => {
-          failed(thrownFailureCode(thrown));
-          throw thrown;
+          const code = thrownFailureCode(thrown);
+          failed(code);
+          if (code !== "network") throw thrown;
         });
-      if (error) failed(startFailureCode(error));
+      if (started?.error) failed(startFailureCode(started.error));
     } finally {
       setLoading("false");
     }

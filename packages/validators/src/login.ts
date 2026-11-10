@@ -91,9 +91,12 @@ export const loginErrorCode = (code: string | null | undefined) => {
 export const startFailureCode = (error: AuthError) =>
   loginErrorCode(error.code ?? `http_${error.status}`);
 
-// fetch rejects with a TypeError when the request never reaches the server
+// When the request never reaches the server, browser fetch rejects with a TypeError and Expo's with "fetch failed: <reason>"
 export const thrownFailureCode = (thrown: unknown) =>
-  thrown instanceof TypeError ? "network" : "exception";
+  thrown instanceof TypeError ||
+  (thrown instanceof Error && thrown.message.startsWith("fetch failed:"))
+    ? "network"
+    : "exception";
 
 const PROVIDER_CANCEL_CODES = new Set([
   "access_denied",
