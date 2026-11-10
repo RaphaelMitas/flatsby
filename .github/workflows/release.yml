@@ -197,7 +197,6 @@ jobs:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
           xcrun simctl bootstatus "$UDID"
-          xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
           # A fresh simulator shows the QuickPath swipe-typing tutorial over
           # the keyboard the second time an input gains focus, which would
           # end up in the screenshots.
@@ -211,11 +210,7 @@ jobs:
       - name: Install and pre-warm app
         env:
           UDID: ${{ steps.sim.outputs.udid }}
-        run: |
-          xcrun simctl install "$UDID" apps/expo/ios/build/Build/Products/Release-iphonesimulator/Flatsby.app
-          xcrun simctl launch "$UDID" com.flatcove.app.v2 || true
-          sleep 15
-          xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
+        run: bash apps/expo/e2e/prepare-device.sh ios "$UDID" apps/expo/ios/build/Build/Products/Release-iphonesimulator/Flatsby.app
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
@@ -247,7 +242,6 @@ jobs:
           UDID: ${{ steps.ipad.outputs.udid }}
         run: |
           xcrun simctl bootstatus "$UDID"
-          xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
           xcrun simctl spawn "$UDID" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
           xcrun simctl ui "$UDID" appearance dark
           xcrun simctl status_bar "$UDID" override \
@@ -257,11 +251,7 @@ jobs:
       - name: Install and pre-warm app on iPad
         env:
           UDID: ${{ steps.ipad.outputs.udid }}
-        run: |
-          xcrun simctl install "$UDID" apps/expo/ios/build/Build/Products/Release-iphonesimulator/Flatsby.app
-          xcrun simctl launch "$UDID" com.flatcove.app.v2 || true
-          sleep 15
-          xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
+        run: bash apps/expo/e2e/prepare-device.sh ios "$UDID" apps/expo/ios/build/Build/Products/Release-iphonesimulator/Flatsby.app
 
       - name: Capture iPad store screenshots
         working-directory: apps/expo

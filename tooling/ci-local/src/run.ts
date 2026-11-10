@@ -26,12 +26,15 @@ export interface RunOptions {
   /** Append output to this file instead of the terminal. */
   log?: string;
   input?: string;
+  /** Still runs after stopRunning: releasing devices, stopping the stack. */
+  cleanup?: boolean;
 }
 
 const running = new Set<number>();
+let stopping = false;
 
-/** Signals every command still running, with whatever it started. */
 export function stopRunning(): void {
+  stopping = true;
   for (const pid of running) {
     try {
       process.kill(-pid, "SIGTERM");
@@ -46,6 +49,9 @@ export function run(
   args: string[],
   options: RunOptions = {},
 ): Promise<number> {
+  // Work started after a signal would outlive the runner.
+  if (stopping && !options.cleanup)
+    return Promise.reject(new Error("stopping"));
   const log = options.log
     ? createWriteStream(options.log, { flags: "a" })
     : undefined;
@@ -124,13 +130,9 @@ export function alive(pid: number): boolean {
 
 /**
  * A directory lock that outlives a crash: a lock whose owner process is gone
- * is taken over. Returns the release function, or the holder's pid when the
- * lock is held and `wait` is false.
+ * is taken over. Returns the release function, or the live holder's pid.
  */
-export async function lock(
-  path: string,
-  wait: boolean,
-): Promise<(() => void) | number> {
+export function tryLock(path: string): (() => void) | number {
   mkdirSync(dirname(path), { recursive: true });
   for (;;) {
     try {
@@ -151,19 +153,58 @@ export async function lock(
     } catch {
       // Taken a moment ago and the pid isn't written yet.
     }
-    if (holder && !alive(holder)) {
-      rmSync(path, { recursive: true, force: true });
-      continue;
-    }
-    if (!wait && holder) return holder;
-    await sleep(2000);
+    if (!holder || alive(holder)) return holder;
+    rmSync(path, { recursive: true, force: true });
   }
 }
 
-export function portFree(port: number): Promise<boolean> {
-  return new Promise((done) => {
-    const server = createServer();
-    server.once("error", () => done(false));
-    server.listen(port, "127.0.0.1", () => server.close(() => done(true)));
-  });
+export async function withLock<T>(
+  path: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  let release = tryLock(path);
+  while (typeof release === "number") {
+    await sleep(2000);
+    release = tryLock(path);
+  }
+  try {
+    return await fn();
+  } finally {
+    release();
+  }
+}
+
+async function portFree(port: number): Promise<boolean> {
+  // Both: a listener on all interfaces doesn't stop a bind to 127.0.0.1.
+  for (const host of ["127.0.0.1", "::"]) {
+    const free = await new Promise<boolean>((done) => {
+      const server = createServer();
+      server.once("error", () => done(false));
+      server.listen(port, host, () => server.close(() => done(true)));
+    });
+    if (!free) return false;
+  }
+  return true;
+}
+
+/**
+ * The first of `starts` whose `width` ports are free, claimed so no other run
+ * takes them while this one lives.
+ */
+export async function claimPorts(
+  kind: string,
+  starts: Iterable<number>,
+  width: number,
+): Promise<{ port: number; dir: string; unclaim: () => void }> {
+  for (const port of starts) {
+    const dir = join(cacheDir, kind, String(port));
+    const claim = tryLock(dir);
+    if (typeof claim === "number") continue;
+    const free = await Promise.all(
+      Array.from({ length: width }, (_, i) => portFree(port + i)),
+    );
+    if (free.every(Boolean)) return { port, dir, unclaim: claim };
+    claim();
+  }
+  throw new Error(`No free ${kind}`);
 }

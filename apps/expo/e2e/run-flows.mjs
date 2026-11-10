@@ -165,7 +165,6 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
     child.on("error", reject);
     child.on("close", (status) => {
       collectTakeScreenshots(debugDir, locale);
-      // Step screenshots and hierarchy dumps are only worth keeping for failures.
       if (status === 0) rmSync(debugDir, { recursive: true, force: true });
       resolve(status ?? 1);
     });

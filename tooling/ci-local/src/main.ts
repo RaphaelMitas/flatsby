@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join, relative } from "node:path";
-import { parseArgs } from "node:util";
+import { parseArgs, parseEnv } from "node:util";
 
 import type { Platform } from "./app.ts";
 import type { Gateway } from "./devices.ts";
@@ -23,15 +23,16 @@ import {
   sweepDeadRuns,
 } from "./devices.ts";
 import {
+  alive,
   cacheDir,
   capture,
-  lock,
+  claimPorts,
   mustRun,
-  portFree,
   repoRoot,
   run,
   stopRunning,
   tryCapture,
+  tryLock,
 } from "./run.ts";
 
 const TARGETS = ["checks", "web", "ios", "android"] as const;
@@ -68,18 +69,6 @@ interface Result {
   log?: string;
 }
 
-function parseEnv(text: string): Record<string, string> {
-  return Object.fromEntries(
-    text
-      .split("\n")
-      .filter((line) => /^[A-Z_][A-Z0-9_]*=/.test(line))
-      .map((line) => {
-        const at = line.indexOf("=");
-        return [line.slice(0, at), line.slice(at + 1)];
-      }),
-  );
-}
-
 function javaHome(): string | undefined {
   if (process.platform === "darwin") {
     const home = tryCapture("/usr/libexec/java_home", ["-v", "17"]);
@@ -88,13 +77,14 @@ function javaHome(): string | undefined {
   return process.env.JAVA_HOME;
 }
 
-/** Read once and taken out of the environment, so no child process sees the token. */
 function gatewayFromEnv(): Gateway | undefined {
   const url = process.env.SIMLOCK_URL?.replace(/\/$/, "");
   const token = process.env.SIMLOCK_TOKEN;
+  // Kept out of the environments the runner passes on, and so out of logs.
   delete process.env.SIMLOCK_TOKEN;
-  if (!url) return undefined;
-  if (!token) throw new Error("SIMLOCK_URL is set but SIMLOCK_TOKEN is not");
+  if (!url && !token) return undefined;
+  if (!url || !token)
+    throw new Error("Set SIMLOCK_URL and SIMLOCK_TOKEN together");
   const { protocol, hostname } = new URL(url);
   if (protocol !== "https:" && !["localhost", "127.0.0.1"].includes(hostname))
     throw new Error(
@@ -103,8 +93,8 @@ function gatewayFromEnv(): Gateway | undefined {
   return { url, token };
 }
 
-const has = (cmd: string) =>
-  tryCapture("sh", ["-c", `command -v ${cmd}`]) !== undefined;
+const works = (cmd: string, args: string[]) =>
+  tryCapture(cmd, args) !== undefined;
 
 function unsupportedReason(
   target: Target,
@@ -112,12 +102,14 @@ function unsupportedReason(
 ): string | undefined {
   const mac = process.platform === "darwin";
   const needs: string[] = [];
-  if (target === "web" && !mac && !tryCapture("docker", ["info"]))
+  // Without Docker, stack.sh only has Zonky's macOS Postgres.
+  if (target !== "checks" && !mac && !works("docker", ["info"]))
     needs.push("Docker");
   if (target === "ios") {
-    if (!mac || !tryCapture("xcrun", ["--find", "simctl"]))
+    if (!mac || !works("xcrun", ["--find", "simctl"]))
       needs.push("macOS with Xcode");
-    if (!has("pod")) needs.push("CocoaPods");
+    if (!works("pod", ["--version"])) needs.push("CocoaPods");
+    if (!works("java", ["-version"])) needs.push("Java, for Maestro");
   }
   if (target === "android") {
     if (!existsSync(adb))
@@ -132,28 +124,30 @@ function unsupportedReason(
   return needs.length ? `needs ${needs.join(", ")}` : undefined;
 }
 
-/** Ports derived from the worktree, so turbo's cache of the web build (which
- * hashes the auth URL) hits on the next run in the same worktree. */
-async function claimStackPorts(): Promise<{
-  web: number;
-  pg: number;
-  proxy: number;
-  unclaim: () => void;
-}> {
-  const seed = Number.parseInt(
-    createHash("sha256").update(repoRoot).digest("hex").slice(0, 6),
-    16,
-  );
-  for (let attempt = 0; attempt < 50; attempt++) {
-    const web = 40_000 + ((seed + attempt) % 2000) * 4;
-    const claim = await lock(join(cacheDir, "stack-ports", String(web)), false);
-    if (typeof claim === "number") continue;
-    const free = await Promise.all([web, web + 1, web + 2].map(portFree));
-    if (free.every(Boolean))
-      return { web, pg: web + 1, proxy: web + 2, unclaim: claim };
-    claim();
+// A run killed outright leaves its stack running; stop it before its ports
+// are handed out again.
+async function sweepDeadStacks(log: string): Promise<void> {
+  const claims = join(cacheDir, "stack-ports");
+  if (!existsSync(claims)) return;
+  for (const web of readdirSync(claims)) {
+    const claim = join(claims, web);
+    const read = (file: string) =>
+      existsSync(join(claim, file))
+        ? readFileSync(join(claim, file), "utf8")
+        : "";
+    const pid = Number(read("pid"));
+    if (!pid || alive(pid)) continue;
+    await run("bash", [STACK, "stop"], {
+      log,
+      env: {
+        PORT: web,
+        PG_PORT: String(Number(web) + 1),
+        DB_WSPROXY_PORT: String(Number(web) + 2),
+        STACK_DIR: read("stack-dir") || claim,
+      },
+    });
+    rmSync(claim, { recursive: true, force: true });
   }
-  throw new Error("No free ports for the stack between 40000 and 48000");
 }
 
 async function timed(
@@ -231,23 +225,24 @@ async function main(): Promise<number> {
     } else results.push({ target, status: "skipped", detail: reason });
   }
 
-  const unlock = await lock(join(repoRoot, ".ci-local/lock"), false);
+  const unlock = tryLock(join(repoRoot, ".ci-local/lock"));
   if (typeof unlock === "number") {
     console.error(
       `Another ci:local run (pid ${unlock}) is using this worktree`,
     );
     return 2;
   }
-  cleanups.push(async () => unlock());
   for (const [signal, code] of [
     ["SIGINT", 130],
     ["SIGTERM", 143],
     ["SIGHUP", 129],
   ] as const) {
-    process.once(signal, () => {
+    process.on(signal, () => {
+      // A second Ctrl-C would otherwise abandon devices mid-cleanup.
+      if (cleaning !== undefined)
+        return console.log(`${signal}: still cleaning up`);
       console.log(`\n${signal}: cleaning up`);
-      // Mid-cleanup, the running commands are the cleanup's own.
-      if (!cleaning) stopRunning();
+      stopRunning();
       void cleanUp().finally(() => process.exit(code));
     });
   }
@@ -263,32 +258,45 @@ async function main(): Promise<number> {
   mkdirSync(runDir, { recursive: true });
   const logOf = (name: string) => join(runDir, `${name}.log`);
   await sweepDeadRuns(logOf("cleanup"));
+  await sweepDeadStacks(logOf("cleanup"));
   const platforms = targets.filter(
     (t): t is Platform => t === "ios" || t === "android",
   );
   const needsStack = targets.some((t) => t !== "checks");
 
-  const ports = await claimStackPorts();
+  // Derived from the worktree, so turbo's cache of the web build (which hashes
+  // the auth URL) hits on the next run in the same worktree.
+  const seed = Number.parseInt(
+    createHash("sha256").update(repoRoot).digest("hex").slice(0, 6),
+    16,
+  );
+  const blocks = Array.from(
+    { length: 50 },
+    (_, i) => 40_000 + ((seed + i) % 2000) * 4,
+  );
+  const ports = await claimPorts("stack-ports", blocks, 3);
   cleanups.push(async () => ports.unclaim());
+  const stackDir = join(runDir, "stack");
+  writeFileSync(join(ports.dir, "stack-dir"), stackDir);
   const stackEnv: NodeJS.ProcessEnv = {
     ...parseEnv(
       capture("bash", [STACK, "env"], {
         env: {
-          PORT: String(ports.web),
-          PG_PORT: String(ports.pg),
-          DB_WSPROXY_PORT: String(ports.proxy),
+          PORT: String(ports.port),
+          PG_PORT: String(ports.port + 1),
+          DB_WSPROXY_PORT: String(ports.port + 2),
         },
       }),
     ),
     CI: "true",
-    STACK_DIR: join(runDir, "stack"),
+    STACK_DIR: stackDir,
   };
-  const apiUrl = `http://localhost:${ports.web}`;
+  const apiUrl = `http://localhost:${ports.port}`;
   console.log(
     [
       `Running ${targets.join(", ")}${results.length ? `; skipping ${results.map((r) => `${r.target} (${r.detail})`).join(", ")}` : ""}`,
       platforms.length
-        ? `Devices: ${deviceCount} per platform, ${gateway ? `leased from ${gateway.url}` : "throwaway"}`
+        ? `Devices: ${deviceCount} per platform, ${gateway ? "leased from the Simlock gateway" : "throwaway"}`
         : "",
       needsStack ? `Stack: ${apiUrl}` : "",
       `Results: ${relative(repoRoot, runDir)}`,
@@ -300,7 +308,11 @@ async function main(): Promise<number> {
   let stack: Promise<void> | undefined;
   if (needsStack) {
     cleanups.push(() =>
-      run("bash", [STACK, "stop"], { env: stackEnv, log: logOf("stack") }),
+      run("bash", [STACK, "stop"], {
+        env: stackEnv,
+        log: logOf("stack"),
+        cleanup: true,
+      }),
     );
     stack = mustRun("bash", [STACK, "start"], {
       env: stackEnv,
@@ -313,6 +325,8 @@ async function main(): Promise<number> {
   const toolEnv: NodeJS.ProcessEnv = {
     ANDROID_HOME: androidHome,
     JAVA_HOME: javaHome(),
+    // The SDK's adb: another adb's first call would restart the shared server.
+    PATH: [join(androidHome, "platform-tools"), process.env.PATH].join(":"),
   };
   // One after the other: two native builds at once starve each other.
   let previousBuild: Promise<unknown> = Promise.resolve();
@@ -350,7 +364,7 @@ async function main(): Promise<number> {
         mustRun(
           "bash",
           ["apps/expo/e2e/prepare-device.sh", platform, device, app],
-          { log },
+          { log, env: toolEnv },
         ),
       ),
     );
@@ -358,11 +372,7 @@ async function main(): Promise<number> {
       cwd: e2eDir,
       log,
       env: {
-        PATH: [
-          installMaestro(),
-          join(androidHome, "platform-tools"),
-          process.env.PATH,
-        ].join(":"),
+        PATH: [installMaestro(), toolEnv.PATH].join(":"),
         E2E_PLATFORM: platform,
         E2E_DEVICE: devices.join(","),
         E2E_API_URL: apiUrl,
@@ -408,11 +418,12 @@ async function main(): Promise<number> {
     return [];
   });
   results.push(...(await Promise.all(e2e)));
-  // Last: next to booting devices and a native build it overloads the machine,
-  // and its turbo runs would race the stack's build.
+  await cleanUp();
+  // Last, with devices and the stack gone: beside them it overloads the
+  // machine, and its turbo runs would race the stack's build.
   if (targets.includes("checks"))
     results.push(await timed("checks", logOf("checks"), checks));
-  await cleanUp();
+  unlock();
 
   writeFileSync(
     join(runDir, "summary.json"),

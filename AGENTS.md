@@ -157,7 +157,8 @@ hangs or says not signed in, ask rather than retry.
 - `pnpm ci:local` runs the checks and the e2e suites against its own stack on
 ports derived from the worktree, so several worktrees can run at once. Devices
 are throwaway simulators and emulators, or leased from a Simlock gateway when
-`SIMLOCK_URL` and `SIMLOCK_TOKEN` are set. Results land in `.ci-local/`.
+`SIMLOCK_URL` and `SIMLOCK_TOKEN` are set. Each run writes its logs and a
+`summary.json` to `.ci-local/<run>/`.
 - `pnpm install` runs `pnpm lint:ws` as a postinstall hook.
 - `pnpm dev:next` is `turbo watch dev`, so shared packages rebuild on change without  
 you restarting anything.

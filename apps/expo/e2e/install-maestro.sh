@@ -18,6 +18,6 @@ if [ ! -x "$dir/maestro/bin/maestro" ]; then
   unzip -q "$partial/maestro.zip" -d "$partial"
   rm "$partial/maestro.zip"
   # Another run may have finished the same install first.
-  mv "$partial" "$dir" 2>/dev/null || rm -rf "$partial"
+  if [ -e "$dir" ]; then rm -rf "$partial"; else mv "$partial" "$dir"; fi
 fi
 echo "$dir/maestro/bin"

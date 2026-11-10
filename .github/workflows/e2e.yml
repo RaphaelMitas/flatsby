@@ -206,9 +206,7 @@ jobs:
       - name: Install and pre-warm app
         env:
           UDID: ${{ steps.sim.outputs.udid }}
-        run: |
-          xcrun simctl bootstatus "$UDID"
-          bash apps/expo/e2e/prepare-device.sh ios "$UDID" Flatsby.app
+        run: bash apps/expo/e2e/prepare-device.sh ios "$UDID" Flatsby.app
 
       # The simulator shares the host's network stack, so localhost is the
       # runner's own server.

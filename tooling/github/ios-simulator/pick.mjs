@@ -14,11 +14,7 @@ const { runtimes } = JSON.parse(
   }),
 );
 
-const order = (version, name) => [
-  ...version.split(".").map(Number),
-  Number(/\d+/.exec(name)?.[0] ?? 0),
-];
-const compare = (a, b) => {
+const compareVersions = (a, b) => {
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const diff = (a[i] ?? 0) - (b[i] ?? 0);
     if (diff !== 0) return diff;
@@ -35,10 +31,11 @@ const newest = runtimes
         type: type.identifier,
         runtime: runtime.identifier,
         name: type.name,
-        order: order(runtime.version, type.name),
+        version: runtime.version.split(".").map(Number),
+        number: Number(/\d+/.exec(type.name)?.[0] ?? 0),
       })),
   )
-  .sort((a, b) => compare(a.order, b.order))
+  .sort((a, b) => compareVersions(a.version, b.version) || a.number - b.number)
   .at(-1);
 
 if (!newest) {

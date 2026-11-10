@@ -11,7 +11,7 @@ platform=${1:?usage: build-native.sh ios|android <out-dir> [abi]}
 mkdir -p "${2:?out-dir required}"
 out=$(cd "$2" && pwd)
 cd "$(dirname "$0")/.."
-# Read by app.config.ts, which the prebuild, build and bundle all evaluate.
+# app.config.ts reads it.
 export E2E_TESTING=true
 
 # --clean: a native folder left over from a dev build would otherwise end up
@@ -37,11 +37,8 @@ abi=${3:?abi required for android, e.g. x86_64 or arm64-v8a}
 # The template's 512m Metaspace cap OOMs the daemon mid-build; a later
 # duplicate key in gradle.properties wins, so appending overrides it.
 printf '\norg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g\n' >>android/gradle.properties
-# One ABI: the emulator only runs one, and skipping the others halves native
-# compile time. Release builds sign with the debug keystore in the Expo
-# template, so the APK installs on an emulator as-is. lintVital is excluded:
-# release lint adds nothing to a throwaway e2e APK and is the heaviest
-# Metaspace consumer.
+# One ABI halves native compile; lintVital adds nothing to an e2e APK and is
+# the heaviest Metaspace consumer.
 (cd android && ./gradlew assembleRelease -PreactNativeArchitectures="$abi" --no-daemon \
   -x lintVitalRelease -x lintVitalAnalyzeRelease -x lintVitalReportRelease)
 cp android/app/build/outputs/apk/release/app-release.apk "$out/"

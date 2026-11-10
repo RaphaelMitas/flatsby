@@ -10,6 +10,7 @@ device=${2:?device required}
 app=${3:?app required}
 
 if [ "$platform" = ios ]; then
+  xcrun simctl bootstatus "$device" >/dev/null
   xcrun simctl spawn "$device" defaults write com.apple.Accessibility ReduceMotionEnabled 1
   xcrun simctl install "$device" "$app"
   # The first launch pays dyld/springboard warm-up, which stalls past the

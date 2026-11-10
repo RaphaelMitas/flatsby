@@ -15,11 +15,9 @@ import type { Platform } from "./app.ts";
 import { localAndroidAbi } from "./app.ts";
 import {
   alive,
-  cacheDir,
   capture,
-  lock,
+  claimPorts,
   mustRun,
-  portFree,
   run,
   sleep,
   tryCapture,
@@ -56,9 +54,17 @@ export const avdmanager = join(
 // CI's models: e2e.yml's simulator and android-emulator-runner's profile.
 const IOS_MODEL = "^iPhone [0-9]+ Pro Max$";
 const ANDROID_MODEL = "Pixel 7";
-const BOOT_TIMEOUT_MS = 5 * 60_000;
+const BOOT_TIMEOUT_MS = 10 * 60_000;
 
 const note = (log: string, line: string) => appendFileSync(log, `${line}\n`);
+
+function kill(pid: number, signal: NodeJS.Signals): void {
+  try {
+    process.kill(pid, signal);
+  } catch {
+    // Already gone, maybe killed by another run's sweep.
+  }
+}
 
 function iosModel(): { type: string; runtime: string; name: string } {
   const [type, runtime, name] = capture("node", [
@@ -100,31 +106,13 @@ async function throwawaySimulator(
     model.runtime,
   ]);
   ctx.onCleanup(async () => {
-    await run("xcrun", ["simctl", "shutdown", udid], { log: ctx.log });
-    await run("xcrun", ["simctl", "delete", udid], { log: ctx.log });
+    const opts = { log: ctx.log, cleanup: true };
+    await run("xcrun", ["simctl", "shutdown", udid], opts);
+    await run("xcrun", ["simctl", "delete", udid], opts);
   });
   await mustRun("xcrun", ["simctl", "boot", udid], { log: ctx.log });
   await mustRun("xcrun", ["simctl", "bootstatus", udid], { log: ctx.log });
   return udid;
-}
-
-// Locked per port so two runs never drive one emulator; 5560-5584 sits in
-// the range the default adb server scans.
-async function claimEmulatorPort(): Promise<{
-  port: number;
-  unclaim: () => void;
-}> {
-  for (let port = 5560; port <= 5584; port += 2) {
-    const claim = await lock(
-      join(cacheDir, "emulator-ports", String(port)),
-      false,
-    );
-    if (typeof claim === "number") continue;
-    if ((await portFree(port)) && (await portFree(port + 1)))
-      return { port, unclaim: claim };
-    claim();
-  }
-  throw new Error("No free emulator port between 5560 and 5585");
 }
 
 async function throwawayEmulator(
@@ -138,15 +126,18 @@ async function throwawayEmulator(
     );
   // Its own AVD home keeps the AVD out of Android Studio's list.
   const avdHome = join(ctx.dir, `avd-${name}`);
-  const { port, unclaim } = await claimEmulatorPort();
+  // Claimed so two runs never drive one emulator; 5560-5584 sits in the range
+  // the default adb server scans.
+  const ports = Array.from({ length: 13 }, (_, i) => 5560 + i * 2);
+  const { port, unclaim } = await claimPorts("emulator-ports", ports, 2);
   const serial = `emulator-${port}`;
   let emulator: ChildProcess | undefined;
   let exited = Promise.resolve();
   ctx.onCleanup(async () => {
     if (emulator?.pid && emulator.exitCode === null) {
-      process.kill(-emulator.pid, "SIGTERM");
+      kill(-emulator.pid, "SIGTERM");
       await Promise.race([exited, sleep(30_000)]);
-      if (emulator.exitCode === null) process.kill(-emulator.pid, "SIGKILL");
+      if (emulator.exitCode === null) kill(-emulator.pid, "SIGKILL");
     }
     rmSync(avdHome, { recursive: true, force: true });
     unclaim();
@@ -219,13 +210,14 @@ async function throwawayEmulator(
     }
     await sleep(3000);
   }
-  throw new Error(`${name} did not finish booting in 5 minutes`);
+  throw new Error(`${name} did not finish booting in 10 minutes`);
 }
 
 const SimlockError = z.object({ code: z.string(), message: z.string() });
 const Lease = z.object({
   id: z.string(),
-  udid: z.string(),
+  // A simulator UDID, or a Simlock emulator's AVD name.
+  udid: z.string().regex(/^[0-9A-F-]{36}$|^simlock_[0-9a-f-]+$/),
   address: z.string(),
   ttlMs: z.number(),
   worker: z.object({ label: z.string() }).partial().optional(),
@@ -315,24 +307,34 @@ async function leaseDevice(
     lease = request.lease;
   }
   const leaseId = lease.id;
+  // A lease that stops renewing expires mid-run and can go to someone else.
+  const renewFailed = (reason: string) =>
+    note(ctx.log, `Renewing lease ${leaseId} failed: ${reason}`);
   renew = setInterval(() => {
-    api(`/v1/leases/${leaseId}/renew`, { method: "POST" }).catch(() => {});
+    api(`/v1/leases/${leaseId}/renew`, { method: "POST" })
+      .then((answer) => answer.error && renewFailed(answer.error.message))
+      .catch((error: unknown) => renewFailed(String(error)));
   }, lease.ttlMs / 3);
   renew.unref();
 
-  // Maestro runs here, so the device has to be on this machine.
   const elsewhere = new Error(
     `Leased a device on worker ${lease.worker?.label ?? "?"}, but ci:local only drives devices on this machine`,
   );
   if (ctx.platform === "ios") {
-    if (!capture("xcrun", ["simctl", "list", "devices"]).includes(lease.udid))
+    if (
+      !capture("xcrun", ["simctl", "list", "devices"]).includes(
+        `(${lease.udid})`,
+      )
+    )
       throw elsewhere;
     return lease.udid;
   }
   // Simlock's emulators sit on Simlock's own adb server, and Maestro only
   // talks to the default one: attach through the emulator's adb port.
   const serial = `127.0.0.1:${Number(lease.address.replace("emulator-", "")) + 1}`;
-  ctx.onCleanup(() => run(adb, ["disconnect", serial], { log: ctx.log }));
+  ctx.onCleanup(() =>
+    run(adb, ["disconnect", serial], { log: ctx.log, cleanup: true }),
+  );
   await run(adb, ["connect", serial], { log: ctx.log });
   // Another worker's emulator can have the same port as one on this machine.
   if (
@@ -374,9 +376,8 @@ export async function sweepDeadRuns(log: string): Promise<void> {
   const dead = (pid: string | undefined) =>
     pid !== undefined && !alive(Number(pid));
   if (process.platform === "darwin") {
-    for (const line of capture("xcrun", ["simctl", "list", "devices"]).split(
-      "\n",
-    )) {
+    const devices = tryCapture("xcrun", ["simctl", "list", "devices"]) ?? "";
+    for (const line of devices.split("\n")) {
       const [, pid, udid] =
         /ci-local-(\d+)-\S+ \(([0-9A-F-]{36})\)/.exec(line) ?? [];
       if (!udid || !dead(pid)) continue;
@@ -387,6 +388,6 @@ export async function sweepDeadRuns(log: string): Promise<void> {
   for (const line of capture("ps", ["-eo", "pid=,command="]).split("\n")) {
     const [, emulatorPid, pid] =
       /^\s*(\d+) .*-avd ci-local-(\d+)-/.exec(line) ?? [];
-    if (emulatorPid && dead(pid)) process.kill(Number(emulatorPid), "SIGKILL");
+    if (emulatorPid && dead(pid)) kill(Number(emulatorPid), "SIGKILL");
   }
 }

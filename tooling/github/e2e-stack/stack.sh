@@ -16,13 +16,9 @@ proxy_port=${DB_WSPROXY_PORT:-5434}
 container=flatsby-e2e-pg-$pg_port
 root=$(cd "$(dirname "$0")/../../.." && pwd)
 
-# dotenv (`pnpm with-env`) never overrides an already-set variable, so callers
-# put these into the environment: that keeps an ambient DATABASE_URL from
-# taking the schema push somewhere real, and turbo hashes the environment, not
-# the file (E2E_TESTING and the auth base URL both change the build). The
-# OAuth credentials are never exercised (no flow signs in through a provider),
-# but better-auth rejects an undefined clientId at init. The service keys are
-# set empty so a developer's own .env can't send mail, events or AI calls.
+# Callers export these: dotenv never overrides a set variable, and turbo hashes
+# the env, not the file. better-auth rejects an undefined clientId; the empty
+# service keys stop a developer's own .env sending mail, events or AI calls.
 print_env() {
   cat <<EOF
 DATABASE_URL=postgres://postgres:postgres@localhost:$pg_port/flatsby
@@ -60,12 +56,10 @@ zonky_sha256=a1c2786acb0c398f9b2d76806fc52f5dc8b222cbc8e9383a9b9702084daaf3a5
 
 has_docker() { command -v docker >/dev/null && docker info >/dev/null 2>&1; }
 
-listener() { lsof -nP -tiTCP:"$1" -sTCP:LISTEN 2>/dev/null || true; }
-
 start_postgres() {
   if has_docker; then
     docker rm -f "$container" >/dev/null 2>&1 || true
-    docker run -d --name "$container" --label flatsby-e2e -p "127.0.0.1:$pg_port:5432" \
+    docker run -d --name "$container" -p "127.0.0.1:$pg_port:5432" \
       -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=flatsby postgres:17-alpine >/dev/null
     # Over TCP, not the socket: the entrypoint runs a socket-only server while
     # it creates the database, so a socket probe reports ready on a server
@@ -109,7 +103,7 @@ start() {
 
   # @neondatabase/serverless speaks Postgres over websockets, which a plain
   # Postgres does not; packages/db/src/client.ts routes localhost URLs here.
-  PG_PORT=$pg_port DB_WSPROXY_PORT=$proxy_port nohup node "$root/scripts/local-db-wsproxy.mjs" >"$dir/wsproxy.log" 2>&1 &
+  nohup node "$root/scripts/local-db-wsproxy.mjs" >"$dir/wsproxy.log" 2>&1 &
 
   pnpm turbo run build --filter=@flatsby/nextjs
   nohup pnpm -F @flatsby/nextjs start >"$dir/web.log" 2>&1 &
@@ -129,7 +123,7 @@ start() {
 # By port, not pid: pnpm starts next-server as a child that outlives pnpm.
 stop() {
   for port in "$web_port" "$proxy_port"; do
-    pids=$(listener "$port")
+    pids=$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)
     [ -n "$pids" ] && kill $pids
   done
   if [ -d "$dir/pgdata" ]; then

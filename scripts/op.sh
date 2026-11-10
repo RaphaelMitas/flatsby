@@ -22,4 +22,5 @@ case ${1:?usage: op.sh dev|prod <command>} in
 esac
 shift
 
-exec op run --no-masking --environment "$environment" -- "$@"
+# The command gets the Environment's secrets, not the token that read them.
+exec op run --no-masking --environment "$environment" -- env -u OP_SERVICE_ACCOUNT_TOKEN "$@"

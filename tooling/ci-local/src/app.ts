@@ -2,21 +2,11 @@ import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { arch } from "node:os";
 import { join } from "node:path";
 
-import { cacheDir, capture, lock, mustRun, run } from "./run.ts";
+import { cacheDir, capture, mustRun, run, withLock } from "./run.ts";
 
 export type Platform = "ios" | "android";
 
 export const localAndroidAbi = arch() === "arm64" ? "arm64-v8a" : "x86_64";
-
-async function withLock<T>(path: string, fn: () => Promise<T>): Promise<T> {
-  const release = await lock(path, true);
-  if (typeof release === "number") throw new Error(`lock ${path} held`);
-  try {
-    return await fn();
-  } finally {
-    release();
-  }
-}
 
 /** Never over ~/.maestro, which other tools on the machine may own. */
 export function installMaestro(): string {
@@ -50,7 +40,6 @@ export async function buildApp(
       env,
     });
 
-  // A build made just now already carries this worktree's JS.
   const builtNow = await withLock(`${cached}.lock`, async () => {
     if (existsSync(cached)) return false;
     const partial = `${cached}.partial`;
@@ -66,6 +55,7 @@ export async function buildApp(
     workDir,
     platform === "ios" ? "Flatsby.app" : "app-release.apk",
   );
+  // A build made just now already carries this worktree's JS.
   if (builtNow) return app;
   const repack =
     platform === "ios"
