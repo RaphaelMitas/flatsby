@@ -21,19 +21,18 @@ auditConfig:
     # @esbuild-kit/core-utils@3.3.2, which pins ~0.18.20. The @esbuild-kit packages
     # are deprecated (folded into tsx); clears when drizzle-kit drops esm-loader.
     - GHSA-67mh-4wv8-2f99
-    # zod <4.6.6 - only 4.x is patched and 3.25.76 is the last 3.x. Every @expo/cli
-    # 58.x (latest 58.1.16) depends on zod ^3.25.76, dev tooling only. Clears when
-    # @expo/cli moves to zod 4.
+    # zod <4.6.6 - only 4.x is patched and 3.25.76 is the last 3.x. @expo/cli up to
+    # 58.1.17 depends on zod ^3.25.76, dev tooling only. 58.1.18 drops it, but expo
+    # pins its other tooling exactly, so this clears with the expo >=58.0.22 bump.
     - GHSA-mrhx-c7xc-m3w5
-    # deepmerge <=4.3.1 - no patched release exists; 4.3.1 is npm's latest and
-    # unchanged since 2023. Reached via @expo/config@58.0.8 (latest) merging app
-    # config at build time, never untrusted input.
+    # deepmerge <=4.3.1 - no patched release exists. Reached via @expo/config up to
+    # 58.0.9 merging app config at build time, never untrusted input. 58.0.10 drops
+    # it; clears with the same expo >=58.0.22 bump.
     - GHSA-gcqx-w48m-w2h4
     # glob <=14.0.1 and minimatch <11.0.1 - patched only in the new majors. Every
     # Expo 58 package (canary included) depends on glob ^13, @expo/fingerprint also
-    # on minimatch ^10. react-email 6 also depends on glob ^13 for its preview CLI.
-    # Build tooling globbing our own project, no abort signals or untrusted input.
-    # Clears when Expo and react-email move to glob 14 and Expo to minimatch 11.
+    # on minimatch ^10. Build tooling globbing our own project, no abort signals or
+    # untrusted input. Clears when Expo moves to glob 14 and minimatch 11.
     - GHSA-3g3m-2fjr-6pw4
     - GHSA-g3hv-75wg-m249
 
