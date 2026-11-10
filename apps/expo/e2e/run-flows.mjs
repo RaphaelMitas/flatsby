@@ -4,14 +4,16 @@
  * the whole suite. Needs E2E_API_URL. E2E_PLATFORM selects the app id ("ios"
  * default, or "android"). E2E_LOCALES (e.g. "en de") runs every flow once per
  * locale, passing it as E2E_LOCALE and filing captures under
- * e2e/results/screenshots/<locale>/. E2E_DEVICE pins a simulator or emulator
- * when several are running.
+ * <results>/screenshots/<locale>/. E2E_DEVICE, comma-separated simulators or
+ * emulators, is required: without it Maestro drives whatever device it finds
+ * first, someone else's included. E2E_RESULTS_DIR moves the results out of
+ * e2e/results.
  *
  * One maestro invocation per flow, because the XCTest driver occasionally
  * crashes mid-batch on hosted runners and a shared invocation then fails
  * every remaining flow instantly ("Unknown error" at 0s).
  */
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
   copyFileSync,
   existsSync,
@@ -20,18 +22,25 @@ import {
   rmSync,
   statSync,
 } from "node:fs";
-import { basename, dirname, join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 
 const e2eDir = dirname(fileURLToPath(import.meta.url));
 const flowsDir = join(e2eDir, "flows");
-const resultsDir = join(e2eDir, "results");
+const resultsDir = resolve(
+  process.env.E2E_RESULTS_DIR ?? join(e2eDir, "results"),
+);
 
 const MAX_RERUN_FLOWS = 5;
 
-// A driver reinstall costs 25-55s per iOS flow; only a failure can leave the
-// driver broken.
-let reinstallDriver = true;
+const devices = process.env.E2E_DEVICE?.split(",").filter(Boolean) ?? [];
+if (devices.length === 0) {
+  console.error(
+    "E2E_DEVICE is required: the simulator UDID or emulator serial to run on, comma-separated for several",
+  );
+  process.exit(1);
+}
 
 const apiUrl = process.env.E2E_API_URL;
 if (!apiUrl) {
@@ -48,6 +57,20 @@ const APP_IDS = {
 const platform = process.env.E2E_PLATFORM ?? "ios";
 const locales = process.env.E2E_LOCALES?.split(" ").filter(Boolean) ?? [];
 const appId = APP_IDS[platform];
+
+const maestroEnv = {
+  MAESTRO_CLI_NO_ANALYTICS: "1",
+  MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000",
+  ...process.env,
+};
+
+// The emulator reaches a localhost API through adb reverse, which an adbd
+// restart on a loaded machine silently drops; set it again before each flow.
+const { hostname, port: apiPort } = new URL(apiUrl);
+const reversePort =
+  platform === "android" && ["localhost", "127.0.0.1"].includes(hostname)
+    ? apiPort || "80"
+    : undefined;
 if (!appId) {
   console.error(
     `Unknown E2E_PLATFORM "${platform}" (expected ${Object.keys(APP_IDS).join(" or ")})`,
@@ -84,18 +107,37 @@ function collectTakeScreenshots(debugDir, locale) {
   }
 }
 
-function runFlow({ file, locale }, index) {
-  const tag = [basename(file, ".yaml"), locale, index]
+function pipeWithPrefix(stream, prefix, out) {
+  createInterface({ input: stream }).on("line", (line) =>
+    out.write(`${prefix}${line}\n`),
+  );
+}
+
+function runFlow({ file, locale }, tag, device, reinstallDriver) {
+  const name = [basename(file, ".yaml"), locale, tag]
     .filter((part) => part !== undefined)
     .join("-");
-  const debugDir = join(resultsDir, `debug-${tag}`);
+  const debugDir = join(resultsDir, `debug-${name}`);
   rmSync(debugDir, { recursive: true, force: true });
-  console.log(`\n> maestro test ${relative(e2eDir, file)}`);
-  const { status, error } = spawnSync(
+  // UDIDs are long; emulator serials are short and differ at the end.
+  const label = device.length > 20 ? device.slice(0, 8) : device;
+  const prefix = devices.length > 1 ? `[${label}] ` : "";
+  console.log(`\n${prefix}> maestro test ${relative(e2eDir, file)}`);
+  if (reversePort) {
+    spawnSync("adb", [
+      "-s",
+      device,
+      "reverse",
+      `tcp:${reversePort}`,
+      `tcp:${reversePort}`,
+    ]);
+  }
+  const child = spawn(
     "maestro",
     [
       "test",
-      ...(process.env.E2E_DEVICE ? ["--device", process.env.E2E_DEVICE] : []),
+      "--device",
+      device,
       ...(reinstallDriver ? [] : ["--no-reinstall-driver"]),
       // Maestro's random driver port is bound on the device and can collide
       // with the emulator's ephemeral ports (mobile-dev-inc/Maestro#3684).
@@ -108,19 +150,62 @@ function runFlow({ file, locale }, index) {
       "--format",
       "junit",
       "--output",
-      join(resultsDir, `report-${tag}.xml`),
+      join(resultsDir, `report-${name}.xml`),
       "--debug-output",
       debugDir,
       file,
     ],
-    { stdio: "inherit" },
+    { env: maestroEnv, stdio: prefix ? ["ignore", "pipe", "pipe"] : "inherit" },
   );
-  if (error) throw error;
-  reinstallDriver = status !== 0;
-  collectTakeScreenshots(debugDir, locale);
-  // Step screenshots and hierarchy dumps are only worth keeping for failures.
-  if (status === 0) rmSync(debugDir, { recursive: true, force: true });
-  return status ?? 1;
+  if (prefix) {
+    pipeWithPrefix(child.stdout, prefix, process.stdout);
+    pipeWithPrefix(child.stderr, prefix, process.stderr);
+  }
+  return new Promise((resolve, reject) => {
+    child.on("error", reject);
+    child.on("close", (status) => {
+      collectTakeScreenshots(debugDir, locale);
+      if (status === 0) rmSync(debugDir, { recursive: true, force: true });
+      resolve(status ?? 1);
+    });
+  });
+}
+
+// A device that failed twice in a row while another one is still working is
+// likely broken (no network, dead driver); it stops taking flows for the run.
+const retired = new Set();
+
+async function runAll(runs, tagPrefix) {
+  const queue = [...runs.entries()];
+  const failed = [];
+  await Promise.all(
+    devices
+      .filter((device) => !retired.has(device))
+      .map(async (device) => {
+        // A driver reinstall costs 25-55s per iOS flow; only a failure can
+        // leave the driver broken.
+        let reinstallDriver = true;
+        let failuresInARow = 0;
+        for (let next = queue.shift(); next; next = queue.shift()) {
+          const [i, run] = next;
+          const status = await runFlow(
+            run,
+            `${tagPrefix}${i}`,
+            device,
+            reinstallDriver,
+          );
+          reinstallDriver = status !== 0;
+          failuresInARow = status === 0 ? 0 : failuresInARow + 1;
+          if (status !== 0) failed.push(run);
+          if (failuresInARow >= 2 && retired.size < devices.length - 1) {
+            retired.add(device);
+            console.log(`\n${device} failed twice in a row; leaving it out`);
+            break;
+          }
+        }
+      }),
+  );
+  return failed;
 }
 
 const targets = process.argv.slice(2);
@@ -131,10 +216,7 @@ mkdirSync(resultsDir, { recursive: true });
 const runs = (locales.length ? locales : [undefined]).flatMap((locale) =>
   files.map((file) => ({ file, locale })),
 );
-const failed = [];
-for (const [i, run] of runs.entries()) {
-  if (runFlow(run, i) !== 0) failed.push(run);
-}
+const failed = await runAll(runs, "");
 if (failed.length === 0) process.exit(0);
 
 if (failed.length > MAX_RERUN_FLOWS) {
@@ -150,9 +232,6 @@ const names = failed
   )
   .join(", ");
 console.log(`\nRerunning ${failed.length} flow file(s) once: ${names}`);
-const stillFailing = [];
-for (const [i, run] of failed.entries()) {
-  if (runFlow(run, `retry-${i}`) !== 0) stillFailing.push(run);
-}
+const stillFailing = await runAll(failed, "retry-");
 if (stillFailing.length > 0) process.exit(1);
 console.log("All failed flows passed on rerun.");

@@ -28,8 +28,8 @@ tags:
 - tapOn:
     id: "calendar-form-title"
 - inputText: "Bins out"
-# Tapping a label dismisses the keyboard, which would swallow the taps below
-- tapOn: "Starts"
+# The open keyboard swallows the taps below; Return closes it.
+- pressKey: Enter
 - tapOn:
     id: "calendar-form-repeat-weeks"
 - scrollUntilVisible:

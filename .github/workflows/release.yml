@@ -125,10 +125,6 @@ jobs:
     if: needs.check.outputs.is-release == 'true'
     runs-on: xcode-27
     timeout-minutes: 90
-    env:
-      MAESTRO_VERSION: "2.12.1"
-      MAESTRO_CLI_NO_ANALYTICS: "1"
-      MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
     steps:
       - uses: actions/checkout@v7
 
@@ -187,9 +183,7 @@ jobs:
           E2E_TESTING: "true"
 
       - name: Install Maestro
-        run: |
-          curl -fsSL https://get.maestro.mobile.dev | bash
-          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+        run: bash apps/expo/e2e/install-maestro.sh "$RUNNER_TEMP/maestro" >> "$GITHUB_PATH"
 
       # Pro Max: the App Store's required 6.9" screenshots come from it.
       - name: Create iOS simulator
@@ -203,7 +197,6 @@ jobs:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
           xcrun simctl bootstatus "$UDID"
-          xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
           # A fresh simulator shows the QuickPath swipe-typing tutorial over
           # the keyboard the second time an input gains focus, which would
           # end up in the screenshots.
@@ -217,11 +210,7 @@ jobs:
       - name: Install and pre-warm app
         env:
           UDID: ${{ steps.sim.outputs.udid }}
-        run: |
-          xcrun simctl install "$UDID" apps/expo/ios/build/Build/Products/Release-iphonesimulator/Flatsby.app
-          xcrun simctl launch "$UDID" com.flatcove.app.v2 || true
-          sleep 15
-          xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
+        run: bash apps/expo/e2e/prepare-device.sh ios "$UDID" apps/expo/ios/build/Build/Products/Release-iphonesimulator/Flatsby.app
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
@@ -253,7 +242,6 @@ jobs:
           UDID: ${{ steps.ipad.outputs.udid }}
         run: |
           xcrun simctl bootstatus "$UDID"
-          xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
           xcrun simctl spawn "$UDID" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
           xcrun simctl ui "$UDID" appearance dark
           xcrun simctl status_bar "$UDID" override \
@@ -263,11 +251,7 @@ jobs:
       - name: Install and pre-warm app on iPad
         env:
           UDID: ${{ steps.ipad.outputs.udid }}
-        run: |
-          xcrun simctl install "$UDID" apps/expo/ios/build/Build/Products/Release-iphonesimulator/Flatsby.app
-          xcrun simctl launch "$UDID" com.flatcove.app.v2 || true
-          sleep 15
-          xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
+        run: bash apps/expo/e2e/prepare-device.sh ios "$UDID" apps/expo/ios/build/Build/Products/Release-iphonesimulator/Flatsby.app
 
       - name: Capture iPad store screenshots
         working-directory: apps/expo
@@ -345,10 +329,6 @@ jobs:
     if: needs.check.outputs.is-release == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    env:
-      MAESTRO_VERSION: "2.12.1"
-      MAESTRO_CLI_NO_ANALYTICS: "1"
-      MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
     steps:
       - uses: actions/checkout@v7
 
@@ -393,9 +373,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Install Maestro
-        run: |
-          curl -fsSL https://get.maestro.mobile.dev | bash
-          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+        run: bash apps/expo/e2e/install-maestro.sh "$RUNNER_TEMP/maestro" >> "$GITHUB_PATH"
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
