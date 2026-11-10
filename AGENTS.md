@@ -145,9 +145,11 @@ migrate. `@t3-oss/env-nextjs` validates env vars at startup and skips validation
 when `CI=true`.
 - `pnpm op-prod` points at the production database and services. Never run it
 unless Ruffy asks for it in that message.
-- `op` and `op-prod` need the 1Password CLI beta (`1password-cli@beta`) with desktop
-app integration, and block on an unlock prompt only Ruffy can answer. If it hangs or
-says not signed in, ask rather than retry.
+- `op` and `op-prod` need the 1Password CLI beta (`1password-cli@beta`). `pnpm op`
+runs unattended when the Keychain holds `flatsby-op-dev`, a read-only service
+account for the dev Environment only. Without it, and always for `op-prod`, op
+blocks on a desktop unlock prompt only Ruffy can answer. If it hangs or says not
+signed in, ask rather than retry.
 - `pnpm install` runs `pnpm lint:ws` as a postinstall hook.
 - `pnpm dev:next` is `turbo watch dev`, so shared packages rebuild on change without  
 you restarting anything.

@@ -25,7 +25,7 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "ui-add": "pnpm dlx shadcn@latest add -c packages/ui",
-    "op": "op run --no-masking --environment azz4y2ohqppyjg4f3cssxtxbia --",
+    "op": "bash scripts/op.sh",
     "op-prod": "op run --no-masking --environment hwryn4byznprvfoes7jqfujbfu --"
   },
   "devDependencies": {
