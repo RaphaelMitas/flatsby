@@ -190,7 +190,7 @@ jobs:
     strategy:
       fail-fast: false
       # Five shards: the repo's macOS runner concurrency is 5, so a sixth would
-      # queue behind the first finisher.
+      # queue behind the first finisher. Nothing runs a flow no shard names.
       matrix:
         include:
           - shard: quick
