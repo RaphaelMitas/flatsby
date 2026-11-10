@@ -125,6 +125,9 @@ export function tryCapture(cmd: string, args: string[]): string | undefined {
   }
 }
 
+export const isLoopback = (url: string) =>
+  ["localhost", "127.0.0.1"].includes(new URL(url).hostname);
+
 export const sleep = (ms: number) =>
   new Promise<void>((done) => setTimeout(done, ms));
 

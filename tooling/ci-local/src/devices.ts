@@ -16,6 +16,7 @@ import {
   alive,
   capture,
   claimPorts,
+  isLoopback,
   mustRun,
   run,
   signal,
@@ -200,8 +201,8 @@ async function throwawayEmulator(
       throw new Error(
         `${name} stopped while booting${failed ? `: ${failed}` : ""}, see ${ctx.log}`,
       );
-    const prop = (name: string) =>
-      tryCapture(adb, ["-s", serial, "shell", "getprop", name]);
+    const prop = (key: string) =>
+      tryCapture(adb, ["-s", serial, "shell", "getprop", key]);
     if (prop("sys.boot_completed") === "1") {
       // Another emulator can take the port before ours binds it.
       const avd = prop("ro.boot.qemu.avd_name");
@@ -321,12 +322,11 @@ async function leaseDevice(
   // workers, so the lease must be on this machine's own worker. Only a gateway
   // names the worker; a worker reached directly is this one if it's local.
   const worker = lease.worker?.label;
-  const local = worker
-    ? worker === localWorker()
-    : ["localhost", "127.0.0.1"].includes(new URL(gateway.url).hostname);
+  const local = worker ? worker === localWorker() : isLoopback(gateway.url);
   if (!local) {
     await api(`/v1/leases/${leaseId}`, { method: "DELETE" });
     lease = undefined;
+    requestId = undefined;
     throw new Error(
       `Leased a device on worker ${worker ?? gateway.url}, but ci:local only drives devices on this machine`,
     );

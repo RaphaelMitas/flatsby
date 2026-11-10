@@ -28,6 +28,7 @@ import {
   cacheDir,
   capture,
   claimPorts,
+  isLoopback,
   mustRun,
   repoRoot,
   run,
@@ -92,8 +93,7 @@ function gatewayFromEnv(): Gateway | undefined {
   if (!url && !token) return undefined;
   if (!url || !token)
     throw new Error("Set SIMLOCK_URL and SIMLOCK_TOKEN together");
-  const { protocol, hostname } = new URL(url);
-  if (protocol !== "https:" && !["localhost", "127.0.0.1"].includes(hostname))
+  if (new URL(url).protocol !== "https:" && !isLoopback(url))
     throw new Error(
       "SIMLOCK_URL must be https: the token goes with every request",
     );
