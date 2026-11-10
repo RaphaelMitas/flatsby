@@ -1,5 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Branches only change between 2 and 4am: every push runs the E2E suite on five macOS runners, and hourly pushes used most of that capacity"
+  ],
   "extends": [
     "config:recommended",
     ":separateMajorReleases",
@@ -9,7 +12,7 @@
   "baseBranchPatterns": ["main"],
   "prConcurrentLimit": 2,
   "timezone": "Europe/Berlin",
-  "schedule": ["* 1-4 * * *"],
+  "schedule": ["* 2-3 * * *"],
   "updateNotScheduled": false,
   "minimumReleaseAge": "2 days",
   "rangeStrategy": "bump",
@@ -27,7 +30,9 @@
     "schedule": []
   },
   "lockFileMaintenance": {
+    "description": "Its window is one night a month, so it keeps rebasing outside it; otherwise the first lockfile conflict would park it until the next month",
     "enabled": true,
+    "updateNotScheduled": true,
     "schedule": ["before 5am on the first day of the month"]
   },
   "packageRules": [

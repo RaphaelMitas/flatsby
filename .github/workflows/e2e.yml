@@ -226,8 +226,7 @@ jobs:
       - name: Unpack app
         run: tar -xzf Flatsby-app.tar.gz
 
-      # Before the simulator: its first boot starves everything beside it, and
-      # the stack took 3.5-8 min next to a booting simulator.
+      # Before the simulator: its first boot starves anything running beside it.
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
 
