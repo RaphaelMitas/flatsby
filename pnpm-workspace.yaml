@@ -12,8 +12,7 @@ allowBuilds:
   sharp: true
   unrs-resolver: false
 
-# Transitive vulnerabilities a lockfile refresh can't clear: each is held back by
-# a parent's exact pin or a range that excludes the patched release, until that
+# Transitive vulnerabilities held back by a parent package. Each clears when that
 # parent ships a fix or we bump it. Re-check with `pnpm audit` and drop entries.
 auditConfig:
   ignoreGhsas:
