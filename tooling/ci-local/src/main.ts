@@ -146,11 +146,12 @@ async function sweepDeadStacks(log: string): Promise<void> {
     const stackDir = existsSync(dirFile) ? readFileSync(dirFile, "utf8") : "";
     const release = tryLock(claim);
     if (typeof release === "number") continue;
-    if (stackDir)
-      await run("bash", [STACK, "stop"], {
-        log,
-        env: { ...stackPortEnv(Number(web)), STACK_DIR: stackDir },
-      });
+    // Stop finds the processes by port, so it works without the run folder.
+    await run("bash", [STACK, "stop"], {
+      log,
+      env: { ...stackPortEnv(Number(web)), STACK_DIR: stackDir || claim },
+      cleanup: true,
+    });
     release();
   }
 }
@@ -188,6 +189,10 @@ function cleanUp(): Promise<void> {
   })();
   return cleaning;
 }
+
+// A closed terminal or a dropped pipe must not stop a cleanup halfway.
+for (const stream of [process.stdout, process.stderr])
+  stream.on("error", () => {});
 
 async function main(): Promise<number> {
   const { values, positionals } = parseArgs({

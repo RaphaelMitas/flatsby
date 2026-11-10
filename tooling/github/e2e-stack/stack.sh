@@ -124,7 +124,7 @@ start() {
 stop() {
   for port in "$web_port" "$proxy_port"; do
     pids=$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)
-    [ -n "$pids" ] && kill $pids
+    [ -n "$pids" ] && kill $pids || true
   done
   if [ -d "$dir/pgdata" ]; then
     "$dir/postgres/bin/pg_ctl" -D "$dir/pgdata" -m fast stop >/dev/null || true

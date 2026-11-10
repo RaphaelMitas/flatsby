@@ -199,16 +199,14 @@ async function throwawayEmulator(
       throw new Error(
         `${name} stopped while booting${failed ? `: ${failed}` : ""}, see ${ctx.log}`,
       );
-    if (
-      tryCapture(adb, [
-        "-s",
-        serial,
-        "shell",
-        "getprop",
-        "sys.boot_completed",
-      ]) === "1"
-    )
+    const prop = (name: string) =>
+      tryCapture(adb, ["-s", serial, "shell", "getprop", name]);
+    if (prop("sys.boot_completed") === "1") {
+      // Another emulator can take the port before ours binds it.
+      if (prop("ro.boot.qemu.avd_name") !== name)
+        throw new Error(`${serial} is not this run's emulator`);
       return serial;
+    }
     await sleep(3000);
   }
   throw new Error(`${name} did not finish booting in 10 minutes`);
