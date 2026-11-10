@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   callbackOutcome,
@@ -158,46 +158,41 @@ describe("thrownFailureCode", () => {
 });
 
 describe("startSignIn", () => {
-  const failures = () => {
-    const codes: string[] = [];
-    return { codes, onFailed: (code: string) => void codes.push(code) };
-  };
-
   it("counts a lost connection as a failure without throwing", async () => {
-    const { codes, onFailed } = failures();
+    const onFailed = vi.fn();
     const started = await startSignIn(
       () => Promise.reject(new TypeError("Failed to fetch")),
       onFailed,
     );
     expect(started).toBe(false);
-    expect(codes).toEqual(["network"]);
+    expect(onFailed).toHaveBeenCalledWith("network");
   });
 
   it("rethrows anything else so error tracking sees it", async () => {
-    const { codes, onFailed } = failures();
+    const onFailed = vi.fn();
     const bug = new TypeError("x is not a function");
     await expect(startSignIn(() => Promise.reject(bug), onFailed)).rejects.toBe(
       bug,
     );
-    expect(codes).toEqual(["exception"]);
+    expect(onFailed).toHaveBeenCalledWith("exception");
   });
 
   it("reports a refused start by its code", async () => {
-    const { codes, onFailed } = failures();
+    const onFailed = vi.fn();
     const started = await startSignIn(
       () =>
         Promise.resolve({ error: { code: "PROVIDER_NOT_FOUND", status: 404 } }),
       onFailed,
     );
     expect(started).toBe(false);
-    expect(codes).toEqual(["provider_not_found"]);
+    expect(onFailed).toHaveBeenCalledWith("provider_not_found");
   });
 
   it("starts when the server answers without an error", async () => {
-    const { codes, onFailed } = failures();
+    const onFailed = vi.fn();
     expect(
       await startSignIn(() => Promise.resolve({ error: null }), onFailed),
     ).toBe(true);
-    expect(codes).toEqual([]);
+    expect(onFailed).not.toHaveBeenCalled();
   });
 });

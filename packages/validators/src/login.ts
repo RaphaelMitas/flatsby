@@ -91,12 +91,12 @@ export const loginErrorCode = (code: string | null | undefined) => {
 export const startFailureCode = (error: AuthError) =>
   loginErrorCode(error.code ?? `http_${error.status}`);
 
-// Unreachable server, by message: Chrome, Firefox, Safari, React Native's polyfill, then Expo's fetch
-const NETWORK_FAILURE =
+// Chrome, Firefox, Safari, React Native's polyfill, then Expo's fetch
+const UNREACHABLE_SERVER_MESSAGE =
   /^(Failed to fetch|NetworkError when attempting to fetch|Load failed|Network request failed|fetch failed:)/;
 
 export const thrownFailureCode = (thrown: unknown) =>
-  thrown instanceof Error && NETWORK_FAILURE.test(thrown.message)
+  thrown instanceof Error && UNREACHABLE_SERVER_MESSAGE.test(thrown.message)
     ? "network"
     : "exception";
 
@@ -110,8 +110,9 @@ export async function startSignIn(
     onFailed(code);
     if (code !== "network") throw thrown;
   });
-  if (result?.error) onFailed(startFailureCode(result.error));
-  return result !== undefined && !result.error;
+  if (!result) return false;
+  if (result.error) onFailed(startFailureCode(result.error));
+  return !result.error;
 }
 
 const PROVIDER_CANCEL_CODES = new Set([

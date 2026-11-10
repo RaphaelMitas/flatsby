@@ -45,6 +45,7 @@ test.describe("Login page", () => {
     "/calendar",
     "/expenses",
     "/shopping-list",
+    "/group",
     "/group/settings",
   ]) {
     test(`sends a signed-out visit to ${path} to login`, async ({ page }) => {

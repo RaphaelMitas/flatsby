@@ -72,7 +72,7 @@ const reportAs = (requester: Requester, error: ApiError) =>
     message_key: error.messageKey,
   });
 
-// An expected error with a cause is a database failure mapped to it, like a foreign key violation
+// A cause means a mapped database failure, like a foreign key violation
 const isAnswer = (path: string, error: ApiError) =>
   grouping(path, error).kind === "expected" && error.cause === undefined;
 
