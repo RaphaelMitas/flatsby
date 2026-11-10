@@ -9,6 +9,7 @@
   "packageManager": "pnpm@12.18.0",
   "scripts": {
     "build": "turbo run build",
+    "ci:local": "node tooling/ci-local/src/main.ts",
     "check": "turbo run check format --continue",
     "check:fix": "turbo run check format --continue -- --write",
     "clean": "git clean -xdf node_modules",
@@ -25,8 +26,8 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "ui-add": "pnpm dlx shadcn@latest add -c packages/ui",
-    "op": "bash scripts/op.sh",
-    "op-prod": "op run --no-masking --environment hwryn4byznprvfoes7jqfujbfu --"
+    "op": "bash scripts/op.sh dev",
+    "op-prod": "bash scripts/op.sh prod"
   },
   "devDependencies": {
     "@effect/tsgo": "catalog:",

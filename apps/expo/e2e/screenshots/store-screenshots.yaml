@@ -11,8 +11,9 @@ appId: ${APP_ID}
 #
 # Navigation taps go through tap-until.yaml (act-verify-repeat) or
 # tap-tab.yaml (label -> id on iOS -> position) so a missed tap costs seconds, not
-# the run. Run via `node e2e/run-flows.mjs ../screenshots/store-screenshots`;
-# E2E_LOCALES="en de" captures each language's household.
+# the run. Run via `E2E_DEVICE=<udid> node e2e/run-flows.mjs
+# ../screenshots/store-screenshots`; E2E_LOCALES="en de" captures each
+# language's household.
 #
 # The crop-* captures are single elements the store templates lift out of a
 # screen; cropping by id keeps them exact whatever the language or layout.

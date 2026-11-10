@@ -126,9 +126,10 @@ All GitHub repo settings, nothing local (already configured as of Aug 2026):
   version goes live on both stores (after store review) without further
   approval. Review the diff and release notes before merging.
 - The screenshot flow lives outside `apps/expo/e2e/flows/`, so the regular
-  e2e suite never runs it. Run it locally against `pnpm dev:next` with:
+  e2e suite never runs it. Run it locally against `pnpm dev:next`, on a
+  simulator you booted for it:
 
   ```bash
   cd apps/expo
-  E2E_API_URL=http://localhost:3000 node e2e/run-flows.mjs ../screenshots/store-screenshots
+  E2E_API_URL=http://localhost:3000 E2E_DEVICE=<udid> node e2e/run-flows.mjs ../screenshots/store-screenshots
   ```
