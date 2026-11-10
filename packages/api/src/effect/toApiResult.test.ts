@@ -45,7 +45,7 @@ describe("toApiResult", () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect("translates a failure and reports it as expected", () =>
+  it.effect("translates an expected failure and reports nothing", () =>
     Effect.gen(function* () {
       const result = yield* toApiResult(
         Effect.fail(Errors.notFound("group", 7)),
@@ -63,18 +63,34 @@ describe("toApiResult", () => {
         identifier: 7,
       });
 
+      assert.deepStrictEqual(yield* Ref.get(yield* Reports), []);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect("reports an expected failure that a database error caused", () =>
+    Effect.gen(function* () {
+      const violation = new Error("violates foreign key constraint");
+      const failure = Errors.validation(
+        "errors.invalidReference",
+        undefined,
+        violation,
+      );
+      const result = yield* toApiResult(Effect.fail(failure));
+
+      assert.isFalse(result.success);
       const reports = yield* Ref.get(yield* Reports);
       assert.strictEqual(reports.length, 1);
+      assert.strictEqual(reports[0]?.error, failure);
       assert.strictEqual(reports[0]?.operation, "group.getGroup");
       assert.strictEqual(reports[0]?.distinctId, "user-1");
       assert.deepStrictEqual(reports[0]?.additionalProperties, {
         kind: "expected",
         requestId: "request-1",
-        error_type: "NotFoundError",
-        message_key: "errors.notFound.group",
+        error_type: "ValidationError",
+        message_key: "errors.invalidReference",
         $exception_fingerprint:
-          "group.getGroup:NotFoundError:errors.notFound.group",
-        $issue_name: "group.getGroup NotFoundError",
+          "group.getGroup:ValidationError:errors.invalidReference",
+        $issue_name: "group.getGroup ValidationError",
       });
     }).pipe(Effect.provide(TestLayer)),
   );
@@ -147,9 +163,9 @@ describe("toApiResult", () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect("answers and reports a failure plus a defect as the failure", () =>
+  it.effect("answers a failure plus a defect as the failure", () =>
     Effect.gen(function* () {
-      const failure = Errors.forbidden("errors.mustBeAdmin");
+      const failure = Errors.database("update group");
       const result = yield* toApiResult(
         Effect.failCause(
           Cause.combine(Cause.fail(failure), Cause.die(new Error("boom"))),
@@ -158,10 +174,31 @@ describe("toApiResult", () => {
 
       assert.isFalse(result.success);
       if (result.success) return;
-      assert.strictEqual(result.error.type, "ForbiddenError");
+      assert.strictEqual(result.error.type, "DatabaseError");
       const reports = yield* Ref.get(yield* Reports);
       assert.strictEqual(reports.length, 1);
       assert.strictEqual(reports[0]?.error, failure);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect("reports the defect behind an expected failure", () =>
+    Effect.gen(function* () {
+      const defect = new Error("boom");
+      const result = yield* toApiResult(
+        Effect.failCause(
+          Cause.combine(
+            Cause.fail(Errors.forbidden("errors.mustBeAdmin")),
+            Cause.die(defect),
+          ),
+        ),
+      );
+
+      assert.isFalse(result.success);
+      if (result.success) return;
+      assert.strictEqual(result.error.type, "ForbiddenError");
+      const reports = yield* Ref.get(yield* Reports);
+      assert.strictEqual(reports.length, 1);
+      assert.strictEqual(reports[0]?.error, defect);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

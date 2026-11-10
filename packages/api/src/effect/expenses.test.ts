@@ -48,7 +48,7 @@ const TestLayer = Layer.effect(
 );
 
 describe("getExpenseWithAccess", () => {
-  it.effect("answers a missing expense with one NotFound report", () =>
+  it.effect("answers a missing expense with NotFound and reports nothing", () =>
     Effect.gen(function* () {
       const result = yield* toApiResult(getExpenseWithAccess(1));
 
@@ -59,8 +59,7 @@ describe("getExpenseWithAccess", () => {
         result.error.details.messageKey,
         "errors.notFound.expense",
       );
-      const reports = yield* Ref.get(yield* Reports);
-      assert.strictEqual(reports.length, 1);
+      assert.deepStrictEqual(yield* Ref.get(yield* Reports), []);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

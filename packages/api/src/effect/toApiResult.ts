@@ -72,25 +72,26 @@ const reportAs = (requester: Requester, error: ApiError) =>
     message_key: error.messageKey,
   });
 
-export const report = (error: ApiError) =>
-  CurrentRequest.use((request) => reportAs(request, error));
+// A cause means a mapped database failure, like a foreign key violation
+const isAnswer = (path: string, error: ApiError) =>
+  grouping(path, error).kind === "expected" && error.cause === undefined;
 
 const reportAndMap = Effect.fnUntraced(function* (
   requester: Requester,
   cause: Cause.Cause<ApiError>,
 ) {
   const failure = Cause.findError(cause);
-  if (Result.isSuccess(failure)) {
+  const defect = Cause.findDefect(cause);
+  if (Result.isSuccess(failure) && !isAnswer(requester.path, failure.success)) {
     yield* reportAs(requester, failure.success);
-    return yield* failure.success;
+  } else if (Result.isSuccess(defect)) {
+    yield* capture(requester, defect.success, { kind: "defect" });
   }
 
-  const defect = Cause.findDefect(cause);
+  if (Result.isSuccess(failure)) return yield* failure.success;
   if (Result.isSuccess(defect)) {
-    yield* capture(requester, defect.success, { kind: "defect" });
     return yield* Errors.internalServer("operation", defect.success);
   }
-
   return yield* Effect.failCause(cause);
 });
 

@@ -91,9 +91,29 @@ export const loginErrorCode = (code: string | null | undefined) => {
 export const startFailureCode = (error: AuthError) =>
   loginErrorCode(error.code ?? `http_${error.status}`);
 
-// fetch rejects with a TypeError when the request never reaches the server
+// Chrome, Firefox, Safari, React Native's polyfill, then Expo's fetch
+const UNREACHABLE_SERVER_MESSAGE =
+  /^(Failed to fetch|NetworkError when attempting to fetch|Load failed|Network request failed|fetch failed:)/;
+
 export const thrownFailureCode = (thrown: unknown) =>
-  thrown instanceof TypeError ? "network" : "exception";
+  thrown instanceof Error && UNREACHABLE_SERVER_MESSAGE.test(thrown.message)
+    ? "network"
+    : "exception";
+
+// A lost connection is only a login_failed; anything else thrown still reaches error tracking
+export async function startSignIn(
+  run: () => Promise<{ error: AuthError | null }>,
+  onFailed: (code: string) => void,
+) {
+  const result = await run().catch((thrown: unknown) => {
+    const code = thrownFailureCode(thrown);
+    onFailed(code);
+    if (code !== "network") throw thrown;
+  });
+  if (!result) return false;
+  if (result.error) onFailed(startFailureCode(result.error));
+  return !result.error;
+}
 
 const PROVIDER_CANCEL_CODES = new Set([
   "access_denied",

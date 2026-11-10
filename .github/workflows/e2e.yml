@@ -159,8 +159,8 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      # Five shards of ~10-13 min: the repo's macOS runner concurrency is 5,
-      # so a sixth would queue behind the first finisher.
+      # Five shards: the repo's macOS runner concurrency is 5, so a sixth would
+      # queue behind the first finisher. Nothing runs a flow no shard names.
       matrix:
         include:
           - shard: quick
@@ -170,9 +170,9 @@ jobs:
           - shard: sl-browse
             areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
           - shard: sl-manage
-            areas: shopping-list/management shopping-list/suggestions
+            areas: shopping-list/management shopping-list/suggestions expenses/splits
           - shard: expenses
-            areas: expenses
+            areas: expenses/creation expenses/debts-settle expenses/debts expenses/management
     steps:
       - uses: actions/checkout@v7
 
@@ -319,9 +319,9 @@ jobs:
           - shard: sl-browse
             areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
           - shard: sl-manage
-            areas: shopping-list/management shopping-list/suggestions shopping-list/offline
+            areas: shopping-list/management shopping-list/suggestions shopping-list/offline expenses/splits
           - shard: expenses
-            areas: expenses
+            areas: expenses/creation expenses/debts-settle expenses/debts expenses/management
     steps:
       - uses: actions/checkout@v7
 
