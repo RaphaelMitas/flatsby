@@ -189,8 +189,8 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      # Five shards of ~10-13 min: the repo's macOS runner concurrency is 5,
-      # so a sixth would queue behind the first finisher.
+      # Five shards: the repo's macOS runner concurrency is 5, so a sixth would
+      # queue behind the first finisher.
       matrix:
         include:
           - shard: quick
@@ -200,9 +200,9 @@ jobs:
           - shard: sl-browse
             areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
           - shard: sl-manage
-            areas: shopping-list/management shopping-list/suggestions
+            areas: shopping-list/management shopping-list/suggestions expenses/splits
           - shard: expenses
-            areas: expenses
+            areas: expenses/creation expenses/debts-settle expenses/debts expenses/management
     env:
       MAESTRO_VERSION: "2.12.1"
       MAESTRO_CLI_NO_ANALYTICS: "1"
@@ -226,18 +226,18 @@ jobs:
       - name: Unpack app
         run: tar -xzf Flatsby-app.tar.gz
 
+      # Before the simulator: its first boot starves everything beside it, and
+      # the stack took 3.5-8 min next to a booting simulator.
+      - name: Start E2E stack
+        uses: ./tooling/github/e2e-stack
+
       # Pro Max because old models time out Maestro's driver and the flows' tab
-      # positions assume its screen. bootstatus waits in the install step so the
-      # boot overlaps the stack start; booting before pnpm install instead slows
-      # the install from ~1.5 to 7-12 min.
+      # positions assume its screen.
       - name: Create iOS simulator
         id: sim
         uses: ./tooling/github/ios-simulator
         with:
           device: "^iPhone [0-9]+ Pro Max$"
-
-      - name: Start E2E stack
-        uses: ./tooling/github/e2e-stack
 
       # The first launch pays dyld/springboard warm-up, which stalls past the
       # first flow's wait if it happens inside Maestro.
@@ -392,9 +392,9 @@ jobs:
           - shard: sl-browse
             areas: shopping-list/dashboard shopping-list/filtering shopping-list/items
           - shard: sl-manage
-            areas: shopping-list/management shopping-list/suggestions shopping-list/offline
+            areas: shopping-list/management shopping-list/suggestions shopping-list/offline expenses/splits
           - shard: expenses
-            areas: expenses
+            areas: expenses/creation expenses/debts-settle expenses/debts expenses/management
     env:
       MAESTRO_VERSION: "2.12.1"
       MAESTRO_CLI_NO_ANALYTICS: "1"
