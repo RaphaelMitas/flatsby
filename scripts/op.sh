@@ -21,6 +21,11 @@ case ${1:?usage: op.sh dev|prod <command>} in
     ;;
 esac
 shift
+# Without a command, `env` below would print every secret.
+if [ $# -eq 0 ]; then
+  echo "usage: pnpm op <command>" >&2
+  exit 2
+fi
 
 # The command gets the Environment's secrets, not the token that read them.
 exec op run --no-masking --environment "$environment" -- env -u OP_SERVICE_ACCOUNT_TOKEN "$@"

@@ -4,6 +4,7 @@ import {
   mkdirSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:net";
@@ -154,9 +155,12 @@ export function tryLock(path: string): (() => void) | number {
     try {
       holder = Number(readFileSync(join(path, "pid"), "utf8"));
     } catch {
-      // Taken a moment ago and the pid isn't written yet.
+      // Taken a moment ago and the pid isn't written yet, unless its taker
+      // died in between.
+      const taken = statSync(path, { throwIfNoEntry: false })?.mtimeMs ?? 0;
+      if (Date.now() - taken < 10_000) return 0;
     }
-    if (!holder || alive(holder)) return holder;
+    if (holder && alive(holder)) return holder;
     rmSync(path, { recursive: true, force: true });
   }
 }

@@ -52,6 +52,7 @@ Devices are throwaway simulators and emulators unless SIMLOCK_URL and
 SIMLOCK_TOKEN name a Simlock gateway to lease them from.`;
 
 const STACK = "tooling/github/e2e-stack/stack.sh";
+const KEEP_RUNS = 4;
 
 const stackPortEnv = (web: number) => ({
   PORT: String(web),
@@ -258,11 +259,28 @@ async function main(): Promise<number> {
   }
 
   const runs = join(repoRoot, ".ci-local");
-  // Emulator disks are gigabytes, and a killed run leaves its own behind.
+  // Emulator disks, app copies and databases are gigabytes, and a killed run
+  // leaves its own behind; logs, results and summary.json stay.
   const avdDir = join(runs, "avd");
   rmSync(avdDir, { recursive: true, force: true });
+  const dropHeavy = (run: string) => {
+    for (const entry of readdirSync(run))
+      if (/^(stack|(ios|android)-app(-tmp)?)$/.test(entry))
+        rmSync(join(run, entry), { recursive: true, force: true });
+  };
+  // Run folders are named by start time, so they sort oldest first.
+  const earlier = readdirSync(runs)
+    .filter((name) => /^\d{4}-/.test(name))
+    .sort();
+  for (const [i, name] of earlier.entries()) {
+    const run = join(runs, name);
+    if (i < earlier.length - KEEP_RUNS)
+      rmSync(run, { recursive: true, force: true });
+    else dropHeavy(run);
+  }
   const runDir = join(runs, new Date().toISOString().replace(/[:.]/g, "-"));
   mkdirSync(runDir, { recursive: true });
+  cleanups.push(async () => dropHeavy(runDir));
   const logOf = (name: string) => join(runDir, `${name}.log`);
   await sweepDeadRuns(logOf("cleanup"));
   await sweepDeadStacks(logOf("cleanup"));
@@ -351,6 +369,8 @@ async function main(): Promise<number> {
     const log = logOf(platform);
     const e2eDir = join(repoRoot, "apps/expo");
     await mustRun("node", ["e2e/validate-flows.mjs"], { cwd: e2eDir, log });
+    // Leased devices wait for nobody else's run while ours builds.
+    if (gateway) await apps.get(platform);
     const devices = await acquireDevices(deviceCount, {
       platform,
       avdDir,
@@ -374,7 +394,7 @@ async function main(): Promise<number> {
       cwd: e2eDir,
       log,
       env: {
-        PATH: [installMaestro(), toolEnv.PATH].join(":"),
+        PATH: [await installMaestro(), toolEnv.PATH].join(":"),
         E2E_PLATFORM: platform,
         E2E_DEVICE: devices.join(","),
         E2E_API_URL: apiUrl,

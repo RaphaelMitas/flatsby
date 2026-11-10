@@ -220,7 +220,7 @@ const Lease = z.object({
   id: z.string(),
   // A simulator UDID, or a Simlock emulator's AVD name.
   udid: z.string().regex(/^[0-9A-F-]{36}$|^simlock_[0-9a-f-]+$/),
-  address: z.string(),
+  address: z.string().regex(/^emulator-\d+$|^[0-9A-F-]{36}$/),
   ttlMs: z.number(),
   worker: z.object({ label: z.string() }).partial().optional(),
 });
@@ -260,7 +260,13 @@ async function leaseDevice(
       },
     });
     const text = await response.text();
-    return LeaseRequest.parse(text ? JSON.parse(text) : {});
+    try {
+      return LeaseRequest.parse(text ? JSON.parse(text) : {});
+    } catch {
+      throw new Error(
+        `Gateway answered ${response.status} to ${path}: ${text.slice(0, 200)}`,
+      );
+    }
   };
   const body =
     ctx.platform === "ios"
@@ -315,6 +321,8 @@ async function leaseDevice(
         throw new Error(`Lease request ${request.id} vanished`);
       request = polled.request;
     }
+    if (!request.lease)
+      throw new Error(`Lease ${request.id} granted without a device`);
     lease = request.lease;
   }
   const leaseId = lease.id;

@@ -171,26 +171,39 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
   });
 }
 
+// A device that failed twice in a row while another one is still working is
+// likely broken (no network, dead driver); it stops taking flows for the run.
+const retired = new Set();
+
 async function runAll(runs, tagPrefix) {
   const queue = [...runs.entries()];
   const failed = [];
   await Promise.all(
-    devices.map(async (device) => {
-      // A driver reinstall costs 25-55s per iOS flow; only a failure can
-      // leave the driver broken.
-      let reinstallDriver = true;
-      for (let next = queue.shift(); next; next = queue.shift()) {
-        const [i, run] = next;
-        const status = await runFlow(
-          run,
-          `${tagPrefix}${i}`,
-          device,
-          reinstallDriver,
-        );
-        reinstallDriver = status !== 0;
-        if (status !== 0) failed.push(run);
-      }
-    }),
+    devices
+      .filter((device) => !retired.has(device))
+      .map(async (device) => {
+        // A driver reinstall costs 25-55s per iOS flow; only a failure can
+        // leave the driver broken.
+        let reinstallDriver = true;
+        let failuresInARow = 0;
+        for (let next = queue.shift(); next; next = queue.shift()) {
+          const [i, run] = next;
+          const status = await runFlow(
+            run,
+            `${tagPrefix}${i}`,
+            device,
+            reinstallDriver,
+          );
+          reinstallDriver = status !== 0;
+          failuresInARow = status === 0 ? 0 : failuresInARow + 1;
+          if (status !== 0) failed.push(run);
+          if (failuresInARow >= 2 && retired.size < devices.length - 1) {
+            retired.add(device);
+            console.log(`\n${device} failed twice in a row; leaving it out`);
+            break;
+          }
+        }
+      }),
   );
   return failed;
 }

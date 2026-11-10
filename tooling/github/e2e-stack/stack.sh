@@ -92,6 +92,8 @@ start_postgres() {
 }
 
 start() {
+  # The fresh database, never one an ambient DATABASE_URL or the root .env names.
+  while IFS= read -r line; do export "$line"; done < <(print_env)
   mkdir -p "$dir"
   start_postgres
 
@@ -122,6 +124,8 @@ start() {
 
 # By port, not pid: pnpm starts next-server as a child that outlives pnpm.
 stop() {
+  # No defaults here: 3000 and 5434 may be someone's `pnpm dev`.
+  : "${PORT:?stop needs PORT}" "${PG_PORT:?stop needs PG_PORT}" "${DB_WSPROXY_PORT:?stop needs DB_WSPROXY_PORT}"
   for port in "$web_port" "$proxy_port"; do
     pids=$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)
     [ -n "$pids" ] && kill $pids || true
