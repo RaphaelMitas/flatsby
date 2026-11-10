@@ -1,6 +1,8 @@
+import type * as DrizzleErrors from "drizzle-orm/errors";
+import { PostHog } from "posthog-node";
 import { describe, expect, it } from "vitest";
 
-import { browserExceptionProperties } from "./posthog";
+import { browserExceptionProperties, withoutQueryParams } from "./posthog";
 
 describe("browserExceptionProperties", () => {
   it("parses Safari and Firefox stacks", () => {
@@ -40,5 +42,37 @@ describe("browserExceptionProperties", () => {
       mechanism: "onunhandledrejection",
     });
     expect($exception_list[0]?.stacktrace).toBeUndefined();
+  });
+});
+
+describe("withoutQueryParams", () => {
+  it("redacts the params of a query error from another drizzle copy", async () => {
+    const copy: typeof DrizzleErrors = await import(
+      /* @vite-ignore */ `${import.meta.resolve("drizzle-orm/errors")}?copy`
+    );
+    // Frames carry source lines, so a literal token would show up through them
+    const token = crypto.randomUUID();
+    const error = new Error("Failed to get session", {
+      cause: new copy.DrizzleQueryError(
+        'select "id" from "flat-cove_session" where "token" = $1',
+        [token],
+        new Error("password authentication failed"),
+      ),
+    });
+    error.name = "APIError";
+
+    const sent: unknown[] = [];
+    const client = new PostHog("phc_test", {
+      before_send: (event) => {
+        sent.push(event);
+        return null;
+      },
+    });
+    client.captureException(withoutQueryParams(error));
+    await client.shutdown();
+
+    const payload = JSON.stringify(sent);
+    expect(payload).toContain("Failed query: select");
+    expect(payload).not.toContain(token);
   });
 });

@@ -8,7 +8,7 @@ import {
 } from "@posthog/core";
 import { PostHog } from "posthog-node";
 
-import { DrizzleQueryError } from "@flatsby/db/errors";
+import { redactQueryParams } from "@flatsby/db/errors";
 import { redactInvitePath } from "@flatsby/validators/invite";
 
 const apiKey = process.env.POSTHOG_API_KEY;
@@ -185,22 +185,15 @@ export function buildPostHogProperties(headers: Headers, page?: PageUrls) {
   );
 }
 
-// DrizzleQueryError's message embeds the query params, which hold user data,
-// and errors like TRPCError copy their cause's message when given none
-function withoutQueryErrors(error: unknown): unknown {
-  if (error instanceof DrizzleQueryError)
-    return withoutQueryErrors(error.cause);
-  if (!(error instanceof Error) || !(error.cause instanceof Error))
-    return error;
-  const cause = withoutQueryErrors(error.cause);
-  if (cause === error.cause) return error;
-  const inherited = error.message === error.cause.message;
-  const copy = new Error(
-    inherited && cause instanceof Error ? cause.message : error.message,
-    { cause },
-  );
+// Wrappers like TRPCError copy or quote their cause's message, params included
+export function withoutQueryParams(error: unknown): unknown {
+  if (!(error instanceof Error)) return error;
+  const cause = withoutQueryParams(error.cause);
+  const message = redactQueryParams(error.message);
+  if (cause === error.cause && message === error.message) return error;
+  const copy = new Error(message, { cause });
   copy.name = error.name;
-  copy.stack = error.stack?.replace(error.message, () => copy.message);
+  copy.stack = error.stack?.replace(error.message, () => message);
   return copy;
 }
 
@@ -215,7 +208,7 @@ export function captureError({
   distinctId?: string;
   additionalProperties?: Record<string, unknown>;
 }) {
-  const cause = withoutQueryErrors(error);
+  const cause = withoutQueryParams(error);
 
   if (process.env.NODE_ENV === "development") {
     console.error(`[${operation}]`, cause);

@@ -84,6 +84,7 @@
     "@effect/vitest": "catalog:",
     "@flatsby/prettier-config": "workspace:*",
     "@flatsby/tsconfig": "workspace:*",
+    "drizzle-orm": "^0.45.4",
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
