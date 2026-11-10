@@ -65,8 +65,9 @@ function deleteSimulator(udid: string, log: string) {
   );
 }
 
+// Empty when `ps` fails, e.g. killed by the Ctrl-C a cleanup is waiting out.
 function processes(): { pid: number; command: string }[] {
-  return capture("ps", ["-eo", "pid=,command="])
+  return (tryCapture("ps", ["-eo", "pid=,command="]) ?? "")
     .split("\n")
     .flatMap((line) => {
       const [, pid, command] = /^\s*(\d+) (.*)$/.exec(line) ?? [];
@@ -203,7 +204,8 @@ async function throwawayEmulator(
       tryCapture(adb, ["-s", serial, "shell", "getprop", name]);
     if (prop("sys.boot_completed") === "1") {
       // Another emulator can take the port before ours binds it.
-      if (prop("ro.boot.qemu.avd_name") !== name)
+      const avd = prop("ro.boot.qemu.avd_name");
+      if (avd && avd !== name)
         throw new Error(`${serial} is not this run's emulator`);
       return serial;
     }
@@ -233,7 +235,6 @@ const LeaseRequest = z.object({
   error: SimlockError.optional(),
 });
 
-// This machine's worker label, if it runs a Simlock worker.
 function localWorker(): string | undefined {
   try {
     const config: unknown = JSON.parse(
@@ -316,6 +317,20 @@ async function leaseDevice(
     lease = request.lease;
   }
   const leaseId = lease.id;
+  // Maestro has to run beside the device, and device names repeat across
+  // workers, so the lease must be on this machine's own worker. Only a gateway
+  // names the worker; a worker reached directly is this one if it's local.
+  const worker = lease.worker?.label;
+  const local = worker
+    ? worker === localWorker()
+    : ["localhost", "127.0.0.1"].includes(new URL(gateway.url).hostname);
+  if (!local) {
+    await api(`/v1/leases/${leaseId}`, { method: "DELETE" });
+    lease = undefined;
+    throw new Error(
+      `Leased a device on worker ${worker ?? gateway.url}, but ci:local only drives devices on this machine`,
+    );
+  }
   const renewFailed = (reason: string) =>
     note(ctx.log, `Renewing lease ${leaseId} failed: ${reason}`);
   renew = setInterval(() => {
@@ -325,13 +340,6 @@ async function leaseDevice(
   }, lease.ttlMs / 3);
   renew.unref();
 
-  // Maestro has to run beside the device, and device names repeat across
-  // workers, so the lease must be on this machine's own worker.
-  const worker = lease.worker?.label;
-  if (!worker || worker !== localWorker())
-    throw new Error(
-      `Leased a device on worker ${worker ?? "?"}, but ci:local only drives devices on this machine`,
-    );
   if (ctx.platform === "ios") {
     if (
       !capture("xcrun", ["simctl", "list", "devices"]).includes(

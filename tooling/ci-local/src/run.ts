@@ -30,8 +30,7 @@ export interface RunOptions {
   cleanup?: boolean;
 }
 
-// Process groups still running, and whether each one is cleanup work.
-const running = new Map<number, boolean>();
+const isCleanupByPid = new Map<number, boolean>();
 let stopping = false;
 
 /** False when the process is gone; a process we may not signal still exists. */
@@ -48,7 +47,8 @@ export const alive = (pid: number) => signal(pid, 0);
 
 export function stopRunning(): void {
   stopping = true;
-  for (const [pid, cleanup] of running) if (!cleanup) signal(-pid, "SIGTERM");
+  for (const [pid, cleanup] of isCleanupByPid)
+    if (!cleanup) signal(-pid, "SIGTERM");
 }
 
 export function run(
@@ -74,7 +74,7 @@ export function run(
       log ? "pipe" : "inherit",
     ],
   });
-  if (child.pid) running.set(child.pid, options.cleanup ?? false);
+  if (child.pid) isCleanupByPid.set(child.pid, options.cleanup ?? false);
   child.stdin?.end(options.input);
   if (log) {
     child.stdout?.pipe(log, { end: false });
@@ -83,7 +83,7 @@ export function run(
   return new Promise((done, fail) => {
     child.on("error", fail);
     child.on("close", (code) => {
-      if (child.pid) running.delete(child.pid);
+      if (child.pid) isCleanupByPid.delete(child.pid);
       log?.end();
       done(code ?? 1);
     });
