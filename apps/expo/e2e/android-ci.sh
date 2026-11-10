@@ -11,30 +11,12 @@ set -uo pipefail
 apk="${1:?apk path required}"
 shift
 
-# ANR/crash dialogs are system windows that overlay the app, and Maestro's
-# hierarchy then only contains the dialog — the sluggish software-rendered
-# emulator ANRs the launcher easily, which failed every flow with
-# "login-screen not visible".
-adb shell settings put global hide_error_dialogs 1 || true
-
-# The API server runs on the runner, not in the guest: localhost:3000 inside
-# the emulator has to come back out to the host.
-adb reverse tcp:3000 tcp:3000
-
-adb install "$apk"
-# The first launch pays JIT/dex warm-up, which stalls past the first flow's
-# wait if it happens inside Maestro.
-adb shell monkey -p com.flatcove.app -c android.intent.category.LAUNCHER 1 || true
-sleep 15
-adb shell am force-stop com.flatcove.app || true
-# hide_error_dialogs only suppresses future dialogs; close any that appeared
-# before it was set.
-adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
+# The runner's only emulator.
+serial=$(adb devices | awk 'NR > 1 && $2 == "device" { print $1; exit }')
+bash "$(dirname "$0")/prepare-device.sh" android "$serial" "$apk" || exit 1
 
 cd "$(dirname "$0")/.."
-# The runner's only emulator.
-E2E_DEVICE=$(adb devices | awk 'NR > 1 && $2 == "device" { print $1; exit }') \
-  node e2e/run-flows.mjs "$@"
+E2E_DEVICE=$serial node e2e/run-flows.mjs "$@"
 status=$?
 mkdir -p e2e/results/diagnostics
 adb logcat -d > e2e/results/diagnostics/logcat.txt || true

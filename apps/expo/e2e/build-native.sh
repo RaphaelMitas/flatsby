@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the e2e app from scratch, used by CI and `pnpm ci:local`.
+# Builds the e2e app from scratch.
 #
 #   build-native.sh ios <out-dir>              -> <out-dir>/Flatsby.app
 #   build-native.sh android <out-dir> <abi>    -> <out-dir>/app-release.apk and
@@ -14,7 +14,9 @@ cd "$(dirname "$0")/.."
 # Read by app.config.ts, which the prebuild, build and bundle all evaluate.
 export E2E_TESTING=true
 
-pnpm expo prebuild --platform "$platform" --no-install
+# --clean: a native folder left over from a dev build would otherwise end up
+# in a cache that every worktree shares.
+pnpm expo prebuild --platform "$platform" --no-install --clean
 
 if [ "$platform" = ios ]; then
   (cd ios && LANG=en_US.UTF-8 pod install)

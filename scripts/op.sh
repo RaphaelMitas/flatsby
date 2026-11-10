@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# `pnpm op` and `pnpm op-prod`: run a command with secrets from a 1Password
-# Environment, named by FLATSBY_OP_ENVIRONMENT or FLATSBY_OP_PROD_ENVIRONMENT.
 set -euo pipefail
 
 case ${1:?usage: op.sh dev|prod <command>} in

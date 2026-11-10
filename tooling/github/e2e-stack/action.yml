@@ -4,8 +4,6 @@ description: "Postgres, schema and the web app, all running on the runner"
 runs:
   using: composite
   steps:
-    # dotenv (`pnpm with-env`) is how every script in the repo gets its config,
-    # so the configuration goes into one file and into the environment.
     - name: Write the stack's configuration
       shell: bash
       run: |

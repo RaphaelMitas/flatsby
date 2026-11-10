@@ -13,8 +13,8 @@
  */
 import { createRequire } from "node:module";
 import net from "node:net";
-import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Resolve `ws` from packages/db, which depends on it.
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -25,7 +25,13 @@ const LISTEN_PORT = Number(process.env.DB_WSPROXY_PORT ?? 5434);
 const TARGET_HOST = process.env.PG_HOST ?? "127.0.0.1";
 const TARGET_PORT = Number(process.env.PG_PORT ?? 5433);
 
-const wss = new WebSocketServer({ port: LISTEN_PORT });
+// Loopback only, and no browsers: a superuser Postgres sits behind this, and
+// pages can open websockets to localhost. Neon's client sends no Origin.
+const wss = new WebSocketServer({
+  host: "127.0.0.1",
+  port: LISTEN_PORT,
+  verifyClient: ({ req }) => !req.headers.origin,
+});
 wss.on("connection", (ws) => {
   const tcp = net.connect(TARGET_PORT, TARGET_HOST);
   ws.on("message", (data) => tcp.write(data));

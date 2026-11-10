@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-# Postgres, schema, websocket proxy and the web app for the e2e suites, used by
-# the e2e-stack action and by `pnpm ci:local`.
+# Postgres, schema, websocket proxy and the web app for the e2e suites.
 #
 #   stack.sh env     print the stack's configuration as KEY=value lines
 #   stack.sh start   start everything, configured by `env`'s variables
 #   stack.sh stop
 #
-# PORT, PG_PORT and DB_WSPROXY_PORT pick the ports (3000, 5433, 5434 by
-# default). STACK_DIR holds the logs (web.log, wsproxy.log, postgres.log) and,
-# without Docker, the database itself.
+# STACK_DIR holds the logs (web.log, wsproxy.log, postgres.log) and, without
+# Docker, the database itself.
 set -euo pipefail
 
 cmd=${1:?usage: stack.sh env|start|stop}
@@ -23,8 +21,8 @@ root=$(cd "$(dirname "$0")/../../.." && pwd)
 # taking the schema push somewhere real, and turbo hashes the environment, not
 # the file (E2E_TESTING and the auth base URL both change the build). The
 # OAuth credentials are never exercised (no flow signs in through a provider),
-# but better-auth rejects an undefined clientId at init. No AI key by design;
-# E2E_TESTING denies every credit check.
+# but better-auth rejects an undefined clientId at init. The service keys are
+# set empty so a developer's own .env can't send mail, events or AI calls.
 print_env() {
   cat <<EOF
 DATABASE_URL=postgres://postgres:postgres@localhost:$pg_port/flatsby
@@ -42,6 +40,9 @@ APPLE_TEAM_ID=e2e
 APPLE_PRIVATE_KEY=e2e
 APPLE_BUNDLE_ID=com.flatcove.app.v2
 APPLE_SERVICE_ID=e2e
+AI_GATEWAY_API_KEY=
+POSTHOG_API_KEY=
+RESEND_API_KEY=
 EOF
 }
 
@@ -53,9 +54,7 @@ dir=${STACK_DIR:?STACK_DIR is required}
 mkdir -p "$dir"
 
 # Zonky's binaries, not brew: brew install stalls for minutes behind a booting
-# simulator. Postgres refuses to start ("postmaster became multithreaded during
-# startup") when the shell's locale settings are incomplete, which is the
-# state a GitHub runner leaves them in.
+# simulator.
 zonky_jar=https://repo1.maven.org/maven2/io/zonky/test/postgres/embedded-postgres-binaries-darwin-arm64v8/17.11.0/embedded-postgres-binaries-darwin-arm64v8-17.11.0.jar
 zonky_sha256=a1c2786acb0c398f9b2d76806fc52f5dc8b222cbc8e9383a9b9702084daaf3a5
 
@@ -65,6 +64,7 @@ listener() { lsof -nP -tiTCP:"$1" -sTCP:LISTEN 2>/dev/null || true; }
 
 start_postgres() {
   if has_docker; then
+    docker rm -f "$container" >/dev/null 2>&1 || true
     docker run -d --name "$container" --label flatsby-e2e -p "127.0.0.1:$pg_port:5432" \
       -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=flatsby postgres:17-alpine >/dev/null
     # Over TCP, not the socket: the entrypoint runs a socket-only server while
@@ -77,7 +77,10 @@ start_postgres() {
     done
     docker exec "$container" $ready
   elif [ "$(uname)" = Darwin ]; then
-    export LC_ALL=C LANG=C
+    # Postgres refuses to start ("postmaster became multithreaded during
+    # startup") with the incomplete locale settings a GitHub runner leaves.
+    local LC_ALL=C LANG=C
+    export LC_ALL LANG
     curl -fsSL -o "$dir/postgres.jar" "$zonky_jar"
     echo "$zonky_sha256  $dir/postgres.jar" | shasum -a 256 -c
     rm -rf "$dir/postgres" "$dir/pgdata"

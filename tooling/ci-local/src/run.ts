@@ -28,6 +28,19 @@ export interface RunOptions {
   input?: string;
 }
 
+const running = new Set<number>();
+
+/** Signals every command still running, with whatever it started. */
+export function stopRunning(): void {
+  for (const pid of running) {
+    try {
+      process.kill(-pid, "SIGTERM");
+    } catch {
+      // Already gone.
+    }
+  }
+}
+
 export function run(
   cmd: string,
   args: string[],
@@ -40,12 +53,15 @@ export function run(
   const child = spawn(cmd, args, {
     cwd: options.cwd ?? repoRoot,
     env: { ...process.env, ...options.env },
+    // Its own process group, so stopRunning reaches pnpm's and turbo's children.
+    detached: true,
     stdio: [
       options.input === undefined ? "ignore" : "pipe",
       log ? "pipe" : "inherit",
       log ? "pipe" : "inherit",
     ],
   });
+  if (child.pid) running.add(child.pid);
   child.stdin?.end(options.input);
   if (log) {
     child.stdout?.pipe(log, { end: false });
@@ -54,6 +70,7 @@ export function run(
   return new Promise((done, fail) => {
     child.on("error", fail);
     child.on("close", (code) => {
+      if (child.pid) running.delete(child.pid);
       log?.end();
       done(code ?? 1);
     });
@@ -96,7 +113,7 @@ export function tryCapture(cmd: string, args: string[]): string | undefined {
 export const sleep = (ms: number) =>
   new Promise<void>((done) => setTimeout(done, ms));
 
-function alive(pid: number): boolean {
+export function alive(pid: number): boolean {
   try {
     process.kill(pid, 0);
     return true;

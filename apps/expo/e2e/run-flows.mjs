@@ -4,17 +4,16 @@
  * the whole suite. Needs E2E_API_URL. E2E_PLATFORM selects the app id ("ios"
  * default, or "android"). E2E_LOCALES (e.g. "en de") runs every flow once per
  * locale, passing it as E2E_LOCALE and filing captures under
- * <results>/screenshots/<locale>/. E2E_DEVICE names the simulators or
- * emulators to run on, comma-separated: each one takes the next flow from one
- * queue. It is required, because without it Maestro picks whatever device it
- * finds first, someone else's included. E2E_RESULTS_DIR moves the results out
- * of e2e/results.
+ * <results>/screenshots/<locale>/. E2E_DEVICE, comma-separated simulators or
+ * emulators, is required: without it Maestro drives whatever device it finds
+ * first, someone else's included. E2E_RESULTS_DIR moves the results out of
+ * e2e/results.
  *
  * One maestro invocation per flow, because the XCTest driver occasionally
  * crashes mid-batch on hosted runners and a shared invocation then fails
  * every remaining flow instantly ("Unknown error" at 0s).
  */
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
   copyFileSync,
   existsSync,
@@ -29,7 +28,9 @@ import { fileURLToPath } from "node:url";
 
 const e2eDir = dirname(fileURLToPath(import.meta.url));
 const flowsDir = join(e2eDir, "flows");
-const resultsDir = resolve(process.env.E2E_RESULTS_DIR ?? join(e2eDir, "results"));
+const resultsDir = resolve(
+  process.env.E2E_RESULTS_DIR ?? join(e2eDir, "results"),
+);
 
 const MAX_RERUN_FLOWS = 5;
 
@@ -56,6 +57,20 @@ const APP_IDS = {
 const platform = process.env.E2E_PLATFORM ?? "ios";
 const locales = process.env.E2E_LOCALES?.split(" ").filter(Boolean) ?? [];
 const appId = APP_IDS[platform];
+
+const maestroEnv = {
+  MAESTRO_CLI_NO_ANALYTICS: "1",
+  MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000",
+  ...process.env,
+};
+
+// The emulator reaches a localhost API through adb reverse, which an adbd
+// restart on a loaded machine silently drops; set it again before each flow.
+const { hostname, port: apiPort } = new URL(apiUrl);
+const reversePort =
+  platform === "android" && ["localhost", "127.0.0.1"].includes(hostname)
+    ? apiPort || "80"
+    : undefined;
 if (!appId) {
   console.error(
     `Unknown E2E_PLATFORM "${platform}" (expected ${Object.keys(APP_IDS).join(" or ")})`,
@@ -92,7 +107,6 @@ function collectTakeScreenshots(debugDir, locale) {
   }
 }
 
-// Several devices interleave their output, so each line gets the device's name.
 function pipeWithPrefix(stream, prefix, out) {
   createInterface({ input: stream }).on("line", (line) =>
     out.write(`${prefix}${line}\n`),
@@ -109,6 +123,15 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
   const label = device.length > 20 ? device.slice(0, 8) : device;
   const prefix = devices.length > 1 ? `[${label}] ` : "";
   console.log(`\n${prefix}> maestro test ${relative(e2eDir, file)}`);
+  if (reversePort) {
+    spawnSync("adb", [
+      "-s",
+      device,
+      "reverse",
+      `tcp:${reversePort}`,
+      `tcp:${reversePort}`,
+    ]);
+  }
   const child = spawn(
     "maestro",
     [
@@ -132,7 +155,7 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
       debugDir,
       file,
     ],
-    { stdio: prefix ? ["ignore", "pipe", "pipe"] : "inherit" },
+    { env: maestroEnv, stdio: prefix ? ["ignore", "pipe", "pipe"] : "inherit" },
   );
   if (prefix) {
     pipeWithPrefix(child.stdout, prefix, process.stdout);
@@ -149,7 +172,6 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
   });
 }
 
-// Every device takes the next run off one queue until it is empty.
 async function runAll(runs, tagPrefix) {
   const queue = [...runs.entries()];
   const failed = [];
@@ -160,7 +182,12 @@ async function runAll(runs, tagPrefix) {
       let reinstallDriver = true;
       for (let next = queue.shift(); next; next = queue.shift()) {
         const [i, run] = next;
-        const status = await runFlow(run, `${tagPrefix}${i}`, device, reinstallDriver);
+        const status = await runFlow(
+          run,
+          `${tagPrefix}${i}`,
+          device,
+          reinstallDriver,
+        );
         reinstallDriver = status !== 0;
         if (status !== 0) failed.push(run);
       }

@@ -16,6 +16,8 @@ platform=$1
 target=$(absolute "$2")
 [ "$platform" = android ] && cached_res=$(absolute "$3")
 cd "$(dirname "$0")/.."
+# Read by app.config.ts, which the bundle evaluates.
+export E2E_TESTING=true
 work=$(mktemp -d)
 
 entry=$(node -e "require('expo/scripts/resolveAppEntry')" "$PWD" "$platform" absolute | tail -n 1)

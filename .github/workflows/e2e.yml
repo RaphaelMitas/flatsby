@@ -64,9 +64,6 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: xcode-27
     timeout-minutes: 45
-    # Read by app.config.ts, which the fingerprint, prebuild, build and bundle all evaluate.
-    env:
-      E2E_TESTING: "true"
     steps:
       - uses: actions/checkout@v7
 
@@ -84,7 +81,9 @@ jobs:
 
       - name: Native build cache key
         id: native
-        run: echo "name=$(bash apps/expo/e2e/native-key.sh ios)" >> "$GITHUB_OUTPUT"
+        run: |
+          key=$(bash apps/expo/e2e/native-key.sh ios)
+          echo "name=$key" >> "$GITHUB_OUTPUT"
 
       - name: Restore native build
         id: cached
@@ -174,10 +173,6 @@ jobs:
             areas: shopping-list/management shopping-list/suggestions
           - shard: expenses
             areas: expenses
-    env:
-      MAESTRO_VERSION: "2.12.1"
-      MAESTRO_CLI_NO_ANALYTICS: "1"
-      MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
     steps:
       - uses: actions/checkout@v7
 
@@ -185,9 +180,7 @@ jobs:
         uses: ./tooling/github/setup
 
       - name: Install Maestro
-        run: |
-          curl -fsSL https://get.maestro.mobile.dev | bash
-          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+        run: bash apps/expo/e2e/install-maestro.sh "$RUNNER_TEMP/maestro" >> "$GITHUB_PATH"
 
       - name: Download app artifact
         uses: actions/download-artifact@v8
@@ -210,18 +203,12 @@ jobs:
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
 
-      # The first launch pays dyld/springboard warm-up, which stalls past the
-      # first flow's wait if it happens inside Maestro.
       - name: Install and pre-warm app
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
           xcrun simctl bootstatus "$UDID"
-          xcrun simctl spawn "$UDID" defaults write com.apple.Accessibility ReduceMotionEnabled 1
-          xcrun simctl install "$UDID" Flatsby.app
-          xcrun simctl launch "$UDID" com.flatcove.app.v2 || true
-          sleep 15
-          xcrun simctl terminate "$UDID" com.flatcove.app.v2 || true
+          bash apps/expo/e2e/prepare-device.sh ios "$UDID" Flatsby.app
 
       # The simulator shares the host's network stack, so localhost is the
       # runner's own server.
@@ -259,9 +246,6 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    # Read by app.config.ts, which the fingerprint, prebuild, build and bundle all evaluate.
-    env:
-      E2E_TESTING: "true"
     steps:
       - uses: actions/checkout@v7
 
@@ -275,7 +259,9 @@ jobs:
 
       - name: Native build cache key
         id: native
-        run: echo "name=$(bash apps/expo/e2e/native-key.sh android)" >> "$GITHUB_OUTPUT"
+        run: |
+          key=$(bash apps/expo/e2e/native-key.sh android)
+          echo "name=$key" >> "$GITHUB_OUTPUT"
 
       - name: Restore native build
         id: cached
@@ -338,10 +324,6 @@ jobs:
             areas: shopping-list/management shopping-list/suggestions shopping-list/offline
           - shard: expenses
             areas: expenses
-    env:
-      MAESTRO_VERSION: "2.12.1"
-      MAESTRO_CLI_NO_ANALYTICS: "1"
-      MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
     steps:
       - uses: actions/checkout@v7
 
@@ -362,9 +344,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Install Maestro
-        run: |
-          curl -fsSL https://get.maestro.mobile.dev | bash
-          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+        run: bash apps/expo/e2e/install-maestro.sh "$RUNNER_TEMP/maestro" >> "$GITHUB_PATH"
 
       - name: Download app artifact
         uses: actions/download-artifact@v8

@@ -1,12 +1,20 @@
 import { spawn } from "node:child_process";
-import { existsSync, openSync, readdirSync, rmSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  openSync,
+  readdirSync,
+  rmSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import type { ChildProcess } from "node:child_process";
 import { z } from "zod/v4";
 
 import type { Platform } from "./app.ts";
-import { androidAbi } from "./app.ts";
+import { localAndroidAbi } from "./app.ts";
 import {
+  alive,
   cacheDir,
   capture,
   lock,
@@ -17,14 +25,19 @@ import {
   tryCapture,
 } from "./run.ts";
 
-export interface Device {
-  /** What `maestro --device` and adb -s / simctl take. */
-  id: string;
-  release: () => Promise<void>;
+export interface Gateway {
+  url: string;
+  token: string;
 }
 
-const IOS_MODEL = /^iPhone \d+ Pro Max$/;
-const ANDROID_MODEL = "Pixel 7";
+export interface DeviceContext {
+  platform: Platform;
+  dir: string;
+  log: string;
+  gateway: Gateway | undefined;
+  /** Registered as soon as a device exists, before it is ready. */
+  onCleanup: (release: () => Promise<unknown>) => void;
+}
 
 export const androidHome =
   process.env.ANDROID_HOME ??
@@ -33,64 +46,29 @@ export const androidHome =
     homedir(),
     process.platform === "darwin" ? "Library/Android/sdk" : "Android/Sdk",
   );
+export const adb = join(androidHome, "platform-tools/adb");
+export const emulatorBin = join(androidHome, "emulator/emulator");
+export const avdmanager = join(
+  androidHome,
+  "cmdline-tools/latest/bin/avdmanager",
+);
 
-const adb = join(androidHome, "platform-tools/adb");
+// CI's models: e2e.yml's simulator and android-emulator-runner's profile.
+const IOS_MODEL = "^iPhone [0-9]+ Pro Max$";
+const ANDROID_MODEL = "Pixel 7";
+const BOOT_TIMEOUT_MS = 5 * 60_000;
 
-const RuntimeList = z.object({
-  runtimes: z.array(
-    z.object({
-      platform: z.string(),
-      identifier: z.string(),
-      version: z.string(),
-      supportedDeviceTypes: z.array(
-        z.object({ name: z.string(), identifier: z.string() }),
-      ),
-    }),
-  ),
-});
+const note = (log: string, line: string) => appendFileSync(log, `${line}\n`);
 
-const versionParts = (v: string) => v.split(".").map(Number);
-
-function compareVersions(a: number[], b: number[]): number {
-  for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    const diff = (a[i] ?? 0) - (b[i] ?? 0);
-    if (diff !== 0) return diff;
-  }
-  return 0;
+function iosModel(): { type: string; runtime: string; name: string } {
+  const [type, runtime, name] = capture("node", [
+    "tooling/github/ios-simulator/pick.mjs",
+    IOS_MODEL,
+  ]).split("\n");
+  if (!type || !runtime || !name) throw new Error("pick.mjs printed no model");
+  return { type, runtime, name };
 }
 
-/** CI's simulator: the newest Pro Max on the newest runtime that has one. */
-function iosModel(): { name: string; type: string; runtime: string } {
-  const list = RuntimeList.parse(
-    JSON.parse(
-      capture("xcrun", ["simctl", "list", "runtimes", "available", "--json"]),
-    ),
-  );
-  const candidates = list.runtimes
-    .filter((runtime) => runtime.platform === "iOS")
-    .flatMap((runtime) =>
-      runtime.supportedDeviceTypes
-        .filter((type) => IOS_MODEL.test(type.name))
-        .map((type) => ({
-          name: type.name,
-          type: type.identifier,
-          runtime: runtime.identifier,
-          order: [
-            ...versionParts(runtime.version),
-            Number(/\d+/.exec(type.name)?.[0] ?? 0),
-          ],
-        })),
-    )
-    .sort((a, b) => compareVersions(a.order, b.order));
-  const newest = candidates.at(-1);
-  if (!newest)
-    throw new Error(
-      "No iPhone Pro Max simulator runtime installed (Xcode > Settings > Components)",
-    );
-  return newest;
-}
-
-/** CI runs API 34; take that when installed, else the newest google_apis image. */
 export function androidImage(): string | undefined {
   const images = join(androidHome, "system-images");
   if (!existsSync(images)) return undefined;
@@ -100,36 +78,38 @@ export function androidImage(): string | undefined {
   const apis = readdirSync(images)
     .filter(
       (api) =>
-        level(api) && existsSync(join(images, api, "google_apis", androidAbi)),
+        level(api) &&
+        existsSync(join(images, api, "google_apis", localAndroidAbi)),
     )
     .sort((a, b) => level(a) - level(b));
+  // CI runs API 34.
   const api = apis.includes("android-34") ? "android-34" : apis.at(-1);
-  return api && `system-images;${api};google_apis;${androidAbi}`;
+  return api && `system-images;${api};google_apis;${localAndroidAbi}`;
 }
 
-async function waitForAndroidBoot(serial: string): Promise<void> {
-  const deadline = Date.now() + 5 * 60_000;
-  while (Date.now() < deadline) {
-    if (
-      tryCapture(adb, [
-        "-s",
-        serial,
-        "shell",
-        "getprop",
-        "sys.boot_completed",
-      ]) === "1"
-    )
-      return;
-    await sleep(3000);
-  }
-  throw new Error(`${serial} did not finish booting in 5 minutes`);
+async function throwawaySimulator(
+  name: string,
+  ctx: DeviceContext,
+): Promise<string> {
+  const model = iosModel();
+  const udid = capture("xcrun", [
+    "simctl",
+    "create",
+    name,
+    model.type,
+    model.runtime,
+  ]);
+  ctx.onCleanup(async () => {
+    await run("xcrun", ["simctl", "shutdown", udid], { log: ctx.log });
+    await run("xcrun", ["simctl", "delete", udid], { log: ctx.log });
+  });
+  await mustRun("xcrun", ["simctl", "boot", udid], { log: ctx.log });
+  await mustRun("xcrun", ["simctl", "bootstatus", udid], { log: ctx.log });
+  return udid;
 }
 
-/**
- * An emulator port no other emulator, and no other run's emulator, can take
- * while this one lives: two runs on one port would drive each other's device.
- * Inside adb's scan range (5555-5585), so the default adb server finds it.
- */
+// Locked per port so two runs never drive one emulator; 5560-5584 sits in
+// the range the default adb server scans.
 async function claimEmulatorPort(): Promise<{
   port: number;
   unclaim: () => void;
@@ -147,42 +127,33 @@ async function claimEmulatorPort(): Promise<{
   throw new Error("No free emulator port between 5560 and 5585");
 }
 
-/** Devices this run creates for itself and deletes again. */
-async function throwaway(
-  platform: Platform,
+async function throwawayEmulator(
   name: string,
-  dir: string,
-  log: string,
-): Promise<Device> {
-  if (platform === "ios") {
-    const model = iosModel();
-    const udid = capture("xcrun", [
-      "simctl",
-      "create",
-      name,
-      model.type,
-      model.runtime,
-    ]);
-    await mustRun("xcrun", ["simctl", "boot", udid], { log });
-    await mustRun("xcrun", ["simctl", "bootstatus", udid], { log });
-    return {
-      id: udid,
-      release: async () => {
-        await run("xcrun", ["simctl", "shutdown", udid], { log });
-        await run("xcrun", ["simctl", "delete", udid], { log });
-      },
-    };
-  }
-
+  ctx: DeviceContext,
+): Promise<string> {
   const image = androidImage();
   if (!image)
     throw new Error(
-      `No google_apis ${androidAbi} system image in ${androidHome}`,
+      `No google_apis ${localAndroidAbi} system image in ${androidHome}`,
     );
   // Its own AVD home keeps the AVD out of Android Studio's list.
-  const env = { ANDROID_AVD_HOME: join(dir, `avd-${name}`) };
+  const avdHome = join(ctx.dir, `avd-${name}`);
+  const { port, unclaim } = await claimEmulatorPort();
+  const serial = `emulator-${port}`;
+  let emulator: ChildProcess | undefined;
+  let exited = Promise.resolve();
+  ctx.onCleanup(async () => {
+    if (emulator?.pid && emulator.exitCode === null) {
+      process.kill(-emulator.pid, "SIGTERM");
+      await Promise.race([exited, sleep(30_000)]);
+      if (emulator.exitCode === null) process.kill(-emulator.pid, "SIGKILL");
+    }
+    rmSync(avdHome, { recursive: true, force: true });
+    unclaim();
+  });
+
   await mustRun(
-    join(androidHome, "cmdline-tools/latest/bin/avdmanager"),
+    avdmanager,
     [
       "create",
       "avd",
@@ -194,12 +165,11 @@ async function throwaway(
       "pixel_7",
       "--force",
     ],
-    { log, env, input: "no\n" },
+    { log: ctx.log, env: { ANDROID_AVD_HOME: avdHome }, input: "no\n" },
   );
-  const { port, unclaim } = await claimEmulatorPort();
-  const out = openSync(log, "a");
-  const emulator = spawn(
-    join(androidHome, "emulator/emulator"),
+  const out = openSync(ctx.log, "a");
+  const child = spawn(
+    emulatorBin,
     [
       "-avd",
       name,
@@ -211,31 +181,45 @@ async function throwaway(
       "-no-boot-anim",
     ],
     {
-      env: { ...process.env, ...env },
+      env: { ...process.env, ANDROID_AVD_HOME: avdHome },
       stdio: ["ignore", out, out],
       detached: true,
     },
   );
-  emulator.unref();
-  const exited = new Promise<void>((done) =>
-    emulator.once("exit", () => done()),
-  );
-  const serial = `emulator-${port}`;
-  const release = async () => {
-    await run(adb, ["-s", serial, "emu", "kill"], { log });
-    await Promise.race([exited, sleep(60_000)]);
-    emulator.kill("SIGKILL");
-    rmSync(env.ANDROID_AVD_HOME, { recursive: true, force: true });
-    unclaim();
-  };
-  try {
-    await mustRun(adb, ["-s", serial, "wait-for-device"], { log });
-    await waitForAndroidBoot(serial);
-  } catch (error) {
-    await release();
-    throw error;
+  emulator = child;
+  let failed: string | undefined;
+  exited = new Promise((done) => {
+    child.once("exit", () => done());
+    child.once("error", (error) => {
+      failed = error.message;
+      done();
+    });
+  });
+  child.unref();
+
+  const deadline = Date.now() + BOOT_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    if (failed || child.exitCode !== null)
+      throw new Error(
+        `${name} stopped while booting${failed ? `: ${failed}` : ""}, see ${ctx.log}`,
+      );
+    if (
+      tryCapture(adb, [
+        "-s",
+        serial,
+        "shell",
+        "getprop",
+        "sys.boot_completed",
+      ]) === "1"
+    ) {
+      const avd = tryCapture(adb, ["-s", serial, "emu", "avd", "name"]);
+      if (avd?.split("\n")[0]?.trim() !== name)
+        throw new Error(`${serial} is not this run's emulator`);
+      return serial;
+    }
+    await sleep(3000);
   }
-  return { id: serial, release };
+  throw new Error(`${name} did not finish booting in 5 minutes`);
 }
 
 const SimlockError = z.object({ code: z.string(), message: z.string() });
@@ -258,12 +242,11 @@ const LeaseRequest = z.object({
   error: SimlockError.optional(),
 });
 
-/** A device leased from a Simlock gateway (SIMLOCK_URL, SIMLOCK_TOKEN). */
-async function leased(
-  platform: Platform,
-  gateway: { url: string; token: string },
-  log: string,
-): Promise<Device> {
+async function leaseDevice(
+  ctx: DeviceContext,
+  gateway: Gateway,
+  held: number,
+): Promise<string> {
   const api = async (path: string, init: RequestInit = {}) => {
     const response = await fetch(`${gateway.url}${path}`, {
       ...init,
@@ -276,19 +259,40 @@ async function leased(
     return LeaseRequest.parse(text ? JSON.parse(text) : {});
   };
   const body =
-    platform === "ios"
-      ? { platform, device: iosModel().name }
-      : { platform, device: ANDROID_MODEL, imageTag: "google_apis" };
+    ctx.platform === "ios"
+      ? { platform: ctx.platform, device: iosModel().name }
+      : {
+          platform: ctx.platform,
+          device: ANDROID_MODEL,
+          imageTag: "google_apis",
+        };
 
+  let requestId: string | undefined;
   let lease: z.infer<typeof Lease> | undefined;
+  let renew: NodeJS.Timeout | undefined;
+  ctx.onCleanup(async () => {
+    clearInterval(renew);
+    if (lease) await api(`/v1/leases/${lease.id}`, { method: "DELETE" });
+    else if (requestId)
+      await api(`/v1/lease-requests/${requestId}`, { method: "DELETE" });
+  });
+
+  const waitUntil = Date.now() + 30 * 60_000;
   while (!lease) {
     const created = await api("/v1/lease-requests", {
       method: "POST",
-      body: JSON.stringify({ ...body, ttlMs: 2 * 60 * 60_000 }),
+      body: JSON.stringify({ ...body, ttlMs: 15 * 60_000 }),
     });
-    // One token holds one waiting request per platform; another run on the
-    // same token is waiting, so take turns.
     if (created.error?.code === "REQUESTER_ALREADY_LEASED") {
+      if (held > 0)
+        throw new Error(
+          `The gateway lets this token hold ${held} ${ctx.platform} lease(s); raise its lease.maxPerRequester or pass --devices ${held}`,
+        );
+      if (Date.now() > waitUntil)
+        throw new Error(
+          "Another run on this token kept its lease request for 30 minutes",
+        );
+      note(ctx.log, "Another run on this token is waiting; retrying in 10s");
       await sleep(10_000);
       continue;
     }
@@ -297,6 +301,7 @@ async function leased(
       throw new Error(
         `Lease request refused: ${created.error?.message ?? "no answer"}`,
       );
+    requestId = request.id;
     while (request.state !== "granted") {
       if (request.state === "failed" || request.state === "cancelled")
         throw new Error(
@@ -309,130 +314,79 @@ async function leased(
     }
     lease = request.lease;
   }
-  const { id: leaseId, ttlMs } = lease;
-  const renew = setInterval(() => {
+  const leaseId = lease.id;
+  renew = setInterval(() => {
     api(`/v1/leases/${leaseId}/renew`, { method: "POST" }).catch(() => {});
-  }, ttlMs / 3);
+  }, lease.ttlMs / 3);
   renew.unref();
-  const release = async () => {
-    clearInterval(renew);
-    await api(`/v1/leases/${leaseId}`, { method: "DELETE" });
-  };
 
   // Maestro runs here, so the device has to be on this machine.
   const elsewhere = new Error(
     `Leased a device on worker ${lease.worker?.label ?? "?"}, but ci:local only drives devices on this machine`,
   );
-  if (platform === "ios") {
-    if (!capture("xcrun", ["simctl", "list", "devices"]).includes(lease.udid)) {
-      await release();
+  if (ctx.platform === "ios") {
+    if (!capture("xcrun", ["simctl", "list", "devices"]).includes(lease.udid))
       throw elsewhere;
-    }
-    return { id: lease.udid, release };
+    return lease.udid;
   }
   // Simlock's emulators sit on Simlock's own adb server, and Maestro only
   // talks to the default one: attach through the emulator's adb port.
   const serial = `127.0.0.1:${Number(lease.address.replace("emulator-", "")) + 1}`;
-  await run(adb, ["connect", serial], { log });
-  if (tryCapture(adb, ["-s", serial, "get-state"]) !== "device") {
-    await release();
+  ctx.onCleanup(() => run(adb, ["disconnect", serial], { log: ctx.log }));
+  await run(adb, ["connect", serial], { log: ctx.log });
+  // Another worker's emulator can have the same port as one on this machine.
+  if (
+    tryCapture(adb, [
+      "-s",
+      serial,
+      "shell",
+      "getprop",
+      "ro.boot.qemu.avd_name",
+    ]) !== lease.udid
+  )
     throw elsewhere;
+  return serial;
+}
+
+export async function acquireDevices(
+  count: number,
+  ctx: DeviceContext,
+): Promise<string[]> {
+  const { gateway } = ctx;
+  if (gateway) {
+    // A token may wait on one request per platform, so lease in turn.
+    const ids: string[] = [];
+    for (let held = 0; held < count; held++)
+      ids.push(await leaseDevice(ctx, gateway, held));
+    return ids;
   }
-  return {
-    id: serial,
-    release: async () => {
-      await run(adb, ["disconnect", serial], { log });
-      await release();
-    },
-  };
+  const make = ctx.platform === "ios" ? throwawaySimulator : throwawayEmulator;
+  return Promise.all(
+    Array.from({ length: count }, (_, i) =>
+      make(`ci-local-${process.pid}-${ctx.platform}-${i + 1}`, ctx),
+    ),
+  );
 }
 
-export function gatewayFromEnv(): { url: string; token: string } | undefined {
-  const url = process.env.SIMLOCK_URL;
-  if (!url) return undefined;
-  const token = process.env.SIMLOCK_TOKEN;
-  if (!token) throw new Error("SIMLOCK_URL is set but SIMLOCK_TOKEN is not");
-  return { url: url.replace(/\/$/, ""), token };
-}
-
-export function acquire(
-  platform: Platform,
-  name: string,
-  dir: string,
-  log: string,
-): Promise<Device> {
-  const gateway = gatewayFromEnv();
-  return gateway
-    ? leased(platform, gateway, log)
-    : throwaway(platform, name, dir, log);
-}
-
-/** Installs the app and sets the device up the way CI's jobs do. */
-export async function prepare(
-  platform: Platform,
-  device: Device,
-  app: string,
-  webPort: number,
-  log: string,
-): Promise<void> {
-  if (platform === "ios") {
-    const simctl = (...args: string[]) =>
-      mustRun("xcrun", ["simctl", ...args], { log });
-    await simctl(
-      "spawn",
-      device.id,
-      "defaults",
-      "write",
-      "com.apple.Accessibility",
-      "ReduceMotionEnabled",
-      "1",
-    );
-    await simctl("install", device.id, app);
-    // The first launch pays dyld/springboard warm-up, which stalls past the
-    // first flow's wait if it happens inside Maestro.
-    await run("xcrun", ["simctl", "launch", device.id, "com.flatcove.app.v2"], {
-      log,
-    });
-    await sleep(15_000);
-    await run(
-      "xcrun",
-      ["simctl", "terminate", device.id, "com.flatcove.app.v2"],
-      { log },
-    );
-    return;
+// Throwaway devices carry their run's pid: a run killed mid-cleanup leaves
+// them behind, and the next run deletes the ones whose run is gone.
+export async function sweepDeadRuns(log: string): Promise<void> {
+  const dead = (pid: string | undefined) =>
+    pid !== undefined && !alive(Number(pid));
+  if (process.platform === "darwin") {
+    for (const line of capture("xcrun", ["simctl", "list", "devices"]).split(
+      "\n",
+    )) {
+      const [, pid, udid] =
+        /ci-local-(\d+)-\S+ \(([0-9A-F-]{36})\)/.exec(line) ?? [];
+      if (!udid || !dead(pid)) continue;
+      await run("xcrun", ["simctl", "shutdown", udid], { log });
+      await run("xcrun", ["simctl", "delete", udid], { log });
+    }
   }
-  const shell = (...args: string[]) =>
-    run(adb, ["-s", device.id, "shell", ...args], { log });
-  // ANR dialogs overlay the app and hide it from Maestro's hierarchy.
-  await shell("settings", "put", "global", "hide_error_dialogs", "1");
-  for (const scale of [
-    "window_animation_scale",
-    "transition_animation_scale",
-    "animator_duration_scale",
-  ])
-    await shell("settings", "put", "global", scale, "0");
-  // The app and Maestro's host-side scripts both use localhost.
-  await mustRun(
-    adb,
-    ["-s", device.id, "reverse", `tcp:${webPort}`, `tcp:${webPort}`],
-    { log },
-  );
-  await mustRun(adb, ["-s", device.id, "install", "-r", app], { log });
-  await shell(
-    "monkey",
-    "-p",
-    "com.flatcove.app",
-    "-c",
-    "android.intent.category.LAUNCHER",
-    "1",
-  );
-  await sleep(15_000);
-  await shell("am", "force-stop", "com.flatcove.app");
-  // hide_error_dialogs only suppresses future dialogs.
-  await shell(
-    "am",
-    "broadcast",
-    "-a",
-    "android.intent.action.CLOSE_SYSTEM_DIALOGS",
-  );
+  for (const line of capture("ps", ["-eo", "pid=,command="]).split("\n")) {
+    const [, emulatorPid, pid] =
+      /^\s*(\d+) .*-avd ci-local-(\d+)-/.exec(line) ?? [];
+    if (emulatorPid && dead(pid)) process.kill(Number(emulatorPid), "SIGKILL");
+  }
 }

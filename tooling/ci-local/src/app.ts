@@ -1,13 +1,12 @@
-import { existsSync, readFileSync, renameSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { arch } from "node:os";
 import { join } from "node:path";
 
-import { cacheDir, capture, lock, mustRun, repoRoot, run } from "./run.ts";
+import { cacheDir, capture, lock, mustRun, run } from "./run.ts";
 
 export type Platform = "ios" | "android";
 
-/** The ABI the local emulator runs; CI's emulator is x86_64. */
-export const androidAbi = arch() === "arm64" ? "arm64-v8a" : "x86_64";
+export const localAndroidAbi = arch() === "arm64" ? "arm64-v8a" : "x86_64";
 
 async function withLock<T>(path: string, fn: () => Promise<T>): Promise<T> {
   const release = await lock(path, true);
@@ -19,51 +18,31 @@ async function withLock<T>(path: string, fn: () => Promise<T>): Promise<T> {
   }
 }
 
-/** The Maestro version CI pins, installed next to (never over) ~/.maestro. */
-export async function installMaestro(log: string): Promise<string> {
-  const workflow = readFileSync(
-    join(repoRoot, ".github/workflows/e2e.yml"),
-    "utf8",
-  );
-  const version = /MAESTRO_VERSION: "([\d.]+)"/.exec(workflow)?.[1];
-  if (!version)
-    throw new Error("No MAESTRO_VERSION in .github/workflows/e2e.yml");
-  const dir = join(cacheDir, `maestro-${version}`);
-  const bin = join(dir, "maestro/bin");
-  await withLock(`${dir}.lock`, async () => {
-    if (existsSync(bin)) return;
-    const zip = `${dir}.zip`;
-    await mustRun(
-      "curl",
-      [
-        "-fsSL",
-        "-o",
-        zip,
-        `https://github.com/mobile-dev-inc/Maestro/releases/download/cli-${version}/maestro.zip`,
-      ],
-      { log },
-    );
-    await mustRun("unzip", ["-q", "-o", zip, "-d", dir], { log });
-    rmSync(zip);
-  });
-  return bin;
+/** Never over ~/.maestro, which other tools on the machine may own. */
+export function installMaestro(): string {
+  return capture("bash", [
+    "apps/expo/e2e/install-maestro.sh",
+    join(cacheDir, "maestro"),
+  ]);
 }
 
-/**
- * The e2e app with this worktree's JS: the native part comes from a cache
- * shared by every worktree, keyed like CI's, and repack.sh swaps in the JS.
- * Returns the .app or .apk to install.
- */
+// The native part comes from a cache every worktree shares; repack.sh swaps
+// in this worktree's JS.
 export async function buildApp(
   platform: Platform,
   workDir: string,
   log: string,
-  env: NodeJS.ProcessEnv,
+  toolEnv: NodeJS.ProcessEnv,
 ): Promise<string> {
+  // Metro's cache lives in TMPDIR and repack resets it, so each run gets its
+  // own and leaves other worktrees' bundles alone.
+  const tmp = `${workDir}-tmp`;
+  mkdirSync(tmp, { recursive: true });
+  const env = { ...toolEnv, TMPDIR: tmp };
   const key = capture("bash", ["apps/expo/e2e/native-key.sh", platform], {
     env,
   });
-  const abi = platform === "android" ? androidAbi : "arm64";
+  const abi = platform === "android" ? localAndroidAbi : "arm64";
   const cached = join(cacheDir, "native", `${key}-${abi}`);
   const build = (out: string) =>
     mustRun("bash", ["apps/expo/e2e/build-native.sh", platform, out, abi], {
