@@ -21,13 +21,11 @@ auditConfig:
     # @esbuild-kit/core-utils@3.3.2, which pins ~0.18.20. The @esbuild-kit packages
     # are deprecated (folded into tsx); clears when drizzle-kit drops esm-loader.
     - GHSA-67mh-4wv8-2f99
-    # zod <4.6.6 - only 4.x is patched and 3.25.76 is the last 3.x. @expo/cli up to
-    # 58.1.17 depends on zod ^3.25.76, dev tooling only. 58.1.18 drops it, but expo
-    # pins its other tooling exactly, so this clears with the expo >=58.0.22 bump.
+    # zod <4.6.6 - only 4.x is patched and 3.25.76 is the last 3.x. @expo/cli
+    # <=58.1.17 depends on zod ^3.25.76, dev tooling only. Clears with expo >=58.0.22.
     - GHSA-mrhx-c7xc-m3w5
-    # deepmerge <=4.3.1 - no patched release exists. Reached via @expo/config up to
-    # 58.0.9 merging app config at build time, never untrusted input. 58.0.10 drops
-    # it; clears with the same expo >=58.0.22 bump.
+    # deepmerge <=4.3.1 - no patched release exists. Reached via @expo/config <=58.0.9
+    # merging app config at build time, never untrusted input. Clears with expo >=58.0.22.
     - GHSA-gcqx-w48m-w2h4
     # glob <=14.0.1 and minimatch <11.0.1 - patched only in the new majors. Every
     # Expo 58 package (canary included) depends on glob ^13, @expo/fingerprint also
