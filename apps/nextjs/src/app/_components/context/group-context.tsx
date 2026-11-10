@@ -24,7 +24,7 @@ interface GroupContextValue {
   // Current state
   currentGroup: Group | null;
   currentShoppingList: ShoppingList | null;
-  groups: Group[];
+  groups: (Group & { memberCount: number })[];
 
   // Computed
   hasGroups: boolean;

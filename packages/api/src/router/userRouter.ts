@@ -19,7 +19,7 @@ import {
   subscriptionDataSchema,
   usageDataSchema,
 } from "@flatsby/validators/billing";
-import { groupSchema } from "@flatsby/validators/group";
+import { groupSchema, hasJoined } from "@flatsby/validators/group";
 import { paypalHandleInputSchema } from "@flatsby/validators/payment";
 import { shoppingListSchema } from "@flatsby/validators/shopping-list";
 import {
@@ -74,7 +74,9 @@ export const userRouter = createTRPCRouter({
             })
             .optional(),
           groups: z.array(
-            groupSchema.pick({ id: true, name: true, profilePicture: true }),
+            groupSchema
+              .pick({ id: true, name: true, profilePicture: true })
+              .extend({ memberCount: z.number() }),
           ),
         }),
       ),
@@ -99,6 +101,12 @@ export const userRouter = createTRPCRouter({
                       id: true,
                       name: true,
                       profilePicture: true,
+                    },
+                    with: {
+                      groupMembers: {
+                        columns: { userId: true },
+                        where: (members, { eq }) => eq(members.isActive, true),
+                      },
                     },
                   },
                   user: {
@@ -129,7 +137,12 @@ export const userRouter = createTRPCRouter({
                       : null,
                 }
               : undefined,
-            groups: groups.map((g) => g.group),
+            groups: groups.map(
+              ({ group: { groupMembers: members, ...group } }) => ({
+                ...group,
+                memberCount: members.filter(hasJoined).length,
+              }),
+            ),
           };
         }),
       ),
