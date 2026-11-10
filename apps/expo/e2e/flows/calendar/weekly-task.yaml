@@ -28,8 +28,9 @@ tags:
 - tapOn:
     id: "calendar-form-title"
 - inputText: "Bins out"
-# Tapping a label dismisses the keyboard, which would swallow the taps below
-- tapOn: "Starts"
+# Return closes the keyboard, which would swallow the taps below. Tapping a
+# label instead only works on some simulators.
+- pressKey: Enter
 - tapOn:
     id: "calendar-form-repeat-weeks"
 - scrollUntilVisible:

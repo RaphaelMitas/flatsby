@@ -4,110 +4,18 @@ description: "Postgres, schema and the web app, all running on the runner"
 runs:
   using: composite
   steps:
-    # dotenv (`pnpm with-env`) is how every script in the repo gets its
-    # config, so the whole stack is configured through one generated file. It
-    # goes into the environment too: dotenv never overrides an already-set
-    # variable, so this is what keeps an ambient DATABASE_URL from taking the
-    # schema push somewhere real, and turbo hashes the environment rather than
-    # the file (E2E_TESTING and the auth base URL both change the build).
-    # The OAuth credentials are never exercised (no flow signs in through a
-    # provider), but better-auth rejects an undefined clientId at init. No AI
-    # key by design; E2E_TESTING denies every credit check.
+    # dotenv (`pnpm with-env`) is how every script in the repo gets its config,
+    # so the configuration goes into one file and into the environment.
     - name: Write the stack's configuration
       shell: bash
       run: |
-        cat > "$GITHUB_WORKSPACE/.env" <<EOF
-        DATABASE_URL=postgres://postgres:postgres@localhost:5433/flatsby
-        DB_WSPROXY_PORT=5434
-        PORT=3000
-        BETTER_AUTH_URL=http://localhost:3000
-        NEXT_PUBLIC_BETTER_AUTH_BASE_URL=http://localhost:3000
-        BETTER_AUTH_SECRET=e2e-runner-secret
-        E2E_TESTING=true
-        GOOGLE_CLIENT_ID=e2e
-        GOOGLE_CLIENT_SECRET=e2e
-        APPLE_KEY_ID=e2e
-        APPLE_TEAM_ID=e2e
-        APPLE_PRIVATE_KEY=e2e
-        APPLE_BUNDLE_ID=com.flatcove.app.v2
-        APPLE_SERVICE_ID=e2e
-        EOF
+        bash "$GITHUB_ACTION_PATH/stack.sh" env > "$GITHUB_WORKSPACE/.env"
         cat "$GITHUB_WORKSPACE/.env" >> "$GITHUB_ENV"
 
     # Ephemeral and per job: every job gets a pristine schema, so shards never
     # see each other's rows. Linux runners have Docker, macOS runners do not.
-    # Zonky's binaries, not brew: brew install stalls for minutes behind the booting simulator.
-    - name: Start Postgres
+    - name: Start the stack
       shell: bash
       env:
-        ZONKY_JAR: https://repo1.maven.org/maven2/io/zonky/test/postgres/embedded-postgres-binaries-darwin-arm64v8/17.11.0/embedded-postgres-binaries-darwin-arm64v8-17.11.0.jar
-        ZONKY_SHA256: a1c2786acb0c398f9b2d76806fc52f5dc8b222cbc8e9383a9b9702084daaf3a5
-        # Postgres refuses to start ("postmaster became multithreaded during
-        # startup") when the shell's locale settings are incomplete, which is
-        # the state a GitHub runner leaves them in.
-        LC_ALL: C
-        LANG: C
-      run: |
-        set -euo pipefail
-        if [ "$RUNNER_OS" = "macOS" ]; then
-          curl -fsSL -o "$RUNNER_TEMP/postgres.jar" "$ZONKY_JAR"
-          echo "$ZONKY_SHA256  $RUNNER_TEMP/postgres.jar" | shasum -a 256 -c
-          mkdir "$RUNNER_TEMP/postgres"
-          unzip -p "$RUNNER_TEMP/postgres.jar" '*.txz' | tar -xJ -C "$RUNNER_TEMP/postgres"
-          PG_BIN="$RUNNER_TEMP/postgres/bin"
-          "$PG_BIN/initdb" -D "$RUNNER_TEMP/pgdata" -U postgres --auth=trust \
-            --encoding=UTF8 --locale=C
-          # Zonky ships no createdb.
-          echo "CREATE DATABASE flatsby" \
-            | "$PG_BIN/postgres" --single -D "$RUNNER_TEMP/pgdata" postgres \
-              >> "$RUNNER_TEMP/postgres.log" 2>&1
-          "$PG_BIN/pg_ctl" -D "$RUNNER_TEMP/pgdata" -l "$RUNNER_TEMP/postgres.log" \
-            -o "-p 5433" -w start
-        else
-          docker run -d --name e2e-postgres -p 5433:5432 \
-            -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=flatsby postgres:17-alpine
-          # Over TCP, not the socket: the entrypoint runs a socket-only server
-          # while it creates the database, so a socket probe reports ready on a
-          # server that is about to shut down and restart.
-          ready="pg_isready -h 127.0.0.1 -p 5432 -U postgres -d flatsby"
-          for _ in $(seq 60); do
-            docker exec e2e-postgres $ready -q && break
-            sleep 1
-          done
-          docker exec e2e-postgres $ready
-        fi
-
-    # Push, not migrate: migration 0000 is a no-op baseline (the schema
-    # predates the migration folder), so `drizzle-kit migrate` leaves an empty
-    # database empty. Push builds the PR's schema straight from src/schema.ts,
-    # which is what the suite should run against anyway.
-    - name: Create schema
-      shell: bash
-      run: pnpm -F @flatsby/db push --force
-
-    # @neondatabase/serverless speaks Postgres over websockets, which a plain
-    # Postgres does not; packages/db/src/client.ts routes localhost URLs here.
-    - name: Start database websocket proxy
-      shell: bash
-      run: |
-        nohup node "$GITHUB_WORKSPACE/scripts/local-db-wsproxy.mjs" \
-          > "$RUNNER_TEMP/wsproxy.log" 2>&1 &
-
-    - name: Build web app
-      shell: bash
-      run: pnpm turbo run build --filter=@flatsby/nextjs
-
-    # Minting one throwaway session is the readiness check: it is the only
-    # probe that proves the whole chain (app, proxy, database) works, and it
-    # pays the route's module init here instead of inside the first flow's
-    # wait. Nothing asserts on it — every test mints its own.
-    - name: Start web app
-      shell: bash
-      run: |
-        nohup pnpm -F @flatsby/nextjs start > "$RUNNER_TEMP/web.log" 2>&1 &
-        for _ in $(seq 60); do
-          curl -fsSL -o /dev/null http://localhost:3000/ && break
-          sleep 2
-        done
-        curl -fsSL -o /dev/null http://localhost:3000/
-        curl -fsS -X POST -o /dev/null http://localhost:3000/api/e2e/create-session
+        STACK_DIR: ${{ runner.temp }}
+      run: bash "$GITHUB_ACTION_PATH/stack.sh" start

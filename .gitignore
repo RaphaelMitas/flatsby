@@ -69,3 +69,5 @@ apps/expo/build-cache/
 # claude
 .claude
 CLAUDE.local.md
+# pnpm ci:local
+.ci-local/

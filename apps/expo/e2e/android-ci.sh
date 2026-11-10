@@ -32,7 +32,9 @@ adb shell am force-stop com.flatcove.app || true
 adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
 
 cd "$(dirname "$0")/.."
-node e2e/run-flows.mjs "$@"
+# The runner's only emulator.
+E2E_DEVICE=$(adb devices | awk 'NR > 1 && $2 == "device" { print $1; exit }') \
+  node e2e/run-flows.mjs "$@"
 status=$?
 mkdir -p e2e/results/diagnostics
 adb logcat -d > e2e/results/diagnostics/logcat.txt || true

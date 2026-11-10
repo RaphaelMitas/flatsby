@@ -1,0 +1,10 @@
+{
+  "extends": "@flatsby/tsconfig/base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

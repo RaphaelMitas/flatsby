@@ -93,7 +93,9 @@ means changing the optimistic update too.
 shopping-list, and smoke. A feature change in one of those areas usually needs its  
 flow updated. Every e2e job runs its own Postgres and web app on the runner
 (`tooling/github/e2e-stack`) and talks to `http://localhost:3000`, so nothing in the
-suite depends on a deployment.
+suite depends on a deployment. Run the suites locally with `pnpm ci:local`, never
+`maestro` on its own: without a device it picks whatever it finds first,
+someone's own phone or emulator included.
 
 ## Where things live
 
@@ -125,6 +127,7 @@ pnpm db:studio
 pnpm ui-add                   # add shadcn components
 pnpm -F @flatsby/expo typecheck
 pnpm -F @flatsby/nextjs dev
+pnpm ci:local [checks web ios android]  # CI on this machine, see --help
 pnpm op <command>             # run any command with dev secrets from 1Password
 pnpm op-prod <command>        # same, with production secrets
 ```
@@ -145,11 +148,16 @@ migrate. `@t3-oss/env-nextjs` validates env vars at startup and skips validation
 when `CI=true`.
 - `pnpm op-prod` points at the production database and services. Never run it
 unless Ruffy asks for it in that message.
-- `op` and `op-prod` need the 1Password CLI beta (`1password-cli@beta`). `pnpm op`
-runs unattended when the Keychain holds `flatsby-op-dev`, a read-only service
-account for the dev Environment only. Without it, and always for `op-prod`, op
-blocks on a desktop unlock prompt only Ruffy can answer. If it hangs or says not
-signed in, ask rather than retry.
+- `op` and `op-prod` need the 1Password CLI beta (`1password-cli@beta`) and the
+Environment IDs in `FLATSBY_OP_ENVIRONMENT` and `FLATSBY_OP_PROD_ENVIRONMENT`.
+`pnpm op` runs unattended when the Keychain holds `flatsby-op-dev`, a read-only
+service account for the dev Environment only. Without it, and always for
+`op-prod`, op blocks on a desktop unlock prompt only Ruffy can answer. If it
+hangs or says not signed in, ask rather than retry.
+- `pnpm ci:local` runs the checks and the e2e suites against its own stack on
+ports derived from the worktree, so several worktrees can run at once. Devices
+are throwaway simulators and emulators, or leased from a Simlock gateway when
+`SIMLOCK_URL` and `SIMLOCK_TOKEN` are set. Results land in `.ci-local/`.
 - `pnpm install` runs `pnpm lint:ws` as a postinstall hook.
 - `pnpm dev:next` is `turbo watch dev`, so shared packages rebuild on change without  
 you restarting anything.
