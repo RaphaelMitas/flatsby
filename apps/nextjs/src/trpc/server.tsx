@@ -59,7 +59,7 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
 
 export const caller = appRouter.createCaller(createContext);
 
-// Next renders a page alongside its layout, so a signed-out visit must redirect here rather than rely on the layout
+// Next renders a page in parallel with its layout, so the auth guard lives here
 export async function getCurrentUserWithGroups() {
   const session = await getSession();
   if (!session?.user) redirect("/auth/login");

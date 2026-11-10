@@ -82,20 +82,16 @@ const reportAndMap = Effect.fnUntraced(function* (
 ) {
   const failure = Cause.findError(cause);
   const defect = Cause.findDefect(cause);
-  if (Result.isSuccess(failure)) {
-    if (!isAnswer(requester.path, failure.success)) {
-      yield* reportAs(requester, failure.success);
-    } else if (Result.isSuccess(defect)) {
-      yield* capture(requester, defect.success, { kind: "defect" });
-    }
-    return yield* failure.success;
+  if (Result.isSuccess(failure) && !isAnswer(requester.path, failure.success)) {
+    yield* reportAs(requester, failure.success);
+  } else if (Result.isSuccess(defect)) {
+    yield* capture(requester, defect.success, { kind: "defect" });
   }
 
+  if (Result.isSuccess(failure)) return yield* failure.success;
   if (Result.isSuccess(defect)) {
-    yield* capture(requester, defect.success, { kind: "defect" });
     return yield* Errors.internalServer("operation", defect.success);
   }
-
   return yield* Effect.failCause(cause);
 });
 

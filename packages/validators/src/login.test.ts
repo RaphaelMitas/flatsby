@@ -8,6 +8,7 @@ import {
   loginErrorCode,
   passkeyCancelled,
   signInCodeError,
+  startSignIn,
   thrownFailureCode,
 } from "./login";
 
@@ -127,21 +128,76 @@ describe("passkeyCancelled", () => {
 });
 
 describe("thrownFailureCode", () => {
-  it("reads an unreachable server as a network failure on web and native", () => {
-    expect(thrownFailureCode(new TypeError("Failed to fetch"))).toBe("network");
-    expect(
-      thrownFailureCode(
-        new Error(
-          'fetch failed: java.net.UnknownHostException: Unable to resolve host "www.flatsby.com"',
-        ),
-      ),
-    ).toBe("network");
+  it("reads an unreachable server as a network failure on every client", () => {
+    for (const message of [
+      "Failed to fetch",
+      "NetworkError when attempting to fetch resource.",
+      "Load failed",
+      "Network request failed",
+    ]) {
+      expect(thrownFailureCode(new TypeError(message))).toBe("network");
+    }
+    for (const reason of [
+      'java.net.UnknownHostException: Unable to resolve host "www.flatsby.com"',
+      "Aufgrund eines TLS-Fehlers ist die sichere Verbindung fehlgeschlagen.",
+    ]) {
+      expect(thrownFailureCode(new Error(`fetch failed: ${reason}`))).toBe(
+        "network",
+      );
+    }
   });
 
-  it("keeps anything else an exception", () => {
-    expect(thrownFailureCode(new Error("Cannot read property"))).toBe(
-      "exception",
-    );
+  it("keeps a bug an exception, even a TypeError", () => {
+    expect(
+      thrownFailureCode(
+        new TypeError("Cannot read properties of undefined (reading 'url')"),
+      ),
+    ).toBe("exception");
     expect(thrownFailureCode("fetch failed: not an Error")).toBe("exception");
+  });
+});
+
+describe("startSignIn", () => {
+  const failures = () => {
+    const codes: string[] = [];
+    return { codes, onFailed: (code: string) => void codes.push(code) };
+  };
+
+  it("counts a lost connection as a failure without throwing", async () => {
+    const { codes, onFailed } = failures();
+    const started = await startSignIn(
+      () => Promise.reject(new TypeError("Failed to fetch")),
+      onFailed,
+    );
+    expect(started).toBe(false);
+    expect(codes).toEqual(["network"]);
+  });
+
+  it("rethrows anything else so error tracking sees it", async () => {
+    const { codes, onFailed } = failures();
+    const bug = new TypeError("x is not a function");
+    await expect(startSignIn(() => Promise.reject(bug), onFailed)).rejects.toBe(
+      bug,
+    );
+    expect(codes).toEqual(["exception"]);
+  });
+
+  it("reports a refused start by its code", async () => {
+    const { codes, onFailed } = failures();
+    const started = await startSignIn(
+      () =>
+        Promise.resolve({ error: { code: "PROVIDER_NOT_FOUND", status: 404 } }),
+      onFailed,
+    );
+    expect(started).toBe(false);
+    expect(codes).toEqual(["provider_not_found"]);
+  });
+
+  it("starts when the server answers without an error", async () => {
+    const { codes, onFailed } = failures();
+    expect(
+      await startSignIn(() => Promise.resolve({ error: null }), onFailed),
+    ).toBe(true);
+    expect(codes).toEqual([]);
   });
 });

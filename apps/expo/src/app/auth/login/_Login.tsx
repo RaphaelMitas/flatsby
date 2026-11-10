@@ -9,7 +9,7 @@ import { uuidv7 } from "@posthog/core";
 import { usePostHog } from "posthog-react-native";
 import { useLocale, useTranslations } from "use-intl";
 
-import { startFailureCode, thrownFailureCode } from "@flatsby/validators/login";
+import { startSignIn } from "@flatsby/validators/login";
 import { usePasskey } from "@flatsby/validators/usePasskey";
 import { useSendSignInCode } from "@flatsby/validators/useSignInCode";
 
@@ -118,26 +118,23 @@ const Login = () => {
         error_code: errorCode,
       });
     try {
-      const started = await signIn
-        .social({
-          provider,
-          callbackURL,
-          additionalData: {
-            login: {
-              attemptId,
-              distinctId: getAnalyticsConsent()
-                ? posthog.getDistinctId()
-                : undefined,
-            } satisfies LoginAttempt,
-          },
-        })
-        .catch((thrown: unknown) => {
-          const code = thrownFailureCode(thrown);
-          failed(code);
-          if (code !== "network") throw thrown;
-        });
+      const started = await startSignIn(
+        () =>
+          signIn.social({
+            provider,
+            callbackURL,
+            additionalData: {
+              login: {
+                attemptId,
+                distinctId: getAnalyticsConsent()
+                  ? posthog.getDistinctId()
+                  : undefined,
+              } satisfies LoginAttempt,
+            },
+          }),
+        failed,
+      );
       if (!started) return;
-      if (started.error) return failed(startFailureCode(started.error));
       // The Expo plugin drops the browser's result, so whether a session came back is all we can know
       const session = await authClient.getSession();
       if (!session.data && !session.error) {
