@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { createAuthSession, expect, test } from "../fixtures/auth";
+import { groupRefetched } from "../helpers/group";
 import { waitForHydration } from "../helpers/hydration";
 
 // seed=debts: Max owes you €42.50, Sophie owes you €18.00, you owe Lena
@@ -78,9 +79,7 @@ test.describe("Debt & Settlements", () => {
     await expect(banner).toContainText("Debts are now in");
     const keepSeparate = banner.getByTestId("currency-banner-keep-separate");
     await waitForHydration(keepSeparate);
-    const saved = page.waitForResponse((response) =>
-      response.url().includes("group.updateGroup"),
-    );
+    const saved = groupRefetched(page);
     await keepSeparate.click();
     await expect(banner).toBeHidden();
     await saved;

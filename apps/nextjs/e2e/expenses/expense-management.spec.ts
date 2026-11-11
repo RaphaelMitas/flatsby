@@ -1,5 +1,11 @@
 import { expect, test } from "../fixtures/auth";
-import { createTestExpense, openExpenseDetail } from "../helpers/expenses";
+import {
+  createTestExpense,
+  fillExpenseAmount,
+  openExpenseDetail,
+  openExpenseEdit,
+  submitEqualSplitExpense,
+} from "../helpers/expenses";
 
 test.describe("Expense Management", () => {
   test("View Details: clicking an expense opens a detail view showing the total, payer, and splits", async ({
@@ -21,30 +27,9 @@ test.describe("Expense Management", () => {
     const { description } = await createTestExpense(authPage);
     await openExpenseDetail(authPage, description);
 
-    await expect(authPage.getByTestId("expense-edit-button")).toBeVisible({
-      timeout: 15000,
-    });
-    await authPage.getByTestId("expense-edit-button").click();
-    await authPage.waitForFunction(
-      () => new URL(window.location.href).searchParams.get("action") === "edit",
-      {},
-      { timeout: 10000 },
-    );
-
-    await expect(authPage.getByTestId("expense-form-title")).toBeVisible({
-      timeout: 10000,
-    });
-    await expect(authPage.getByTestId("expense-form-title")).toContainText(
-      "Edit Expense",
-    );
-
-    const amountInput = authPage.getByTestId("expense-form-amount");
-    await amountInput.click();
-    await amountInput.clear();
-    await amountInput.pressSequentially("50.00");
-    await authPage.getByTestId("expense-form-next").click();
-    await authPage.getByTestId("expense-form-next").click();
-    await authPage.getByTestId("expense-form-submit").click();
+    await openExpenseEdit(authPage);
+    await fillExpenseAmount(authPage, "50.00");
+    await submitEqualSplitExpense(authPage);
 
     await expect(authPage.getByText("€50.00").first()).toBeVisible();
   });

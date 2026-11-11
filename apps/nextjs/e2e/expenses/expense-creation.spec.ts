@@ -4,6 +4,7 @@ import {
   ensurePaidBySelected,
   fillExpenseAmount,
   openExpenseDetail,
+  openExpenseEdit,
   openExpenseForm,
   submitEqualSplitExpense,
 } from "../helpers/expenses";
@@ -113,14 +114,7 @@ test.describe("Expense Creation", () => {
       "2 of 2 shares",
     );
 
-    // The created toast sits over the form's Next button until it expires
-    await expect(authPage.getByText("Expense created successfully")).toBeHidden(
-      { timeout: 10000 },
-    );
-    await authPage.getByTestId("expense-edit-button").click();
-    await expect(authPage.getByTestId("expense-form-title")).toContainText(
-      "Edit Expense",
-    );
+    await openExpenseEdit(authPage);
     await fillExpenseAmount(authPage, "60.00");
     await authPage.getByTestId("expense-form-next").click();
     await expect(

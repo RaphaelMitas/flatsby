@@ -74,7 +74,7 @@ start_postgres() {
     # startup") with the incomplete locale settings a GitHub runner leaves.
     local LC_ALL=C LANG=C
     export LC_ALL LANG
-    curl -fsSL -o "$dir/postgres.jar" "$zonky_jar"
+    curl -fsSL --retry 5 --retry-all-errors -o "$dir/postgres.jar" "$zonky_jar"
     echo "$zonky_sha256  $dir/postgres.jar" | shasum -a 256 -c
     rm -rf "$dir/postgres" "$dir/pgdata"
     mkdir "$dir/postgres"

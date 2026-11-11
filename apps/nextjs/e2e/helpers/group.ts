@@ -61,7 +61,7 @@ export async function deleteCurrentGroup(page: Page) {
   await page.waitForURL("/group");
 }
 
-// The member list refetches once a member change settles; navigating earlier aborts it
+// The group refetches once a change to it settles; navigating earlier can beat the write
 export const groupRefetched = (page: Page) =>
   page.waitForResponse(
     (response) =>

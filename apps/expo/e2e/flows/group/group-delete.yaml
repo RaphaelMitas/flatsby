@@ -23,10 +23,18 @@ tags:
     visible:
       id: "group-dashboard-title"
     timeout: 15000
-- swipe:
-    from:
-      text: "Delete Me Group"
-    direction: LEFT
+# A swipe can pass without opening the row, like a tap that misses (see tap-until.yaml).
+- retry:
+    maxRetries: 2
+    commands:
+      - swipe:
+          from:
+            text: "Delete Me Group"
+          direction: LEFT
+      - extendedWaitUntil:
+          visible:
+            id: "delete-confirmation-input"
+          timeout: 15000
 - runFlow:
     file: ../../subflows/confirm-delete.yaml
     env:

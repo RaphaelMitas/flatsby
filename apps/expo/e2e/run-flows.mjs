@@ -132,6 +132,11 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
       `tcp:${reversePort}`,
     ]);
   }
+  // The driver records a running app's pid at startup; clearState then kills
+  // the app and XCTest's terminate waits 60s on the stale pid.
+  if (platform === "ios") {
+    spawnSync("xcrun", ["simctl", "terminate", device, appId]);
+  }
   const child = spawn(
     "maestro",
     [
@@ -235,3 +240,6 @@ console.log(`\nRerunning ${failed.length} flow file(s) once: ${names}`);
 const stillFailing = await runAll(failed, "retry-");
 if (stillFailing.length > 0) process.exit(1);
 console.log("All failed flows passed on rerun.");
+if (process.env.GITHUB_ACTIONS) {
+  console.log(`::warning title=Flaky e2e flows::${names}`);
+}
