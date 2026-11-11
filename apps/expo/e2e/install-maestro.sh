@@ -12,7 +12,7 @@ dir=$root/$version
 if [ ! -x "$dir/maestro/bin/maestro" ]; then
   mkdir -p "$root"
   partial=$(mktemp -d "$root/.partial.XXXXXX")
-  curl -fsSL -o "$partial/maestro.zip" \
+  curl -fsSL --retry 5 --retry-all-errors -o "$partial/maestro.zip" \
     "https://github.com/mobile-dev-inc/Maestro/releases/download/cli-$version/maestro.zip"
   echo "$sha256  $partial/maestro.zip" | shasum -a 256 -c >/dev/null
   unzip -q "$partial/maestro.zip" -d "$partial"

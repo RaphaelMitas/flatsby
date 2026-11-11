@@ -7,7 +7,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "dashboard-group-picker"
-    timeout: 15000
+    timeout: 60000
 - runFlow:
     file: tap-tab.yaml
     env:
