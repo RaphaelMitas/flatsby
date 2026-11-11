@@ -190,10 +190,6 @@ jobs:
       - name: Unpack app
         run: tar -xzf Flatsby-app.tar.gz
 
-      # TEMP, out before merge: ranks what takes the CPU, to tune the settle wait.
-      - name: Sample CPU
-        run: nohup top -l 0 -s 10 -n 6 -o cpu -stats pid,cpu,command > "$RUNNER_TEMP/top.log" 2>&1 &
-
       # Before the simulator exists: its first boot takes the runner's three
       # cores for minutes and starves anything started next to it.
       - name: Start E2E stack
@@ -249,10 +245,6 @@ jobs:
           xcrun simctl spawn "${{ steps.sim.outputs.udid }}" log show --style compact --last 30m \
             --predicate 'processImagePath CONTAINS "Flatsby" OR senderImagePath CONTAINS "Flatsby"' \
             > e2e/results/diagnostics/sim-log.txt 2>/dev/null || true
-          # TEMP, out before merge.
-          cp -f "$RUNNER_TEMP/top.log" e2e/results/diagnostics/ 2>/dev/null || true
-          awk '$1 ~ /^[0-9]+$/ && NF >= 3 { cpu[$3] += $2 } END { for (c in cpu) printf "%8.0f %s\n", cpu[c], c }' \
-            "$RUNNER_TEMP/top.log" | sort -rn | head -15 || true
 
       # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
       # which upload-artifact drops by default. An artifact service timeout
