@@ -223,7 +223,7 @@ jobs:
             echo "CPU idle: $idle%"
             if [ "$idle" -ge 50 ]; then quiet=$((quiet + 1)); else quiet=0; fi
           done
-          [ "$quiet" -ge 4 ] || echo "::warning title=Simulator not settled::Flows started on a busy simulator after ${SECONDS}s"
+          [ "$quiet" -ge 4 ] || echo "Flows started on a busy simulator after ${SECONDS}s"
 
       # The simulator shares the host's network stack, so localhost is the
       # runner's own server.
