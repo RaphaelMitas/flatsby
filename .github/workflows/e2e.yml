@@ -29,8 +29,10 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
 
+      # No --with-deps: the runner image has Chromium's libraries, and apt would
+      # only add fonts no test looks at while depending on the Ubuntu mirrors.
       - name: Install Playwright Chromium
-        run: pnpm --filter @flatsby/nextjs exec playwright install --with-deps chromium
+        run: pnpm --filter @flatsby/nextjs exec playwright install chromium
 
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
