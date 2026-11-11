@@ -132,8 +132,8 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
       `tcp:${reversePort}`,
     ]);
   }
-  // A driver that starts while the app runs keeps its pid; launchApp's
-  // clearState kills it over simctl and XCTest's terminate hangs on the stale pid.
+  // The driver records a running app's pid at startup; clearState then kills
+  // the app and XCTest's terminate waits 60s on the stale pid.
   if (platform === "ios") {
     spawnSync("xcrun", ["simctl", "terminate", device, appId]);
   }
