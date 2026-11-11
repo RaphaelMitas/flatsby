@@ -12,28 +12,24 @@ allowBuilds:
   sharp: true
   unrs-resolver: false
 
-# Transitive vulnerabilities with no upstream fix path: each is held back by a
-# parent package we do not control, via an exact pin or a range that excludes the
-# patched release. Re-check with `pnpm audit` and drop entries as upstream ships.
+# Transitive vulnerabilities held back by a parent package. Each clears when that
+# parent ships a fix or we bump it. Re-check with `pnpm audit` and drop entries.
 auditConfig:
   ignoreGhsas:
     # esbuild <=0.24.2 - drizzle-kit@0.31.11 (latest) > @esbuild-kit/esm-loader >
     # @esbuild-kit/core-utils@3.3.2, which pins ~0.18.20. The @esbuild-kit packages
     # are deprecated (folded into tsx); clears when drizzle-kit drops esm-loader.
     - GHSA-67mh-4wv8-2f99
-    # zod <4.6.6 - only 4.x is patched and 3.25.76 is the last 3.x. Every @expo/cli
-    # 58.x (latest 58.1.16) depends on zod ^3.25.76, dev tooling only. Clears when
-    # @expo/cli moves to zod 4.
+    # zod <4.6.6 - only 4.x is patched and 3.25.76 is the last 3.x. @expo/cli
+    # <=58.1.17 depends on zod ^3.25.76, dev tooling only. Clears with expo >=58.0.22.
     - GHSA-mrhx-c7xc-m3w5
-    # deepmerge <=4.3.1 - no patched release exists; 4.3.1 is npm's latest and
-    # unchanged since 2023. Reached via @expo/config@58.0.8 (latest) merging app
-    # config at build time, never untrusted input.
+    # deepmerge <=4.3.1 - no patched release exists. Reached via @expo/config <=58.0.9
+    # merging app config at build time, never untrusted input. Clears with expo >=58.0.22.
     - GHSA-gcqx-w48m-w2h4
     # glob <=14.0.1 and minimatch <11.0.1 - patched only in the new majors. Every
     # Expo 58 package (canary included) depends on glob ^13, @expo/fingerprint also
-    # on minimatch ^10. react-email 6 also depends on glob ^13 for its preview CLI.
-    # Build tooling globbing our own project, no abort signals or untrusted input.
-    # Clears when Expo and react-email move to glob 14 and Expo to minimatch 11.
+    # on minimatch ^10. Build tooling globbing our own project, no abort signals or
+    # untrusted input. Clears when Expo moves to glob 14 and minimatch 11.
     - GHSA-3g3m-2fjr-6pw4
     - GHSA-g3hv-75wg-m249
 
