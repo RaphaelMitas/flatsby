@@ -1,6 +1,3 @@
-• Search your expenses and filter by person, category or time range, even years back.
-• The top of the expense list shows what you owe or are owed.
-• Receipt scanning reads PDF invoices too, and is marked as beta.
-• Starting a group is quicker: create it first, then send each person their own invite link from Home.
-• Calmer screens, and the Next button no longer hides under the number pad.
+• Flatsby is now free for everyone: automatic categories and receipt scanning (beta) no longer use credits, and there's nothing to buy.
+• New in Settings: Support Flatsby, with what stays free and how to get in touch.
 • Small fixes and improvements.

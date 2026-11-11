@@ -1,6 +1,3 @@
-• Durchsuche deine Ausgaben und filtere nach Person, Kategorie oder Zeitraum, auch Jahre zurück.
-• Oben in der Ausgabenliste siehst du, was du schuldest oder bekommst.
-• Der Belegscan liest jetzt auch PDF-Rechnungen und ist als Beta markiert.
-• Neue Gruppe schneller startklar: erst anlegen, dann jeder Person auf Start ihren eigenen Link schicken.
-• Ruhigere Bildschirme, und „Weiter“ verschwindet nicht mehr unter dem Ziffernblock.
+• Flatsby ist jetzt für alle kostenlos: Automatische Kategorien und Belegscan (Beta) brauchen keine Credits mehr, und es gibt nichts zu kaufen.
+• Neu in den Einstellungen: „Flatsby unterstützen“, mit allem, was kostenlos bleibt, und wie du mich erreichst.
 • Kleine Fehlerbehebungen und Verbesserungen.
