@@ -26,7 +26,7 @@ test.describe("Account Management", () => {
     const usage = authPage.getByTestId("usage-analytics-switch");
     await expect(usage).toBeChecked();
 
-    // The user is refetched once the write settles; reloading any earlier can abort the write
+    // The user is refetched once the write settles; reloading any earlier can beat the write
     const saved = authPage.waitForResponse(
       (response) =>
         /user\.getCurrentUser\b/.test(response.url()) &&

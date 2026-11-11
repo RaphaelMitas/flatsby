@@ -23,7 +23,7 @@ tags:
     visible:
       id: "group-dashboard-title"
     timeout: 15000
-# A swipe right after navigation can miss like a tap does (see tap-until.yaml).
+# A swipe can pass without opening the row, like a tap that misses (see tap-until.yaml).
 - retry:
     maxRetries: 2
     commands:
