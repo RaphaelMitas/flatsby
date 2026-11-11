@@ -157,7 +157,8 @@ hangs or says not signed in, ask rather than retry.
 - `pnpm ci:local` runs the checks and the e2e suites against its own stack on
 ports derived from the worktree, so several worktrees can run at once. Devices
 are throwaway simulators and emulators, or leased from a Simlock gateway when
-`SIMLOCK_URL` and `SIMLOCK_TOKEN` are set. Each run writes its logs and a
+`SIMLOCK_URL` and `SIMLOCK_TOKEN` are set. Each platform gets `--devices`, or
+the machine's `CI_LOCAL_DEVICES`, or 2. Each run writes its logs and a
 `summary.json` to `.ci-local/<run>/`; the last five runs are kept. A native build it can't take from the
 cache regenerates the worktree's `apps/expo/ios` and `android` folders.
 - `pnpm install` runs `pnpm lint:ws` as a postinstall hook.

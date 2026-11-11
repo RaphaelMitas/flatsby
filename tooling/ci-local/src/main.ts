@@ -46,7 +46,7 @@ Runs CI on this machine: the checks from ci.yml and the e2e suites from
 e2e.yml. Without targets it runs everything this machine supports.
 
   --areas     Maestro flow areas or files, e.g. group,shopping-list/items
-  --devices   simulators or emulators per platform (default 2)
+  --devices   simulators or emulators per platform (default CI_LOCAL_DEVICES or 2)
 
 Devices are throwaway simulators and emulators unless SIMLOCK_URL and
 SIMLOCK_TOKEN name a Simlock gateway to lease them from.`;
@@ -200,7 +200,7 @@ async function main(): Promise<number> {
     allowPositionals: true,
     options: {
       areas: { type: "string" },
-      devices: { type: "string", default: "2" },
+      devices: { type: "string", default: process.env.CI_LOCAL_DEVICES ?? "2" },
       help: { type: "boolean", short: "h" },
     },
   });
@@ -219,7 +219,9 @@ async function main(): Promise<number> {
   }
   const deviceCount = Number(values.devices);
   if (!Number.isInteger(deviceCount) || deviceCount < 1) {
-    console.error("--devices takes a whole number of at least 1");
+    console.error(
+      "--devices and CI_LOCAL_DEVICES take a whole number of at least 1",
+    );
     return 2;
   }
   const areas = values.areas?.split(",").filter(Boolean) ?? [];
