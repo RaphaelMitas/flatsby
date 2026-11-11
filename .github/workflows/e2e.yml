@@ -195,8 +195,7 @@ jobs:
         run: nohup top -l 0 -s 10 -n 6 -o cpu -stats pid,cpu,command > "$RUNNER_TEMP/top.log" 2>&1 &
 
       # Before the simulator exists: its first boot takes the runner's three
-      # cores for minutes, and anything started next to it crawls (the stack
-      # 3-5 min, pnpm install 7-12).
+      # cores for minutes and starves anything started next to it.
       - name: Start E2E stack
         uses: ./tooling/github/e2e-stack
 
@@ -214,22 +213,21 @@ jobs:
         run: bash apps/expo/e2e/prepare-device.sh ios "$UDID" Flatsby.app
 
       # A fresh simulator keeps working for minutes after bootstatus returns,
-      # and flows started into that time out on their first waits. Its push
-      # daemon never settles on a VM: it reconnects to Apple about nine times a
-      # second for the whole job, and the app registers for no remote pushes.
+      # and flows started into that time out on their first waits.
       - name: Wait for the simulator to settle
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
+          # apsd never settles on a VM, and the app registers for no remote pushes.
           xcrun simctl spawn "$UDID" launchctl bootout user/foreground/com.apple.apsd || true
           quiet=0
-          for _ in $(seq 60); do
+          while [ "$quiet" -lt 4 ] && [ "$SECONDS" -lt 420 ]; do
             # top's first sample is the average since boot; the second covers the 5s.
             idle=$(top -l 2 -n 0 -s 5 | awk '/^CPU usage/ { idle = $7 } END { print int(idle) }')
             echo "CPU idle: $idle%"
             if [ "$idle" -ge 50 ]; then quiet=$((quiet + 1)); else quiet=0; fi
-            if [ "$quiet" -ge 4 ]; then break; fi
           done
+          [ "$quiet" -ge 4 ] || echo "::warning title=Simulator not settled::Flows started on a busy simulator after ${SECONDS}s"
 
       # The simulator shares the host's network stack, so localhost is the
       # runner's own server.
@@ -415,9 +413,11 @@ jobs:
           cp -f "$RUNNER_TEMP"/web.log "$RUNNER_TEMP"/wsproxy.log apps/expo/e2e/results/diagnostics/ || true
 
       # Maestro's failure debug bundle sits under a hidden .maestro/ dir,
-      # which upload-artifact drops by default.
+      # which upload-artifact drops by default. An artifact service timeout
+      # must not fail a shard whose flows passed.
       - name: Upload test results
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: maestro-android-results-${{ matrix.shard }}

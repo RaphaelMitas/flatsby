@@ -132,8 +132,8 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
       `tcp:${reversePort}`,
     ]);
   }
-  // Maestro's launchApp stops a running app through XCTest, which sometimes
-  // hangs on the pid until the device counts as unreachable.
+  // A driver that starts while the app runs keeps its pid; launchApp's
+  // clearState kills it over simctl and XCTest's terminate hangs on the stale pid.
   if (platform === "ios") {
     spawnSync("xcrun", ["simctl", "terminate", device, appId]);
   }
@@ -240,7 +240,6 @@ console.log(`\nRerunning ${failed.length} flow file(s) once: ${names}`);
 const stillFailing = await runAll(failed, "retry-");
 if (stillFailing.length > 0) process.exit(1);
 console.log("All failed flows passed on rerun.");
-// A green job hides these otherwise.
 if (process.env.GITHUB_ACTIONS) {
   console.log(`::warning title=Flaky e2e flows::${names}`);
 }

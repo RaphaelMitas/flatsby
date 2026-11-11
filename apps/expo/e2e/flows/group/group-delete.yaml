@@ -23,10 +23,19 @@ tags:
     visible:
       id: "group-dashboard-title"
     timeout: 15000
-- swipe:
-    from:
-      text: "Delete Me Group"
-    direction: LEFT
+# A swipe into a list that is still rendering can miss the way a tap does
+# (see tap-until.yaml).
+- retry:
+    maxRetries: 2
+    commands:
+      - swipe:
+          from:
+            text: "Delete Me Group"
+          direction: LEFT
+      - extendedWaitUntil:
+          visible:
+            id: "delete-confirmation-input"
+          timeout: 15000
 - runFlow:
     file: ../../subflows/confirm-delete.yaml
     env:
