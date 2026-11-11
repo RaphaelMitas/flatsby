@@ -84,6 +84,17 @@ export async function createTestExpense(
   };
 }
 
+export async function openExpenseEdit(page: Page) {
+  // The created toast sits over the form's Next button until it expires
+  await expect(page.getByText("Expense created successfully")).toBeHidden({
+    timeout: 10000,
+  });
+  await page.getByTestId("expense-edit-button").click();
+  await expect(page.getByTestId("expense-form-title")).toContainText(
+    "Edit Expense",
+  );
+}
+
 export async function openExpenseDetail(page: Page, description: string) {
   const expenseCard = page
     .getByTestId(/^expense-card-\d+$/)

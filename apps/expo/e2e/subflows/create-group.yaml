@@ -16,7 +16,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible:
       id: "group-invite-code"
-    timeout: 60000
+    timeout: 15000
 # Done sits below the placeholder names, off screen on small devices
 - scrollUntilVisible:
     element:
