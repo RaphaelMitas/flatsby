@@ -113,6 +113,9 @@ export const MemberCard = ({
         void queryClient.invalidateQueries(
           trpc.group.getUserGroups.queryOptions(),
         );
+        void queryClient.invalidateQueries(
+          trpc.user.getCurrentUserWithGroups.queryFilter(),
+        );
         if (isCurrentUser) {
           router.push(`/group`);
         }
@@ -138,6 +141,7 @@ export const MemberCard = ({
           invalidate: [
             ...memberNameQueries,
             trpc.group.getUserGroups.queryFilter(),
+            trpc.user.getCurrentUserWithGroups.queryFilter(),
           ],
         },
       ),

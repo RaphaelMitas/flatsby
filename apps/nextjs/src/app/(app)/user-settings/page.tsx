@@ -11,7 +11,7 @@ import {
 } from "@flatsby/ui/card";
 
 import { SupportFlatsby } from "~/app/_components/SupportFlatsby";
-import { prefetch, trpc } from "~/trpc/server";
+import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { AnalyticsSettings } from "./AnalyticsSettings";
 import DeleteUser from "./DeleteUser";
 import ExportUserData from "./ExportUserData";
@@ -25,35 +25,37 @@ export default async function Page() {
   const t = await getTranslations("settings.page");
   const preference = (await cookies()).get(localeCookie)?.value;
   return (
-    <div className="flex flex-col p-4 md:pt-16">
-      <div className="mx-auto grid w-full max-w-6xl items-start gap-6 lg:grid-cols-[1fr]">
-        <div className="mx-auto grid w-full max-w-6xl gap-2">
-          <h1
-            className="text-3xl font-semibold"
-            data-testid="account-settings-title"
-          >
-            {t("title")}
-          </h1>
+    <HydrateClient>
+      <div className="flex flex-col p-4 md:pt-16">
+        <div className="mx-auto grid w-full max-w-6xl items-start gap-6 lg:grid-cols-[1fr]">
+          <div className="mx-auto grid w-full max-w-6xl gap-2">
+            <h1
+              className="text-3xl font-semibold"
+              data-testid="account-settings-title"
+            >
+              {t("title")}
+            </h1>
+          </div>
+          <ManageUser />
+          <PaypalHandleCard />
+          <Passkeys />
+          <LanguageSettings
+            preference={preference && isLocale(preference) ? preference : null}
+          />
+          <AnalyticsSettings />
+          <SupportFlatsby />
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("dataTitle")}</CardTitle>
+              <CardDescription>{t("dataDescription")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ExportUserData />
+            </CardContent>
+          </Card>
+          <DeleteUser />
         </div>
-        <ManageUser />
-        <PaypalHandleCard />
-        <Passkeys />
-        <LanguageSettings
-          preference={preference && isLocale(preference) ? preference : null}
-        />
-        <AnalyticsSettings />
-        <SupportFlatsby />
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("dataTitle")}</CardTitle>
-            <CardDescription>{t("dataDescription")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ExportUserData />
-          </CardContent>
-        </Card>
-        <DeleteUser />
       </div>
-    </div>
+    </HydrateClient>
   );
 }

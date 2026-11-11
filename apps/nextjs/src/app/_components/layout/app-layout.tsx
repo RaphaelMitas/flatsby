@@ -21,7 +21,8 @@ export async function AppLayout({ children }: AppLayoutProps) {
   await getCurrentUserWithGroups();
 
   return (
-    <HydrateClient>
+    // Pending page prefetches would hydrate into the sidebar's useQuery readers as data SSR never rendered
+    <HydrateClient settledOnly>
       <SidebarProvider>
         <GroupContextProvider>
           <AppSidebar />

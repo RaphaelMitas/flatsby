@@ -4,7 +4,11 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
-import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import {
+  defaultShouldDehydrateQuery,
+  dehydrate,
+  HydrationBoundary,
+} from "@tanstack/react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
 import { appRouter, createTRPCContext } from "@flatsby/api";
@@ -36,13 +40,18 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
   queryClient: getQueryClient,
 });
 
-export function HydrateClient(props: { children: React.ReactNode }) {
-  const queryClient = getQueryClient();
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      {props.children}
-    </HydrationBoundary>
+export function HydrateClient({
+  children,
+  settledOnly = false,
+}: {
+  children: React.ReactNode;
+  settledOnly?: boolean;
+}) {
+  const state = dehydrate(
+    getQueryClient(),
+    settledOnly ? { shouldDehydrateQuery: defaultShouldDehydrateQuery } : {},
   );
+  return <HydrationBoundary state={state}>{children}</HydrationBoundary>;
 }
 // biome-ignore lint/suspicious/noExplicitAny: generic constraint must accept any query options shape
 export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(

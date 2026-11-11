@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { House, KeyRound, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -12,22 +11,18 @@ import { season } from "~/app/_components/seasonal/season";
 import { Switcher } from "~/app/_components/switcher/Switcher";
 import { SwitcherSettingsButton } from "~/app/_components/switcher/SwitcherSettingsButton";
 import { JoinWithCodeDialog } from "~/app/(app)/group/JoinWithCodeDialog";
-import { useTRPC } from "~/trpc/react";
 
 export function GroupHeader() {
   const t = useTranslations();
   const router = useRouter();
-  const trpc = useTRPC();
-  const { currentGroup, switchGroup } = useGroupContext();
+  const { currentGroup, groups, switchGroup } = useGroupContext();
   const [isSwitching, setIsSwitching] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
-  const { data } = useQuery(trpc.group.getUserGroups.queryOptions());
 
   if (!currentGroup) {
     return null;
   }
 
-  const groups = data?.success ? data.data : [];
   const memberCount = (count: number) => t("group.memberCount", { count });
   const current = groups.find(({ id }) => id === currentGroup.id);
   const Backdrop = season.HomeBackdrop;
