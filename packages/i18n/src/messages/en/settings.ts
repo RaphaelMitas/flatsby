@@ -25,6 +25,10 @@ export const settings = {
     rateApp: "Rate Flatsby",
     eveningReminder: "Evening reminder",
     eveningReminderBlocked: "Turned off in your phone's settings",
+    updateNudge: "Update prompt",
+    updateNudgeOff: "Off",
+    updateNudgeMonthly: "Monthly",
+    updateNudgeVersion: "Per version",
   },
   analytics: {
     title: "Analytics",

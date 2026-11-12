@@ -5,13 +5,35 @@ import * as ExpoInAppUpdates from "expo-in-app-updates";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslations } from "use-intl";
 
+import type { UpdateNudgeFrequency } from "~/utils/update-nudge-frequency";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SheetModal } from "~/lib/ui/sheet-modal";
 import { getPostHog } from "~/utils/analytics/posthog";
 import { isE2ETestingEnabled } from "~/utils/e2e";
+import { updateNudgeFrequency } from "~/utils/update-nudge-frequency";
 
 const DISMISSED_KEY = "update_nudge_dismissed_version";
+const DISMISSED_AT_KEY = "update_nudge_dismissed_at";
+const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
+
+async function wasDismissed(
+  frequency: UpdateNudgeFrequency,
+  storeVersion: string,
+) {
+  if (frequency === "monthly") {
+    const dismissedAt = Number(await AsyncStorage.getItem(DISMISSED_AT_KEY));
+    return Date.now() - dismissedAt < MONTH_MS;
+  }
+  return (await AsyncStorage.getItem(DISMISSED_KEY)) === storeVersion;
+}
+
+async function availableStoreVersion() {
+  const update = await ExpoInAppUpdates.checkForUpdate().catch(() => null);
+  if (!update?.updateAvailable || update.updateInProgress) return null;
+  if (Platform.OS === "android" && !update.immediateAllowed) return null;
+  return update.storeVersion;
+}
 
 export function UpdateNudge() {
   const t = useTranslations("appUpdate");
@@ -20,18 +42,15 @@ export function UpdateNudge() {
   const updatePressed = useRef(false);
 
   useEffect(() => {
-    if (__DEV__ && process.env.EXPO_PUBLIC_FORCE_UPDATE_NUDGE === "true") {
-      setStoreVersion("dev");
-      return;
-    }
-    if (__DEV__ || isE2ETestingEnabled()) return;
+    const forced =
+      __DEV__ && process.env.EXPO_PUBLIC_FORCE_UPDATE_NUDGE === "true";
+    if (!forced && (__DEV__ || isE2ETestingEnabled())) return;
     const check = async () => {
-      const update = await ExpoInAppUpdates.checkForUpdate().catch(() => null);
-      if (!update?.updateAvailable || update.updateInProgress) return;
-      if (Platform.OS === "android" && !update.immediateAllowed) return;
-      if ((await AsyncStorage.getItem(DISMISSED_KEY)) === update.storeVersion)
-        return;
-      setStoreVersion(update.storeVersion);
+      const frequency = await updateNudgeFrequency.read();
+      if (frequency === "off") return;
+      const version = forced ? "dev" : await availableStoreVersion();
+      if (!version || (await wasDismissed(frequency, version))) return;
+      setStoreVersion(version);
     };
     void check();
     const subscription = AppState.addEventListener("change", (state) => {
@@ -57,6 +76,12 @@ export function UpdateNudge() {
     }
   };
 
+  const turnOff = () => {
+    getPostHog().capture("update_nudge_turned_off", { storeVersion });
+    updateNudgeFrequency.save("off");
+    sheetRef.current?.dismiss();
+  };
+
   return (
     <SheetModal
       ref={sheetRef}
@@ -65,7 +90,10 @@ export function UpdateNudge() {
           updatePressed.current = false;
           void ExpoInAppUpdates.startUpdate(true);
         } else if (storeVersion) {
-          void AsyncStorage.setItem(DISMISSED_KEY, storeVersion);
+          void AsyncStorage.multiSet([
+            [DISMISSED_KEY, storeVersion],
+            [DISMISSED_AT_KEY, String(Date.now())],
+          ]);
         }
       }}
     >
@@ -87,6 +115,12 @@ export function UpdateNudge() {
           title={t("later")}
           variant="ghost"
           onPress={() => sheetRef.current?.dismiss()}
+        />
+        <Button
+          testID="update-nudge-turn-off"
+          title={t("turnOff")}
+          variant="ghost"
+          onPress={turnOff}
         />
       </View>
     </SheetModal>

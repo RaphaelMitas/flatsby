@@ -5,4 +5,5 @@ export const appUpdate = {
   body: "Aktualisiere, um die neuesten Funktionen und Fehlerbehebungen zu bekommen.",
   update: "Aktualisieren",
   later: "Später",
+  turnOff: "Nicht mehr anzeigen",
 } satisfies Messages["appUpdate"];

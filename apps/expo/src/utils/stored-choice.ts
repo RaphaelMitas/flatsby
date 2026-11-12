@@ -14,9 +14,13 @@ export function storedChoice<T extends string>(
     for (const listener of listeners) listener();
   };
 
-  AsyncStorage.getItem(key)
-    .then((saved) => set(parse(saved)))
-    .catch(() => set(parse(null)));
+  const loaded = AsyncStorage.getItem(key)
+    .catch(() => null)
+    .then((saved) => {
+      const parsed = parse(saved);
+      set(parsed);
+      return parsed;
+    });
 
   const subscribe = (listener: () => void) => {
     listeners.add(listener);
@@ -25,6 +29,10 @@ export function storedChoice<T extends string>(
 
   return {
     useValue: () => useSyncExternalStore(subscribe, () => value),
+    read: async () => {
+      const initial = await loaded;
+      return value ?? initial;
+    },
     save: (next: T) => {
       set(next);
       AsyncStorage.setItem(key, next).catch(console.error);
