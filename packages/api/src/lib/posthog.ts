@@ -120,12 +120,11 @@ const clientHeadersSchema = z.object({
   "x-app-version": z.string().min(1).max(32).optional().catch(undefined),
   "x-app-build": z.string().min(1).max(32).optional().catch(undefined),
   "x-expo-update-id": z.uuid().optional().catch(undefined),
-  // The app sends it only while its device has analytics consent
   "x-posthog-session-id": z.uuid().optional().catch(undefined),
 });
 
 // The app's user agent is okhttp or CFNetwork, which reads as an unknown desktop
-function clientProperties(headers: Headers) {
+export function clientProperties(headers: Headers) {
   const client = clientHeadersSchema.parse(Object.fromEntries(headers));
   const os = client["x-os-name"];
   return {
@@ -205,8 +204,6 @@ export function buildPostHogProperties(headers: Headers, page?: PageUrls) {
 
     // Campaign params
     ...campaignParams,
-
-    ...clientProperties(headers),
   };
 
   // Remove undefined values
@@ -299,6 +296,7 @@ export function captureEvent({
     event,
     properties: {
       ...buildPostHogProperties(headers, page),
+      ...clientProperties(headers),
       ...additionalProperties,
     },
   });

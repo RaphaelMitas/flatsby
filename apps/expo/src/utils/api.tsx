@@ -117,7 +117,7 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
 /**
  * Get headers for tRPC requests
  */
-async function getHeaders(opList: readonly Operation[]) {
+async function getHeaders({ opList }: { opList: readonly Operation[] }) {
   const headers = new Map<string, string>();
   headers.set("x-trpc-source", "expo-react");
   headers.set("Accept-Language", languageTags().join(","));
@@ -151,7 +151,7 @@ const trpcClient = createTRPCClient<AppRouter>({
     httpBatchLink({
       transformer: superjson,
       url: `${getBaseUrl()}/api/trpc`,
-      headers: ({ opList }) => getHeaders(opList),
+      headers: getHeaders,
       // iOS would append its own stored cookies to the Cookie header from getHeaders
       fetch: (url, options) => fetch(url, { ...options, credentials: "omit" }),
     }),

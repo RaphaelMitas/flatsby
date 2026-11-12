@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   browserExceptionProperties,
-  buildPostHogProperties,
+  clientProperties,
   withoutQueryParams,
 } from "./posthog";
 
@@ -81,22 +81,22 @@ describe("withoutQueryParams", () => {
   });
 });
 
-describe("buildPostHogProperties", () => {
+describe("clientProperties", () => {
   const sessionId = "019a7c3e-5b2a-7d1f-9c4e-2f8a6b1d3e5c";
 
   it("attributes an app request to its platform, version and session", () => {
-    const properties = buildPostHogProperties(
-      new Headers({
-        "user-agent": "okhttp/4.11.0",
-        "x-trpc-source": "expo-react",
-        "x-os-name": "Android",
-        "x-app-version": "0.19.0",
-        "x-app-build": "74",
-        "x-expo-update-id": sessionId,
-        "x-posthog-session-id": sessionId,
-      }),
-    );
-    expect(properties).toMatchObject({
+    expect(
+      clientProperties(
+        new Headers({
+          "x-trpc-source": "expo-react",
+          "x-os-name": "Android",
+          "x-app-version": "0.19.0",
+          "x-app-build": "74",
+          "x-expo-update-id": sessionId,
+          "x-posthog-session-id": sessionId,
+        }),
+      ),
+    ).toEqual({
       client: "expo-react",
       $os: "Android",
       $os_name: "Android",
@@ -109,17 +109,15 @@ describe("buildPostHogProperties", () => {
   });
 
   it("drops app headers that don't parse", () => {
-    const properties = buildPostHogProperties(
-      new Headers({
-        "x-trpc-source": "x".repeat(10_000),
-        "x-os-name": "Windows",
-        "x-app-version": "",
-        "x-posthog-session-id": "not-a-session",
-      }),
-    );
-    expect(properties).not.toHaveProperty("client");
-    expect(properties).not.toHaveProperty("$os_name");
-    expect(properties).not.toHaveProperty("$app_version");
-    expect(properties).not.toHaveProperty("$session_id");
+    expect(
+      clientProperties(
+        new Headers({
+          "x-trpc-source": "x".repeat(10_000),
+          "x-os-name": "Windows",
+          "x-app-version": "",
+          "x-posthog-session-id": "not-a-session",
+        }),
+      ),
+    ).toEqual({});
   });
 });
