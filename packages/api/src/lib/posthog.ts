@@ -7,6 +7,7 @@ import {
   ErrorTracking,
 } from "@posthog/core";
 import { PostHog } from "posthog-node";
+import { z } from "zod/v4";
 
 import { redactQueryParams } from "@flatsby/db/errors";
 import { redactInvitePath } from "@flatsby/validators/invite";
@@ -110,6 +111,29 @@ function getBrowserLanguagePrefix(headers: Headers): string | undefined {
   return lang?.split("-")[0];
 }
 
+const APP_OS = { ios: "iOS", android: "Android" } as const;
+
+const appHeadersSchema = z.object({
+  "x-platform": z.enum(["ios", "android"]).optional().catch(undefined),
+  "x-app-version": z.string().min(1).max(32).optional().catch(undefined),
+  "x-app-build": z.string().min(1).max(32).optional().catch(undefined),
+  // The app sends it only while its device has analytics consent
+  "x-posthog-session-id": z.uuid().optional().catch(undefined),
+});
+
+// The app's user agent is okhttp or CFNetwork, which reads as an unknown desktop
+function appProperties(headers: Headers) {
+  const app = appHeadersSchema.parse(Object.fromEntries(headers));
+  const os = app["x-platform"] && APP_OS[app["x-platform"]];
+  return {
+    // posthog-react-native puts the platform in $os_name
+    ...(os && { $os: os, $os_name: os, $device_type: "Mobile" }),
+    $app_version: app["x-app-version"],
+    $app_build: app["x-app-build"],
+    $session_id: app["x-posthog-session-id"],
+  };
+}
+
 interface PageUrls {
   url: string;
   referrer: string | null;
@@ -177,6 +201,9 @@ export function buildPostHogProperties(headers: Headers, page?: PageUrls) {
 
     // Campaign params
     ...campaignParams,
+
+    client: headers.get("x-trpc-source") ?? undefined,
+    ...appProperties(headers),
   };
 
   // Remove undefined values
