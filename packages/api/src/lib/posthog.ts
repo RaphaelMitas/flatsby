@@ -111,26 +111,30 @@ function getBrowserLanguagePrefix(headers: Headers): string | undefined {
   return lang?.split("-")[0];
 }
 
-const APP_OS = { ios: "iOS", android: "Android" } as const;
-
-const appHeadersSchema = z.object({
-  "x-platform": z.enum(["ios", "android"]).optional().catch(undefined),
+const clientHeadersSchema = z.object({
+  "x-trpc-source": z
+    .enum(["expo-react", "nextjs-react", "rsc"])
+    .optional()
+    .catch(undefined),
+  "x-os-name": z.enum(["iOS", "iPadOS", "Android"]).optional().catch(undefined),
   "x-app-version": z.string().min(1).max(32).optional().catch(undefined),
   "x-app-build": z.string().min(1).max(32).optional().catch(undefined),
+  "x-expo-update-id": z.uuid().optional().catch(undefined),
   // The app sends it only while its device has analytics consent
   "x-posthog-session-id": z.uuid().optional().catch(undefined),
 });
 
 // The app's user agent is okhttp or CFNetwork, which reads as an unknown desktop
-function appProperties(headers: Headers) {
-  const app = appHeadersSchema.parse(Object.fromEntries(headers));
-  const os = app["x-platform"] && APP_OS[app["x-platform"]];
+function clientProperties(headers: Headers) {
+  const client = clientHeadersSchema.parse(Object.fromEntries(headers));
+  const os = client["x-os-name"];
   return {
-    // posthog-react-native puts the platform in $os_name
+    client: client["x-trpc-source"],
     ...(os && { $os: os, $os_name: os, $device_type: "Mobile" }),
-    $app_version: app["x-app-version"],
-    $app_build: app["x-app-build"],
-    $session_id: app["x-posthog-session-id"],
+    $app_version: client["x-app-version"],
+    $app_build: client["x-app-build"],
+    $expo_update_id: client["x-expo-update-id"],
+    $session_id: client["x-posthog-session-id"],
   };
 }
 
@@ -202,8 +206,7 @@ export function buildPostHogProperties(headers: Headers, page?: PageUrls) {
     // Campaign params
     ...campaignParams,
 
-    client: headers.get("x-trpc-source") ?? undefined,
-    ...appProperties(headers),
+    ...clientProperties(headers),
   };
 
   // Remove undefined values
