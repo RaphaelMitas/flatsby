@@ -129,7 +129,7 @@ export function clientProperties(headers: Headers) {
   const os = client["x-os-name"];
   return {
     client: client["x-trpc-source"],
-    ...(os && { $os: os, $os_name: os, $device_type: "Mobile" }),
+    ...(os && { $os: os, $os_name: os, $device_type: "Mobile" }), // i18n-ignore: PostHog value
     $app_version: client["x-app-version"],
     $app_build: client["x-app-build"],
     $expo_update_id: client["x-expo-update-id"],
