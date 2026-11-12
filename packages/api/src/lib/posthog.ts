@@ -7,6 +7,7 @@ import {
   ErrorTracking,
 } from "@posthog/core";
 import { PostHog } from "posthog-node";
+import { z } from "zod/v4";
 
 import { redactQueryParams } from "@flatsby/db/errors";
 import { redactInvitePath } from "@flatsby/validators/invite";
@@ -108,6 +109,32 @@ function getBrowserLanguage(headers: Headers): string | undefined {
 function getBrowserLanguagePrefix(headers: Headers): string | undefined {
   const lang = getBrowserLanguage(headers);
   return lang?.split("-")[0];
+}
+
+const clientHeadersSchema = z.object({
+  "x-trpc-source": z
+    .enum(["expo-react", "nextjs-react", "rsc"])
+    .optional()
+    .catch(undefined),
+  "x-os-name": z.enum(["iOS", "iPadOS", "Android"]).optional().catch(undefined),
+  "x-app-version": z.string().min(1).max(32).optional().catch(undefined),
+  "x-app-build": z.string().min(1).max(32).optional().catch(undefined),
+  "x-expo-update-id": z.uuid().optional().catch(undefined),
+  "x-posthog-session-id": z.uuid().optional().catch(undefined),
+});
+
+// The app's user agent is okhttp or CFNetwork, which reads as an unknown desktop
+export function clientProperties(headers: Headers) {
+  const client = clientHeadersSchema.parse(Object.fromEntries(headers));
+  const os = client["x-os-name"];
+  return {
+    client: client["x-trpc-source"],
+    ...(os && { $os: os, $os_name: os, $device_type: "Mobile" }), // i18n-ignore: PostHog value
+    $app_version: client["x-app-version"],
+    $app_build: client["x-app-build"],
+    $expo_update_id: client["x-expo-update-id"],
+    $session_id: client["x-posthog-session-id"],
+  };
 }
 
 interface PageUrls {
@@ -269,6 +296,7 @@ export function captureEvent({
     event,
     properties: {
       ...buildPostHogProperties(headers, page),
+      ...clientProperties(headers),
       ...additionalProperties,
     },
   });

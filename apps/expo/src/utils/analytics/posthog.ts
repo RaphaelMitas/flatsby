@@ -97,6 +97,10 @@ export const getAnalyticsConsent = () => applied;
 export const usePostHogClient = () =>
   useSyncExternalStore(subscribe, getPostHog);
 
+// The latest choice gates too, so withdrawing stops the header before the client swap finishes
+export const consentedSessionId = () =>
+  consent && applied ? current.posthog.getSessionId() || null : null;
+
 export function applyConsent(next: boolean) {
   consent = next;
   queue = queue.then(() => apply(consent)).catch(console.error);

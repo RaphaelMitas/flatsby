@@ -2,7 +2,11 @@ import type * as DrizzleErrors from "drizzle-orm/errors";
 import { PostHog } from "posthog-node";
 import { describe, expect, it } from "vitest";
 
-import { browserExceptionProperties, withoutQueryParams } from "./posthog";
+import {
+  browserExceptionProperties,
+  clientProperties,
+  withoutQueryParams,
+} from "./posthog";
 
 describe("browserExceptionProperties", () => {
   it("parses Safari and Firefox stacks", () => {
@@ -74,5 +78,46 @@ describe("withoutQueryParams", () => {
     const payload = JSON.stringify(sent);
     expect(payload).toContain("Failed query: select");
     expect(payload).not.toContain(token);
+  });
+});
+
+describe("clientProperties", () => {
+  const sessionId = "019a7c3e-5b2a-7d1f-9c4e-2f8a6b1d3e5c";
+
+  it("attributes an app request to its platform, version and session", () => {
+    expect(
+      clientProperties(
+        new Headers({
+          "x-trpc-source": "expo-react",
+          "x-os-name": "Android",
+          "x-app-version": "0.19.0",
+          "x-app-build": "74",
+          "x-expo-update-id": sessionId,
+          "x-posthog-session-id": sessionId,
+        }),
+      ),
+    ).toEqual({
+      client: "expo-react",
+      $os: "Android",
+      $os_name: "Android",
+      $device_type: "Mobile",
+      $app_version: "0.19.0",
+      $app_build: "74",
+      $expo_update_id: sessionId,
+      $session_id: sessionId,
+    });
+  });
+
+  it("drops app headers that don't parse", () => {
+    expect(
+      clientProperties(
+        new Headers({
+          "x-trpc-source": "x".repeat(10_000),
+          "x-os-name": "Windows",
+          "x-app-version": "",
+          "x-posthog-session-id": "not-a-session",
+        }),
+      ),
+    ).toEqual({});
   });
 });

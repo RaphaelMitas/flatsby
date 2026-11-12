@@ -1,9 +1,11 @@
 import type { AppRouter } from "@flatsby/api";
 import type { PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
+import type { Operation } from "@trpc/client";
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import type { NetworkState } from "expo-network";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import * as Application from "expo-application";
+import * as Device from "expo-device";
 import { addNetworkStateListener, getNetworkStateAsync } from "expo-network";
 import * as Updates from "expo-updates";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -23,6 +25,7 @@ import {
   trpcFailureCaches,
 } from "@flatsby/api/trpcFailure";
 
+import { consentedSessionId } from "./analytics/posthog";
 import { authClient } from "./auth/auth-client";
 import { getBaseUrl } from "./base-url";
 import { languageTags } from "./intl-provider";
@@ -114,10 +117,23 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
 /**
  * Get headers for tRPC requests
  */
-async function getHeaders() {
+async function getHeaders({ opList }: { opList: readonly Operation[] }) {
   const headers = new Map<string, string>();
   headers.set("x-trpc-source", "expo-react");
   headers.set("Accept-Language", languageTags().join(","));
+  // The same value posthog-react-native reports as $os_name
+  headers.set(
+    "x-os-name",
+    Platform.OS === "android" ? "Android" : (Device.osName ?? "iOS"),
+  );
+  headers.set("x-app-version", Application.nativeApplicationVersion ?? "");
+  headers.set("x-app-build", Application.nativeBuildVersion ?? "");
+  headers.set("x-expo-update-id", Updates.updateId ?? "");
+  // Reading the session id extends it, so background polling must not
+  if (opList.some((op) => op.type === "mutation")) {
+    const sessionId = consentedSessionId();
+    if (sessionId) headers.set("x-posthog-session-id", sessionId);
+  }
 
   const cookies = await authClient.getCookie();
   if (cookies) {
