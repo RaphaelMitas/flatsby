@@ -31,7 +31,7 @@ export const settings = {
     updateNudge: "Update-Hinweis",
     updateNudgeOff: "Aus",
     updateNudgeMonthly: "Monatlich",
-    updateNudgeVersion: "Pro Version",
+    updateNudgeVersion: "Je Version",
   },
   analytics: {
     title: "Analyse",

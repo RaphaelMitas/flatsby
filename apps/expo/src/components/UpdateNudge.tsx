@@ -23,7 +23,7 @@ async function wasDismissed(
 ) {
   if (frequency === "monthly") {
     const dismissedAt = Number(await AsyncStorage.getItem(DISMISSED_AT_KEY));
-    return Date.now() - dismissedAt < MONTH_MS;
+    return Math.abs(Date.now() - dismissedAt) < MONTH_MS;
   }
   return (await AsyncStorage.getItem(DISMISSED_KEY)) === storeVersion;
 }
