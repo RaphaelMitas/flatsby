@@ -3,15 +3,10 @@ import { useRef } from "react";
 import { View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
+import type { Choice } from "./ChoiceButtons";
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
-import { Button } from "~/lib/ui/button";
+import { ChoiceButtons } from "./ChoiceButtons";
 import { SettingsItem } from "./SettingsItem";
-
-interface Choice<T extends string> {
-  value: T;
-  label: string;
-  icon?: IconProps["name"];
-}
 
 export function SettingsChoiceItem<T extends string>(props: {
   title: string;
@@ -31,22 +26,17 @@ export function SettingsChoiceItem<T extends string>(props: {
       rightThreshold={40}
       renderRightActions={() => (
         <View className="h-full w-full flex-row gap-2 p-2">
-          {props.choices.map((choice) => (
-            <Button
-              key={choice.value}
-              title={choice.label}
-              icon={choice.icon}
-              numberOfLines={1}
-              className="flex-1 py-0"
-              // Spans the container's p-2 (7pt) so the target fills the row
-              hitSlop={{ top: 7, bottom: 7 }}
-              variant={props.selected === choice.value ? "primary" : "outline"}
-              onPress={() => {
-                props.onSelect(choice.value);
-                swipeableRef.current?.close();
-              }}
-            />
-          ))}
+          <ChoiceButtons
+            choices={props.choices}
+            selected={props.selected}
+            buttonClassName="flex-1 py-0"
+            // Spans the container's p-2 (7pt) so the target fills the row
+            hitSlop={{ top: 7, bottom: 7 }}
+            onSelect={(value) => {
+              props.onSelect(value);
+              swipeableRef.current?.close();
+            }}
+          />
         </View>
       )}
     >

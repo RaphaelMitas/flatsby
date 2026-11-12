@@ -19,6 +19,10 @@ import { signOut } from "~/utils/auth/auth-client";
 import { useHomeVersion } from "~/utils/home-version";
 import { useLocalePreference } from "~/utils/intl-provider";
 import { useShoppingStore } from "~/utils/shopping-store";
+import {
+  updateNudgeFrequency,
+  useUpdateNudgeChoices,
+} from "~/utils/update-nudge-frequency";
 import { writeReviewUrl } from "~/utils/useReviewNudge";
 import { useSelectedGroup } from "~/utils/useSelectedGroup";
 
@@ -32,6 +36,8 @@ export default function SettingsIndex() {
   const { group: currentGroup, name: groupName } = useSelectedGroup();
   const { version: homeVersion, switchTo: switchHome } = useHomeVersion();
   const home = homeVersion === "new" ? "new" : "classic";
+  const updateNudge = updateNudgeFrequency.useValue();
+  const updateNudgeChoices = useUpdateNudgeChoices();
 
   const { data: user } = useSuspenseQuery(
     trpc.user.getCurrentUser.queryOptions(),
@@ -122,6 +128,14 @@ export default function SettingsIndex() {
             ]}
           />
           <EveningReminderItem />
+          <SettingsChoiceItem
+            title={t("settings.items.updateNudge")}
+            value={updateNudgeChoices.labels[updateNudge ?? "version"]}
+            iconName="download"
+            selected={updateNudge}
+            onSelect={updateNudgeFrequency.save}
+            choices={updateNudgeChoices.choices}
+          />
           <Link href="/settings/analytics" asChild>
             <SettingsItem
               testID="settings-analytics"

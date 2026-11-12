@@ -28,6 +28,10 @@ export const settings = {
     rateApp: "Flatsby bewerten",
     eveningReminder: "Erinnerung am Vorabend",
     eveningReminderBlocked: "In den Telefoneinstellungen ausgeschaltet",
+    updateNudge: "Update-Hinweis",
+    updateNudgeOff: "Aus",
+    updateNudgeMonthly: "Monatlich",
+    updateNudgeVersion: "Je Version",
   },
   analytics: {
     title: "Analyse",
