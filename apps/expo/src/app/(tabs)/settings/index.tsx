@@ -6,7 +6,6 @@ import { useLocale, useTranslations } from "use-intl";
 import { localeNames, locales } from "@flatsby/i18n/locale";
 
 import type { Theme } from "~/lib/ui/theme";
-import type { UpdateNudgeFrequency } from "~/utils/update-nudge-frequency";
 import { EveningReminderItem } from "~/components/settings/EveningReminderItem";
 import { SettingsChoiceItem } from "~/components/settings/SettingsChoiceItem";
 import { SettingsItem } from "~/components/settings/SettingsItem";
@@ -20,7 +19,10 @@ import { signOut } from "~/utils/auth/auth-client";
 import { useHomeVersion } from "~/utils/home-version";
 import { useLocalePreference } from "~/utils/intl-provider";
 import { useShoppingStore } from "~/utils/shopping-store";
-import { updateNudgeFrequency } from "~/utils/update-nudge-frequency";
+import {
+  updateNudgeFrequency,
+  useUpdateNudgeChoices,
+} from "~/utils/update-nudge-frequency";
 import { writeReviewUrl } from "~/utils/useReviewNudge";
 import { useSelectedGroup } from "~/utils/useSelectedGroup";
 
@@ -35,6 +37,7 @@ export default function SettingsIndex() {
   const { version: homeVersion, switchTo: switchHome } = useHomeVersion();
   const home = homeVersion === "new" ? "new" : "classic";
   const updateNudge = updateNudgeFrequency.useValue();
+  const updateNudgeChoices = useUpdateNudgeChoices();
 
   const { data: user } = useSuspenseQuery(
     trpc.user.getCurrentUser.queryOptions(),
@@ -54,11 +57,6 @@ export default function SettingsIndex() {
     classic: t("settings.items.homeClassic"),
     new: t("settings.items.homeNew"),
   };
-  const updateNudgeLabels = {
-    off: t("settings.items.updateNudgeOff"),
-    monthly: t("settings.items.updateNudgeMonthly"),
-    version: t("settings.items.updateNudgeVersion"),
-  } satisfies Record<UpdateNudgeFrequency, string>;
 
   return (
     <SafeAreaView>
@@ -132,15 +130,11 @@ export default function SettingsIndex() {
           <EveningReminderItem />
           <SettingsChoiceItem
             title={t("settings.items.updateNudge")}
-            value={updateNudgeLabels[updateNudge ?? "version"]}
+            value={updateNudgeChoices.labels[updateNudge ?? "version"]}
             iconName="download"
             selected={updateNudge}
             onSelect={updateNudgeFrequency.save}
-            choices={[
-              { value: "off", label: updateNudgeLabels.off },
-              { value: "monthly", label: updateNudgeLabels.monthly },
-              { value: "version", label: updateNudgeLabels.version },
-            ]}
+            choices={updateNudgeChoices.choices}
           />
           <Link href="/settings/analytics" asChild>
             <SettingsItem

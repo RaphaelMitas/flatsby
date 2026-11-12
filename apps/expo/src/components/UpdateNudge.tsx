@@ -6,12 +6,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslations } from "use-intl";
 
 import type { UpdateNudgeFrequency } from "~/utils/update-nudge-frequency";
+import { ChoiceButtons } from "~/components/settings/ChoiceButtons";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SheetModal } from "~/lib/ui/sheet-modal";
 import { getPostHog } from "~/utils/analytics/posthog";
 import { isE2ETestingEnabled } from "~/utils/e2e";
-import { updateNudgeFrequency } from "~/utils/update-nudge-frequency";
+import {
+  updateNudgeFrequency,
+  useUpdateNudgeChoices,
+} from "~/utils/update-nudge-frequency";
 
 const DISMISSED_KEY = "update_nudge_dismissed_version";
 const DISMISSED_AT_KEY = "update_nudge_dismissed_at";
@@ -40,6 +44,9 @@ export function UpdateNudge() {
   const sheetRef = useRef<BottomSheetModal>(null);
   const [storeVersion, setStoreVersion] = useState<string | null>(null);
   const updatePressed = useRef(false);
+  const [choosing, setChoosing] = useState(false);
+  const frequency = updateNudgeFrequency.useValue();
+  const { choices } = useUpdateNudgeChoices();
 
   useEffect(() => {
     const forced =
@@ -76,9 +83,12 @@ export function UpdateNudge() {
     }
   };
 
-  const turnOff = () => {
-    getPostHog().capture("update_nudge_turned_off", { storeVersion });
-    updateNudgeFrequency.save("off");
+  const choose = (next: UpdateNudgeFrequency) => {
+    getPostHog().capture("update_nudge_frequency_set", {
+      storeVersion,
+      frequency: next,
+    });
+    updateNudgeFrequency.save(next);
     sheetRef.current?.dismiss();
   };
 
@@ -86,6 +96,7 @@ export function UpdateNudge() {
     <SheetModal
       ref={sheetRef}
       onDismiss={() => {
+        setChoosing(false);
         if (updatePressed.current) {
           updatePressed.current = false;
           void ExpoInAppUpdates.startUpdate(true);
@@ -116,12 +127,27 @@ export function UpdateNudge() {
           variant="ghost"
           onPress={() => sheetRef.current?.dismiss()}
         />
-        <Button
-          testID="update-nudge-turn-off"
-          title={t("turnOff")}
-          variant="ghost"
-          onPress={turnOff}
-        />
+        {choosing ? (
+          <View className="gap-2 pt-2">
+            <Text className="text-muted-foreground text-center text-sm">
+              {t("howOften")}
+            </Text>
+            <View className="flex-row gap-2">
+              <ChoiceButtons
+                choices={choices}
+                selected={frequency}
+                onSelect={choose}
+              />
+            </View>
+          </View>
+        ) : (
+          <Button
+            testID="update-nudge-less"
+            title={t("remindLess")}
+            variant="ghost"
+            onPress={() => setChoosing(true)}
+          />
+        )}
       </View>
     </SheetModal>
   );

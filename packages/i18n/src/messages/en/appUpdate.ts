@@ -3,5 +3,6 @@ export const appUpdate = {
   body: "Update to get the latest features and fixes.",
   update: "Update",
   later: "Later",
-  turnOff: "Don't show again",
+  remindLess: "Remind me less often",
+  howOften: "How often should Flatsby remind you?",
 };
