@@ -270,14 +270,37 @@ appId: ${APP_ID}
     visible:
       id: "dashboard-group-picker"
     timeout: 45000
-# Store screenshots show the classic home without the invite to the new one
+# The README shows the new home, the store screenshots the classic one;
+# switching back from the new home also retires the invite to it.
 - runFlow:
     when:
       visible:
-        id: "home-invite-dismiss"
+        id: "home-invite-try"
     commands:
       - tapOn:
-          id: "home-invite-dismiss"
+          id: "home-invite-try"
+      - extendedWaitUntil:
+          visible:
+            id: "home-rows"
+          timeout: 45000
+      - extendedWaitUntil:
+          visible:
+            id: "home-for-you"
+          timeout: 45000
+      - waitForAnimationToEnd
+      - takeScreenshot: e2e/results/screenshots/${output.locale}/07-new-home
+      - scrollUntilVisible:
+          element:
+            id: "home-switch-back"
+          direction: DOWN
+      - tapOn:
+          id: "home-switch-back"
+      - tapOn:
+          id: "picker-item-no_reason"
+      - extendedWaitUntil:
+          visible:
+            id: "dashboard-group-picker"
+          timeout: 20000
 - retry:
     maxRetries: 2
     commands:

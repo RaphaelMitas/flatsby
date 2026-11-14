@@ -19,7 +19,7 @@ on:
         type: boolean
         default: false
       dry_run:
-        description: "Only capture and compose the store screenshots and banners (any branch); tag, build and publish nothing"
+        description: "Only capture and compose the store screenshots, banners and README images (any branch); tag, build and publish nothing"
         type: boolean
         default: false
 
@@ -478,19 +478,27 @@ jobs:
           path: apps/nextjs/test-results/
           retention-days: 30
 
-  # Publishes the README's images: the iPhone captures plus the web captures,
-  # under stable filenames, as a single-commit orphan `assets` branch that
-  # README.md embeds via raw.githubusercontent URLs. Force-pushing keeps the
-  # branch at one commit so the repo never grows release over release.
+  # Publishes the README's images: the iPhone and web captures, and the
+  # composites README.md embeds (tooling/store-assets/readme), under stable
+  # filenames, as a single-commit orphan `assets` branch served via
+  # raw.githubusercontent URLs. Force-pushing keeps the branch at one commit
+  # so the repo never grows release over release. A dry run composes but
+  # pushes nothing.
   publish-readme-assets:
     needs: [check, screenshots-ios, screenshots-web]
     if: >-
-      always() && needs.check.outputs.is-release == 'true' && !inputs.dry_run &&
+      always() && needs.check.outputs.is-release == 'true' &&
       (needs.screenshots-ios.result == 'success' || needs.screenshots-web.result == 'success')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Install Playwright browser
+        run: pnpm -F @flatsby/store-assets exec playwright install --with-deps chromium
 
       - name: Download iOS screenshots
         if: needs.screenshots-ios.result == 'success'
@@ -506,19 +514,17 @@ jobs:
           name: readme-screenshots-web
           path: web-results
 
-      - name: Push assets branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.check.outputs.tag }}
+      - name: Collect captures
         run: |
           set -euo pipefail
           PUBLISH="$RUNNER_TEMP/publish"
+          echo "PUBLISH=$PUBLISH" >> "$GITHUB_ENV"
           mkdir -p "$PUBLISH"
           # Start from the branch's current images so a platform whose capture
-          # failed this release keeps its previous screenshots. A failed fetch
-          # has to abort: the force-push below would otherwise publish an empty
-          # tree, dropping the other platform's images with no history to
-          # recover them from.
+          # failed this release keeps its previous screenshots, and its
+          # composites are rebuilt from them. A failed fetch has to abort: the
+          # force-push below would otherwise publish an empty tree, dropping
+          # the other platform's images with no history to recover them from.
           if git ls-remote --exit-code origin assets > /dev/null; then
             git fetch --depth 1 origin assets
             git archive FETCH_HEAD | tar -x -C "$PUBLISH"
@@ -538,6 +544,24 @@ jobs:
             mkdir -p "$PUBLISH/web"
             cp "${web[@]}" "$PUBLISH/web/"
           fi
+
+      - name: Compose README images
+        run: pnpm -F @flatsby/store-assets render:readme "$PUBLISH" "$PUBLISH/readme"
+
+      - name: Upload README images
+        uses: actions/upload-artifact@v7
+        with:
+          name: readme-assets
+          path: ${{ env.PUBLISH }}/readme/
+          retention-days: 30
+
+      - name: Push assets branch
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          set -euo pipefail
           cd "$PUBLISH"
           git init -q -b assets
           git config user.name "github-actions[bot]"

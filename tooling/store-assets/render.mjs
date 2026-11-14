@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Composes the store listing assets from the Maestro store-screenshot
- * captures.
+ * captures, or with --readme the README's section images.
  *
  * <captures-dir>/<platform>/<locale>/ holds that locale's captures from the
  * flows in apps/expo/e2e/screenshots/ (full screens, crop-* elements and the
@@ -12,10 +12,14 @@
  *   <out>/app-store/<store-locale>/header.mp4            and the header video
  *   <out>/play/<store-locale>/featureGraphic.png
  * The App Store and Play assets need iPhone captures; they are skipped without.
+ *
+ * --readme reads the `assets` branch layout instead (<captures-dir>/ios and
+ * /web) and writes <out>/<section>.png per readme/sections.json, skipping a
+ * section whose captures are missing.
  */
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { copyFile, mkdir, readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
@@ -23,9 +27,10 @@ import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 
-const [capturesArg, outArg] = process.argv.slice(2);
+const readme = process.argv[2] === "--readme";
+const [capturesArg, outArg] = process.argv.slice(readme ? 3 : 2);
 if (!capturesArg || !outArg) {
-  console.error("Usage: node render.mjs <captures-dir> <out-dir>");
+  console.error("Usage: node render.mjs [--readme] <captures-dir> <out-dir>");
   process.exit(1);
 }
 const capturesDir = resolve(capturesArg);
@@ -92,10 +97,13 @@ async function open(url, viewport, deviceScaleFactor) {
   return page;
 }
 
-async function shoot(url, viewport, deviceScaleFactor, file) {
+async function shoot(url, viewport, deviceScaleFactor, file, element) {
   const page = await open(url, viewport, deviceScaleFactor);
   await mkdir(dirname(file), { recursive: true });
-  await page.screenshot({ path: file });
+  // The store rejects an alpha channel; README images need one for GitHub's light and dark pages.
+  await (element
+    ? page.locator(element).screenshot({ path: file, omitBackground: true })
+    : page.screenshot({ path: file }));
   await page.close();
   console.log(file);
 }
@@ -164,57 +172,85 @@ const BANNERS = {
   header: { viewport: { width: 1920, height: 823 }, scale: 2 },
 };
 
-for (const platform of readdirSync(capturesDir)) {
-  for (const locale of readdirSync(join(capturesDir, platform))) {
-    const storeLocale = STORE_LOCALES[locale];
-    if (!storeLocale) continue;
-    const captures = join(capturesDir, platform, locale);
-    // Rendering at the capture's size keeps each device's store resolution.
-    const viewport = pngSize(join(captures, "01-home.png"));
-    for (const [i] of frames.entries()) {
+async function renderStore() {
+  for (const platform of readdirSync(capturesDir)) {
+    for (const locale of readdirSync(join(capturesDir, platform))) {
+      const storeLocale = STORE_LOCALES[locale];
+      if (!storeLocale) continue;
+      const captures = join(capturesDir, platform, locale);
+      // Rendering at the capture's size keeps each device's store resolution.
+      const viewport = pngSize(join(captures, "01-home.png"));
+      for (const [i] of frames.entries()) {
+        await shoot(
+          `/screenshots/template.html?frame=${i}&lang=${locale}&platform=${platform}`,
+          viewport,
+          1,
+          join(
+            outDir,
+            platform,
+            storeLocale,
+            `${String(i + 1).padStart(2, "0")}.png`,
+          ),
+        );
+      }
+      if (platform !== "ios") continue;
+      for (const ipad of readdirSync(captures).filter((f) =>
+        f.startsWith("ipad-"),
+      )) {
+        await copyFile(
+          join(captures, ipad),
+          join(outDir, platform, storeLocale, ipad),
+        );
+      }
+      for (const [asset, { viewport: size, scale }] of Object.entries(
+        BANNERS,
+      )) {
+        await shoot(
+          `/banners/template.html?asset=${asset}&lang=${locale}`,
+          size,
+          scale,
+          join(outDir, "app-store", storeLocale, `${asset}.png`),
+        );
+      }
+      await record(
+        `/banners/template.html?asset=header&video&lang=${locale}`,
+        BANNERS.header.viewport,
+        BANNERS.header.scale,
+        join(outDir, "app-store", storeLocale, "header.mp4"),
+      );
       await shoot(
-        `/screenshots/template.html?frame=${i}&lang=${locale}&platform=${platform}`,
-        viewport,
+        `/banners/template.html?asset=play&lang=${locale}`,
+        { width: 1024, height: 500 },
         1,
-        join(
-          outDir,
-          platform,
-          storeLocale,
-          `${String(i + 1).padStart(2, "0")}.png`,
-        ),
+        join(outDir, "play", storeLocale, "featureGraphic.png"),
       );
     }
-    if (platform !== "ios") continue;
-    for (const ipad of readdirSync(captures).filter((f) =>
-      f.startsWith("ipad-"),
-    )) {
-      await copyFile(
-        join(captures, ipad),
-        join(outDir, platform, storeLocale, ipad),
-      );
+  }
+}
+
+async function renderReadme() {
+  const sections = JSON.parse(
+    readFileSync(join(packageDir, "readme/sections.json"), "utf8"),
+  );
+  for (const [section, captures] of Object.entries(sections)) {
+    const missing = Object.entries(captures)
+      .map(([platform, name]) => join(capturesDir, platform, `${name}.png`))
+      .filter((file) => !existsSync(file));
+    if (missing.length > 0) {
+      console.warn(`Skipping ${section}, missing ${missing.join(", ")}`);
+      continue;
     }
-    for (const [asset, { viewport: size, scale }] of Object.entries(BANNERS)) {
-      await shoot(
-        `/banners/template.html?asset=${asset}&lang=${locale}`,
-        size,
-        scale,
-        join(outDir, "app-store", storeLocale, `${asset}.png`),
-      );
-    }
-    await record(
-      `/banners/template.html?asset=header&video&lang=${locale}`,
-      BANNERS.header.viewport,
-      BANNERS.header.scale,
-      join(outDir, "app-store", storeLocale, "header.mp4"),
-    );
     await shoot(
-      `/banners/template.html?asset=play&lang=${locale}`,
-      { width: 1024, height: 500 },
-      1,
-      join(outDir, "play", storeLocale, "featureGraphic.png"),
+      `/readme/template.html?section=${section}`,
+      { width: 1150, height: 753 },
+      2,
+      join(outDir, `${section}.png`),
+      ".canvas",
     );
   }
 }
+
+await (readme ? renderReadme() : renderStore());
 
 await browser.close();
 server.close();

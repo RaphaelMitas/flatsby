@@ -16,10 +16,7 @@
 <br><br>
 
 <p>
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-home.png" alt="Flatsby dashboard on web" width="760">
-</p>
-<p>
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/01-home.png" alt="Flatsby home on iOS" width="200">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/readme/home.png" alt="The Flatsby dashboard on web and iPhone">
 </p>
 
 </div>
@@ -36,11 +33,7 @@ the milk in the supermarket, you see it the next time you open the list. Items
 carry categories and who added them.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-shopping-list.png" alt="Shopping list on web" width="760">
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/02-shopping-list.png" alt="Shopping list on iOS" width="200">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/06-shopping-lists.png" alt="A group's shopping lists on iOS" width="200">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/readme/shopping-lists.png" alt="The same shopping list on web and iPhone">
 </p>
 
 ## Expenses and settling up
@@ -50,11 +43,7 @@ amounts, and Flatsby keeps a running balance per flatmate. Settlements clear
 debts between two people.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-expenses.png" alt="Expenses on web" width="760">
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/03-expenses.png" alt="Expenses on iOS" width="200">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/04-expense-split.png" alt="Splitting an expense on iOS" width="200">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/readme/expenses.png" alt="Expenses and balances on web, splitting an expense on iPhone">
 </p>
 
 ## Calendar
@@ -64,10 +53,7 @@ or yearly, and pick several flatmates to take turns. Tick a chore off and
 everyone sees who did it.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/web/web-calendar.png" alt="Calendar on web" width="760">
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/01a-calendar.png" alt="Calendar on iOS" width="200">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/readme/calendar.png" alt="The household calendar by month on web and by week on iPhone">
 </p>
 
 ## Groups
@@ -77,7 +63,7 @@ manage roles, and keep every list and expense scoped to the people who share
 the flat.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/ios/05-add-member.png" alt="Managing members on iOS" width="200">
+  <img src="https://raw.githubusercontent.com/RaphaelMitas/flatsby/assets/readme/groups.png" alt="Managing a group's members on web and iPhone">
 </p>
 
 ## Tech

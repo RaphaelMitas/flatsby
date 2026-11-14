@@ -56,4 +56,9 @@ test("captures README screenshots", async ({ page, baseURL }) => {
   ).toBeVisible();
   await settle(page);
   await page.screenshot({ path: `${OUT}/web-calendar.png` });
+
+  await page.goto("/group/settings");
+  await expect(page.getByText("Tom Baker").first()).toBeVisible();
+  await settle(page);
+  await page.screenshot({ path: `${OUT}/web-group.png` });
 });

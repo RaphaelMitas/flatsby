@@ -1,0 +1,7 @@
+{
+  "home": { "web": "web-home", "ios": "07-new-home" },
+  "shopping-lists": { "web": "web-shopping-list", "ios": "02-shopping-list" },
+  "expenses": { "web": "web-expenses", "ios": "04-expense-split" },
+  "calendar": { "web": "web-calendar", "ios": "01a-calendar" },
+  "groups": { "web": "web-group", "ios": "05-add-member" }
+}
