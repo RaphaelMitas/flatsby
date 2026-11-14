@@ -3,11 +3,7 @@ import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import { useRouter } from "expo-router";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
@@ -20,6 +16,7 @@ import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImp
 
 import type { BottomSheetPickerItem } from "~/lib/ui/bottom-sheet-picker";
 import { MemberAvatar } from "~/components/expenses/MemberAvatar";
+import { useInvalidateExpenses } from "~/components/expenses/useInvalidateExpenses";
 import { TimedAlert } from "~/components/TimedAlert";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import {
@@ -39,9 +36,9 @@ export default function ImportExpensesScreen() {
   const tRoot = useTranslations();
   const locale = useLocale();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { selectedGroupId } = useShoppingStore();
   const groupId = Number(selectedGroupId) || 0;
+  const { invalidateAll } = useInvalidateExpenses(groupId);
   const wizard = useSplitwiseImport();
   const isAndroid = Platform.OS === "android";
 
@@ -53,12 +50,7 @@ export default function ImportExpensesScreen() {
     trpc.expense.bulkCreateExpenses.mutationOptions({
       onSuccess: (data) => {
         if (data.success) {
-          void queryClient.invalidateQueries(
-            trpc.expense.getGroupExpenses.queryOptions({ groupId }),
-          );
-          void queryClient.invalidateQueries({
-            queryKey: trpc.expense.getDebtSummary.queryKey(),
-          });
+          invalidateAll();
         }
       },
     }),
