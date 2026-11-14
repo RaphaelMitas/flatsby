@@ -8,7 +8,8 @@
     "clean": "git clean -xdf .cache .turbo node_modules",
     "check": "biome check",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "render": "node render.mjs"
+    "render": "node render.mjs",
+    "render:readme": "node render.mjs --readme"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
