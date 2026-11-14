@@ -11,7 +11,12 @@ import {
 } from "@flatsby/ui/card";
 
 import { SupportFlatsby } from "~/app/_components/SupportFlatsby";
-import { HydrateClient, prefetch, trpc } from "~/trpc/server";
+import {
+  getCurrentUserWithGroups,
+  HydrateClient,
+  prefetch,
+  trpc,
+} from "~/trpc/server";
 import { AnalyticsSettings } from "./AnalyticsSettings";
 import DeleteUser from "./DeleteUser";
 import ExportUserData from "./ExportUserData";
@@ -21,6 +26,7 @@ import Passkeys from "./Passkeys";
 import { PaypalHandleCard } from "./PaypalHandleCard";
 
 export default async function Page() {
+  await getCurrentUserWithGroups();
   prefetch(trpc.user.getCurrentUser.queryOptions());
   const t = await getTranslations("settings.page");
   const preference = (await cookies()).get(localeCookie)?.value;
