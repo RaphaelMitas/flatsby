@@ -7,7 +7,10 @@
 [**flatsby.com**](https://www.flatsby.com)
 
 <a href="https://apps.apple.com/app/id6747908544">
-  <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="44">
+  <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="40">
+</a>
+<a href="https://play.google.com/store/apps/details?id=com.flatcove.app">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" height="40">
 </a>
 
 <br><br>
