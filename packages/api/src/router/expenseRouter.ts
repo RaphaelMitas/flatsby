@@ -32,6 +32,7 @@ import {
 } from "@flatsby/validators/expenses/split-editing";
 import { bulkCreateExpensesSchema } from "@flatsby/validators/expenses/splitwise-import";
 import { validateExpenseSplitsStrict } from "@flatsby/validators/expenses/validation";
+import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import type { ApiError } from "../errors";
 import type { Database as DbClient } from "../types";
@@ -526,7 +527,7 @@ export const expenseRouter = createTRPCRouter({
       expenseListFilterSchema.extend({
         groupId: z.number(),
         cursor: z.object({ date: z.date(), id: z.number() }).optional(),
-        limit: z.number().int().min(1).max(100).default(50),
+        limit: z.number().int().min(1).max(100).default(PAGE_SIZE.expenses),
       }),
     )
     .query(async ({ ctx, input }) =>

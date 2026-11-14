@@ -2,11 +2,7 @@
 
 import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import { useCallback, useRef, useState } from "react";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   ArrowLeft,
@@ -52,6 +48,7 @@ import {
 } from "@flatsby/validators/expenses/formatting";
 import { useSplitwiseImport } from "@flatsby/validators/expenses/useSplitwiseImport";
 
+import { useExpenseInvalidation } from "~/app/(app)/expenses/useExpenseInvalidation";
 import { CurrencySelect } from "~/components/CurrencySelect";
 import { useTRPC } from "~/trpc/react";
 
@@ -69,7 +66,7 @@ export function SplitwiseImportDialog({
   const t = useTranslations("splitwiseImport");
   const tCommon = useTranslations("common");
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const { invalidateAll } = useExpenseInvalidation(groupId);
   const wizard = useSplitwiseImport();
 
   const { data: group } = useSuspenseQuery(
@@ -80,12 +77,7 @@ export function SplitwiseImportDialog({
     trpc.expense.bulkCreateExpenses.mutationOptions({
       onSuccess: (data) => {
         if (data.success) {
-          void queryClient.invalidateQueries(
-            trpc.expense.getGroupExpenses.queryOptions({ groupId }),
-          );
-          void queryClient.invalidateQueries({
-            queryKey: trpc.expense.getDebtSummary.queryKey(),
-          });
+          invalidateAll();
         }
       },
     }),
