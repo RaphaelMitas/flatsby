@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="/common.css" />
+    <style>
+      body {
+        background: none;
+      }
+      .canvas {
+        position: relative;
+        width: 1150px;
+        height: 753px;
+      }
+      .window {
+        position: absolute;
+        left: 56px;
+        top: 56px;
+        width: 900px;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #09090b;
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.14),
+          0 12px 40px rgba(9, 9, 11, 0.28);
+      }
+      .titlebar {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 38px;
+        background: #18181b;
+        border-bottom: 1px solid #27272a;
+      }
+      .lights {
+        position: absolute;
+        left: 16px;
+        display: flex;
+        gap: 8px;
+      }
+      .lights i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+      .url {
+        padding: 4px 56px;
+        border-radius: 8px;
+        background: #09090b;
+        color: #a1a1aa;
+        font-size: 13px;
+      }
+      .window img,
+      .phone img {
+        display: block;
+        width: 100%;
+      }
+      .phone {
+        position: absolute;
+        left: 826px;
+        bottom: 56px;
+        width: 250px;
+        padding: 9px;
+        border-radius: 44px;
+        background: #000;
+        box-shadow:
+          inset 0 0 0 1.5px #3f3f46,
+          0 0 0 1px rgba(255, 255, 255, 0.14),
+          0 16px 40px rgba(9, 9, 11, 0.4);
+      }
+      .phone img {
+        border-radius: 35px;
+      }
+      .island {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        width: 72px;
+        height: 21px;
+        margin-left: -36px;
+        border-radius: 11px;
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <div class="window">
+        <div class="titlebar">
+          <div class="lights">
+            <i style="background: #ff5f57"></i>
+            <i style="background: #febc2e"></i>
+            <i style="background: #28c840"></i>
+          </div>
+          <div class="url">flatsby.com</div>
+        </div>
+        <img id="web" alt="" />
+      </div>
+      <div class="phone">
+        <img id="ios" alt="" />
+        <div class="island"></div>
+      </div>
+    </div>
+    <script type="module">
+      import { loadImage } from "/compose.js";
+
+      const section = new URLSearchParams(location.search).get("section");
+      fetch("sections.json")
+        .then((r) => r.json())
+        .then(async (sections) => {
+          await Promise.all(
+            Object.entries(sections[section]).map(async ([platform, name]) => {
+              const src = `/captures/${platform}/${name}.png`;
+              await loadImage(src);
+              document.getElementById(platform).src = src;
+            }),
+          );
+          await document.fonts.ready;
+          document.body.dataset.ready = "true";
+        });
+    </script>
+  </body>
+</html>
