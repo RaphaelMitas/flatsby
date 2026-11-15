@@ -6,7 +6,7 @@ const directive =
 const singleRuleSuppression =
   /^\/\/\s*biome-ignore(-all|-start|-end)?(\s+lint\/(?!plugin\/)[a-zA-Z]+\/[a-zA-Z]+)+:/;
 
-const trivia = /(?:\s|\/\/.*|\/\*[\s\S]*?\*\/)*/y;
+const trivia = /(?:[\s\u200B]|\/\/.*|\/\*[\s\S]*?\*\/)*/y;
 const comments = /\/\/.*|\/\*[\s\S]*?\*\//g;
 
 const unpaddedTokens = new Set(["TEMPLATE_CHUNK", "JSX_TEXT_LITERAL"]);
