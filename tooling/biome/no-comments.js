@@ -4,7 +4,7 @@ const directive =
   /^(\/\/|\/\*)\s*(@ts-(expect-error|ignore|nocheck|check)\b|biome-ignore(-all|-start|-end)?\s|i18n-ignore\b|@vite-ignore\b)|^\/\/\/\s*<reference\b|^\/\*\*[\s*]*@(deprecated|type|typedef)\b/;
 
 const suppressesThisRule =
-  /^(\/\/|\/\*)\s*biome-ignore\S*\s[^:]*\blint\/plugin\b/;
+  /^(\/\/|\/\*)\s*biome-ignore\S*\s[^:]*\blint(\/plugin\b|(?![\w/]))/;
 
 const trivia = /(?:\s|\/\/.*|\/\*[\s\S]*?\*\/)*/y;
 const comments = /\/\/.*|\/\*[\s\S]*?\*\//g;
