@@ -1,18 +1,4 @@
 #!/usr/bin/env node
-/**
- * CI Maestro runner: `node e2e/run-flows.mjs [dir-or-flow ...]`, no args for
- * the whole suite. Needs E2E_API_URL. E2E_PLATFORM selects the app id ("ios"
- * default, or "android"). E2E_LOCALES (e.g. "en de") runs every flow once per
- * locale, passing it as E2E_LOCALE and filing captures under
- * <results>/screenshots/<locale>/. E2E_DEVICE, comma-separated simulators or
- * emulators, is required: without it Maestro drives whatever device it finds
- * first, someone else's included. E2E_RESULTS_DIR moves the results out of
- * e2e/results.
- *
- * One maestro invocation per flow, because the XCTest driver occasionally
- * crashes mid-batch on hosted runners and a shared invocation then fails
- * every remaining flow instantly ("Unknown error" at 0s).
- */
 import { spawn, spawnSync } from "node:child_process";
 import {
   copyFileSync,
@@ -48,8 +34,6 @@ if (!apiUrl) {
   process.exit(1);
 }
 
-// The iOS bundle id and Android package differ (see app.config.ts); flows
-// reference ${APP_ID} so one suite drives both.
 const APP_IDS = {
   ios: "com.flatcove.app.v2",
   android: "com.flatcove.app",
@@ -64,8 +48,6 @@ const maestroEnv = {
   ...process.env,
 };
 
-// The emulator reaches a localhost API through adb reverse, which an adbd
-// restart on a loaded machine silently drops; set it again before each flow.
 const { hostname, port: apiPort } = new URL(apiUrl);
 const reversePort =
   platform === "android" && ["localhost", "127.0.0.1"].includes(hostname)
@@ -92,8 +74,6 @@ function resolveTarget(target) {
   process.exit(1);
 }
 
-// Maestro ≥2 saves takeScreenshot output inside the debug bundle, not the
-// cwd; copy captures out before the bundle is deleted.
 function collectTakeScreenshots(debugDir, locale) {
   if (!existsSync(debugDir)) return;
   const screenshotsDir = join(resultsDir, "screenshots", locale ?? "");
@@ -119,7 +99,6 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
     .join("-");
   const debugDir = join(resultsDir, `debug-${name}`);
   rmSync(debugDir, { recursive: true, force: true });
-  // UDIDs are long; emulator serials are short and differ at the end.
   const label = device.length > 20 ? device.slice(0, 8) : device;
   const prefix = devices.length > 1 ? `[${label}] ` : "";
   console.log(`\n${prefix}> maestro test ${relative(e2eDir, file)}`);
@@ -132,8 +111,6 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
       `tcp:${reversePort}`,
     ]);
   }
-  // The driver records a running app's pid at startup; clearState then kills
-  // the app and XCTest's terminate waits 60s on the stale pid.
   if (platform === "ios") {
     spawnSync("xcrun", ["simctl", "terminate", device, appId]);
   }
@@ -144,8 +121,6 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
       "--device",
       device,
       ...(reinstallDriver ? [] : ["--no-reinstall-driver"]),
-      // Maestro's random driver port is bound on the device and can collide
-      // with the emulator's ephemeral ports (mobile-dev-inc/Maestro#3684).
       ...(platform === "android" ? ["--driver-host-port", "7001"] : []),
       "-e",
       `APP_ID=${appId}`,
@@ -176,8 +151,6 @@ function runFlow({ file, locale }, tag, device, reinstallDriver) {
   });
 }
 
-// A device that failed twice in a row while another one is still working is
-// likely broken (no network, dead driver); it stops taking flows for the run.
 const retired = new Set();
 
 async function runAll(runs, tagPrefix) {
@@ -187,8 +160,6 @@ async function runAll(runs, tagPrefix) {
     devices
       .filter((device) => !retired.has(device))
       .map(async (device) => {
-        // A driver reinstall costs 25-55s per iOS flow; only a failure can
-        // leave the driver broken.
         let reinstallDriver = true;
         let failuresInARow = 0;
         for (let next = queue.shift(); next; next = queue.shift()) {

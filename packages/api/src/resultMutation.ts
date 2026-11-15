@@ -21,13 +21,11 @@ export const restoreSnapshot =
 interface ResultMutationOptions<TData, TInput, TContext> {
   onMutate?: (input: TInput) => TContext | Promise<TContext>;
   rollback?: (context: NonNullable<TContext>) => void;
-  /** Gets the server's message, or undefined when the request itself threw. */
   onFailure?: (message: string | undefined) => void;
   onSuccess?: (data: TData, input: TInput, context: TContext) => void;
   onSettled?: () => void;
 }
 
-/** Procedures fail two ways: they throw, or return `success: false`. */
 export const resultMutation = <TData, TInput, TContext = undefined>({
   onMutate,
   rollback,

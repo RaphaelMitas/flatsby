@@ -107,7 +107,6 @@ export function ExpenseDetailPanel({
     return null;
   }
 
-  // Show create form
   if (action === "create") {
     return (
       <ExpenseFormInline
@@ -119,7 +118,6 @@ export function ExpenseDetailPanel({
     );
   }
 
-  // Show expense detail or edit form
   if (selectedExpenseId) {
     return (
       <ExpenseDetailPanelContent
@@ -141,7 +139,6 @@ export function ExpenseDetailPanel({
     );
   }
 
-  // Empty state
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
       <Receipt className="text-muted-foreground h-16 w-16" />
@@ -198,7 +195,6 @@ function ExpenseDetailPanelContent({
 
   const expense = expenseData.data;
 
-  // Show inline edit form
   if (action === "edit") {
     return (
       <ExpenseFormInline
@@ -210,7 +206,6 @@ function ExpenseDetailPanelContent({
     );
   }
 
-  // Show detail view
   return (
     <div className="flex h-full flex-col">
       <ScrollArea className="flex-1">
@@ -224,7 +219,6 @@ function ExpenseDetailPanelContent({
         </div>
       </ScrollArea>
 
-      {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent data-testid="expense-delete-dialog">
           <AlertDialogHeader>

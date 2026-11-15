@@ -2,7 +2,6 @@ import { useSyncExternalStore } from "react";
 
 import { hasJoined } from "./group";
 
-// Module state, so a join that lands while the creator is still sending doesn't take the card away mid-send
 const sharedGroups = new Set<number>();
 const listeners = new Set<() => void>();
 

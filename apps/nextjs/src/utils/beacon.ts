@@ -2,7 +2,6 @@ import type { NextRequest } from "next/server";
 import type { z } from "zod/v4";
 import { after } from "next/server";
 
-// Other sites could otherwise make their visitors' browsers post analytics here
 function isSameOrigin(request: NextRequest) {
   const site = request.headers.get("sec-fetch-site");
   if (site !== null) return site === "same-origin";

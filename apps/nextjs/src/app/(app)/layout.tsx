@@ -12,7 +12,6 @@ export const metadata = rootMetadata;
 export const viewport = rootViewport;
 
 export default async function AppLayout(props: { children: React.ReactNode }) {
-  // No route under (app) renders marketing or legal text.
   const { marketing, legal, ...messages } = await getMessages();
   return (
     <RootShell lang={await getLocale()}>

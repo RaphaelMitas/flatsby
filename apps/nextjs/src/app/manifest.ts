@@ -33,7 +33,6 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#ffffff",
     background_color: "#000000",
     display: "standalone",
-    // Chrome on Android offers the Play app instead of installing this site as a PWA.
     prefer_related_applications: true,
     related_applications: [
       { platform: "play", url: PLAY_STORE_URL, id: PLAY_STORE_ID },

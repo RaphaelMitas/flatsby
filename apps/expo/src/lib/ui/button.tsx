@@ -69,7 +69,6 @@ const iconVariants = {
 
 interface ButtonProps
   extends Omit<PressableProps, "onPress">, VariantProps<typeof buttonVariants> {
-  // Event-free so form.handleSubmit(fn) fits under RN's strict event types
   onPress?: () => unknown;
   title?: string;
   icon?: IconProps["name"];

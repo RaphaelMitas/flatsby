@@ -5,14 +5,12 @@ import { usePathname } from "next/navigation";
 
 import { isEntryPage } from "~/utils/entry-pages";
 
-// Module scope outlives the [locale] layout remounting, and resets on every full page load
 let lastUrl: string | undefined;
 
 function send(url: string, referrer: string | null) {
   navigator.sendBeacon("/api/pv", JSON.stringify({ url, referrer }));
 }
 
-// Chrome shows prerendered and search-prefetched pages without a request the proxy counts
 function reportPrefetchedLanding() {
   const report = () => send(window.location.href, document.referrer || null);
   if ("prerendering" in document && document.prerendering === true) {
@@ -29,7 +27,6 @@ function reportPrefetchedLanding() {
   }
 }
 
-// The proxy skips client-side navigations, so this reports them
 export function NavBeacon({
   entryPagesOnly = false,
 }: {

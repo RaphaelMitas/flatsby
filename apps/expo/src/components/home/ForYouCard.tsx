@@ -51,7 +51,6 @@ export function ForYouCard({
 
   return (
     <View>
-      {/* Before the card, so the card hides whatever sinks below its edge */}
       <HomeCat
         pose={pose}
         stretchKey={stretchKey}

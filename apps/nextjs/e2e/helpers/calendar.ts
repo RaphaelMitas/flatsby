@@ -2,7 +2,6 @@ import type { Page } from "@playwright/test";
 
 import { waitForHydration } from "./hydration";
 
-// The range is refetched once a write settles; reloading any earlier can abort the write
 export const writeSettled = (page: Page) =>
   page.waitForResponse(
     (response) =>

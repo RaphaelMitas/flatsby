@@ -41,7 +41,6 @@ export const deleteGroupSchema = groupSchema.pick({ id: true });
 
 export const groupIdInputSchema = z.object({ groupId: groupSchema.shape.id });
 
-// Group Member validators
 export const groupMemberRoleSchema = z.enum(["admin", "member"]);
 export type GroupMemberRole = z.infer<typeof groupMemberRoleSchema>;
 
@@ -72,7 +71,6 @@ export const createGroupSchema = groupSchema
   .pick({ name: true, currency: true })
   .partial({ currency: true })
   .extend({
-    // Released apps send no placeholders, which keeps the group to its creator
     placeholders: z
       .array(placeholderNameSchema)
       .max(MAX_NEW_GROUP_PLACEHOLDERS, {
@@ -112,7 +110,6 @@ export const openPlaceholders = (
   members: { id: number; userId: string | null; user: { name: string } }[],
 ): InvitePlaceholder[] =>
   members
-    // A placeholder still saving has a temporary negative id, and a link with it preselects nothing
     .filter((member) => isPlaceholder(member) && member.id > 0)
     .map(({ id, user }) => ({ id, name: user.name }));
 
@@ -151,7 +148,6 @@ export const addGroupMemberInputSchema = z.object({
 });
 export type AddGroupMemberInput = z.infer<typeof addGroupMemberInputSchema>;
 
-// Activity validators
 export const activityUserSchema = z.object({
   email: userEmailSchema.nullable(),
   name: userNameSchema,

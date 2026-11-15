@@ -37,13 +37,7 @@ import { INVITE_CODE_LENGTH } from "@flatsby/validators/invite";
 import { MAX_PAYPAL_HANDLE_LENGTH } from "@flatsby/validators/payment";
 import { MAX_CONSENT_VERSION_LENGTH } from "@flatsby/validators/user";
 
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
-export const createTable = pgTableCreator((name) => `flat-cove_${name}`); // still called flat-cove because of the old name
+export const createTable = pgTableCreator((name) => `flat-cove_${name}`);
 
 export const users = createTable("user", {
   id: text("id").primaryKey(),
@@ -57,7 +51,6 @@ export const users = createTable("user", {
   lastShoppingListUsed: integer("last_shopping_list_used").references(
     () => shoppingLists.id,
   ),
-  // Legal consent tracking
   termsAcceptedAt: timestamp("terms_accepted_at"),
   termsVersion: varchar("terms_version", {
     length: MAX_CONSENT_VERSION_LENGTH,
@@ -70,7 +63,6 @@ export const users = createTable("user", {
   paypalHandle: varchar("paypal_handle", { length: MAX_PAYPAL_HANDLE_LENGTH }),
 });
 
-/** Append-only proof of each analytics consent choice made on a device (Art. 7(1) GDPR) */
 export const analyticsConsents = createTable(
   "analytics_consent",
   {
@@ -192,21 +184,17 @@ export const rateLimits = createTable("rate_limit", {
   lastRequest: bigint("last_request", { mode: "number" }).notNull(),
 });
 
-// Better Auth only limits per IP, so sign-in codes are also counted per address
 export const signInCodeRequests = createTable("sign_in_code_request", {
   emailHash: text("email_hash").primaryKey(),
   count: integer("count").notNull(),
   windowStart: timestamp("window_start").notNull(),
 });
-// end auth
 
-// Enums
 export const groupMemberRoleEnum = pgEnum("group_member_role", [
   "admin",
   "member",
 ]);
 
-// Create a pgTable that maps to a table in your DB
 export const groups = createTable("groups", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: MAX_GROUP_NAME_LENGTH }).notNull(),
@@ -216,7 +204,6 @@ export const groups = createTable("groups", {
     .$type<CurrencyCode>()
     .default("EUR")
     .notNull(),
-  // null until an admin decides, which is what the debts banner asks about
   convertAutomatically: boolean("convert_automatically"),
 });
 
@@ -227,9 +214,7 @@ export const groupMembers = createTable(
     groupId: integer("groupId")
       .notNull()
       .references(() => groups.id),
-    // null for a placeholder, a flatmate added by name who has no account yet
     userId: text("userId"),
-    // kept after a claim so it can be undone
     placeholderName: varchar("placeholder_name", {
       length: MAX_PLACEHOLDER_NAME_LENGTH,
     }),
@@ -391,7 +376,6 @@ export const expenses = createTable(
       .references(() => groupMembers.id),
     amountInCents: integer("amount_in_cents").notNull(),
     currency: varchar("currency", { length: 3 }).notNull(),
-    // Both set when the expense counts toward debts in another currency
     convertedAmountInCents: integer("converted_amount_in_cents"),
     convertedCurrency: varchar("converted_currency", { length: 3 }),
     description: varchar("description", {
@@ -477,16 +461,12 @@ export const calendarItems = createTable(
     color: varchar("color", { length: 16 }).$type<CalendarColor>().notNull(),
     startsOn: date("starts_on", { mode: "string" }).notNull(),
     endsOn: date("ends_on", { mode: "string" }),
-    // Wall-clock times, so 19:00 stays 19:00 across DST; null means all day
     startTime: time("start_time"),
     endTime: time("end_time"),
-    // Calendar days an event touches; its end time falls on the last one
     days: integer("days").default(1).notNull(),
-    // IANA zone of the device that made it; the times above stay wall-clock
     timeZone: varchar("time_zone", { length: MAX_TIME_ZONE_LENGTH })
       .default(DEFAULT_TIME_ZONE)
       .notNull(),
-    // null means it happens once
     recurrence: jsonb("recurrence").$type<Recurrence>(),
     createdByGroupMemberId: integer("created_by_group_member_id").references(
       () => groupMembers.id,
@@ -537,7 +517,6 @@ export const calendarItemMembersRelations = relations(
   }),
 );
 
-/** Only occurrences that differ from the rule get a row: done or skipped. */
 export const calendarOccurrences = createTable(
   "calendar_occurrence",
   {

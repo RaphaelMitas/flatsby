@@ -68,7 +68,6 @@ export default function GroupDetailsScreen() {
 
   return (
     <AppScrollView className="p-4">
-      {/* Group Profile Section */}
       <ProfileSection
         name={group.data.name}
         subtitle={t("group.memberCount", { count: memberCount })}
@@ -77,7 +76,6 @@ export default function GroupDetailsScreen() {
         disabled={true}
       />
 
-      {/* Group Name Edit Section */}
       <View className="bg-card gap-4 rounded-lg p-4">
         <Text className="text-foreground mb-4 text-lg font-semibold">
           {t("group.settings.details")}
@@ -135,7 +133,6 @@ export default function GroupDetailsScreen() {
           </View>
         </Form>
 
-        {/* Error Alert */}
         {form.formState.errors.name && (
           <TimedAlert
             variant="destructive"
@@ -147,7 +144,6 @@ export default function GroupDetailsScreen() {
           />
         )}
 
-        {/* Success Alert */}
         {showSuccessMessage && (
           <TimedAlert
             variant="success"

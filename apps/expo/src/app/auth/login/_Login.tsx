@@ -135,7 +135,6 @@ const Login = () => {
         failed,
       );
       if (!started) return;
-      // The Expo plugin drops the browser's result, so whether a session came back is all we can know
       const session = await authClient.getSession();
       if (!session.data && !session.error) {
         posthog.capture("login_cancelled", { ...attempt, stage: "sheet" });
@@ -148,7 +147,6 @@ const Login = () => {
   return (
     <View testID="login-screen" className="bg-background flex-1">
       <Stack.Screen options={{ headerShown: false }} />
-      {/* Keeps the continue button above the keyboard, not just the field */}
       <AppScrollView
         bottomOffset={96}
         contentContainerClassName="justify-center px-6 py-8"
@@ -288,7 +286,6 @@ const Login = () => {
               ),
             })}
           </Text>
-          {/* Art. 21(4) GDPR: the right to object, on its own line, before the first sign-in */}
           <Text
             testID="login-right-to-object"
             className="text-foreground text-center text-xs"

@@ -115,7 +115,6 @@ export function CatOverlay({
         <Snores
           style={{ top: CAT_SIZE - 20 }}
           className="absolute right-20"
-          // In season they float over the dark sky
           textClassName={season.home ? "text-white" : undefined}
         />
       )}

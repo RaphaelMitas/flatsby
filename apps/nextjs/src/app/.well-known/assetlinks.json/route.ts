@@ -10,7 +10,6 @@ export function GET() {
     {
       relation: [
         "delegate_permission/common.handle_all_urls",
-        // Lets the app use passkeys made for the website
         "delegate_permission/common.get_login_creds",
       ],
       target: {

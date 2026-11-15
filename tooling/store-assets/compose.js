@@ -15,7 +15,6 @@ export function place(className, styles, parent = document.body) {
   return el;
 }
 
-// The icon's cat sits in x 0.29-0.71 with its ears at y 0.27; whatever it peeks over cuts it at y `cut`.
 export function placeCat({ size, cut, centerX, bottom }, parent) {
   const visible = (cut - 0.27) * size;
   place(
@@ -42,15 +41,12 @@ function pixels(img) {
   return ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 }
 
-// Where a Maestro `cropOn` capture sits in the full screenshot of the same
-// screen, as [x, y, w, h] in capture pixels.
 export function locate(capture, crop) {
   const W = capture.naturalWidth;
   const w = crop.naturalWidth;
   const h = crop.naturalHeight;
   const big = pixels(capture);
   const small = pixels(crop);
-  // Flat background samples also match lookalike tiles, so sample the crop's edges.
   const step = Math.max(1, Math.floor(Math.min(w, h) / 64));
   const contrast = (x, y) => {
     const a = (y * w + x) * 4;
@@ -81,8 +77,6 @@ export function locate(capture, crop) {
       if (error < best.error) best = { error, x, y };
     }
   }
-  // The crop is cut from a second screenshot of the same settled screen, so a
-  // real match is near pixel-exact; anything else means the screen changed.
   if (best.error > samples.length * 3 * 0.1) {
     throw new Error(`${crop.src} does not match its capture`);
   }

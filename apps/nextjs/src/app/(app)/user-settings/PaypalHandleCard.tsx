@@ -49,7 +49,6 @@ export function PaypalHandleCard() {
 
   const form = useForm({
     resolver: zodResolver(paypalHandleInputSchema),
-    // Follows a newer save from another tab without dropping what's being typed
     values: { paypalHandle: stored ?? "" },
     resetOptions: { keepDirtyValues: true },
   });
@@ -62,7 +61,6 @@ export function PaypalHandleCard() {
             trpc.user.getCurrentUser.queryFilter(),
           );
           void queryClient.invalidateQueries(trpc.group.getGroup.pathFilter());
-          // reset() applies resetOptions too, which would keep the raw pasted link
           form.reset(
             { paypalHandle: paypalHandle ?? "" },
             { keepDirtyValues: false },

@@ -4,17 +4,12 @@ import { createAuthSession, expect, test } from "../fixtures/auth";
 import { groupRefetched } from "../helpers/group";
 import { waitForHydration } from "../helpers/hydration";
 
-// seed=debts: Max owes you €42.50, Sophie owes you €18.00, you owe Lena
-// €30.00 and Max $15.00; among the others Max owes Lena €25.00, Sophie owes
-// Max €12.00 and Lena €8.00. Lena and Max added a PayPal.me name, Sophie and
-// you didn't.
 async function openSeededDebts(page: Page, baseURL: string | undefined) {
   await createAuthSession(page, baseURL, { seed: "debts" });
   await page.goto("/expenses/debts");
   await expect(page.getByTestId("debt-summary-title")).toBeVisible();
 }
 
-// SSR renders the mobile layout; its streamed copy lingers hidden after the desktop swap.
 function expenseDebtCard(page: Page) {
   return page.getByTestId("expense-debt-card").filter({ visible: true });
 }

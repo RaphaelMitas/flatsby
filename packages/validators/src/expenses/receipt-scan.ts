@@ -14,7 +14,6 @@ export const RECEIPT_IMAGE_MAX_EDGE = 2048;
 export const RECEIPT_IMAGE_QUALITY = 0.7;
 const MAX_MERCHANT_LENGTH = 80;
 
-// Vercel rejects bodies over 4.5 MB
 export const RECEIPT_FILE_MAX_BASE64 = 3_000_000;
 
 export const receiptMediaTypeSchema = z.enum(["image/jpeg", "application/pdf"]);
@@ -22,12 +21,10 @@ export type ReceiptMediaType = z.infer<typeof receiptMediaTypeSchema>;
 
 export const scanReceiptInputSchema = z.object({
   imageBase64: z.base64().max(RECEIPT_FILE_MAX_BASE64),
-  // v0.18.0 apps send photos only and leave this out
   mediaType: receiptMediaTypeSchema.default("image/jpeg"),
 });
 export type ReceiptFile = z.infer<typeof scanReceiptInputSchema>;
 
-// Scans that fail before the request is sent; the scan procedure reports its own failures
 export const receiptScanFailureSchema = z.object({
   reason: z.enum(["too_large", "unreadable_file"]),
   mediaType: receiptMediaTypeSchema,
@@ -77,7 +74,6 @@ export const receiptScanSchema = z.object({
 
 export type ReceiptScan = z.infer<typeof receiptScanSchema>;
 
-// Models sometimes answer with the symbol despite being asked for the code
 const CURRENCY_SYMBOLS: Record<string, string> = { "€": "EUR", "£": "GBP" };
 
 export function receiptScanFrom(
@@ -97,7 +93,6 @@ export function receiptScanFrom(
   const printed = reading.currency?.trim().toUpperCase() ?? null;
   const code = printed === null ? null : (CURRENCY_SYMBOLS[printed] ?? printed);
   const currency = code !== null && isCurrencyCode(code) ? code : null;
-  // An amount in a currency the app can't book must not land in the form's currency
   const bookable = code === null || currency !== null;
   const day = calendarDateSchema.safeParse(reading.date);
   const description = reading.merchant?.trim().slice(0, MAX_MERCHANT_LENGTH);
@@ -107,15 +102,12 @@ export function receiptScanFrom(
       : null;
   return {
     amountInCents: amount,
-    // Alone it would switch the currency of whatever amount the person typed
     currency: amount === null ? null : currency,
-    // The server's UTC day can be one behind the person's own
     expenseDay: day.success && day.data <= addDays(today, 1) ? day.data : null,
     description: description || null,
   };
 }
 
-// A currency alone fills nothing the person would check
 export const isEmptyReceiptScan = (scan: ReceiptScan) =>
   scan.amountInCents === null &&
   scan.expenseDay === null &&
@@ -168,7 +160,6 @@ export interface StageEvent {
   reveal?: StageTag;
 }
 
-// A fast answer still gets one look over the receipt, so the stage never flashes
 export const MIN_READING_MS = 1200;
 const REVEAL_GAP_MS = 550;
 const PREVIEW_AFTER_MS = 600;
@@ -219,7 +210,6 @@ const TOTAL_WORDS = /summe|total|gesamt|zu zahlen|betrag|amount|due/i;
 const squash = (text: string) =>
   text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
 
-// Finds where on the photo each value the model read is printed
 export function receiptMarks(
   lines: ReceiptTextLine[],
   scan: ReceiptScan,

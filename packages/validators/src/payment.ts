@@ -21,7 +21,6 @@ export function parsePaypalHandle(value: string) {
   return handle && PAYPAL_HANDLE_SHAPE.test(handle) ? handle : null;
 }
 
-// Blank clears it
 export const paypalHandleInputSchema = z.object({
   paypalHandle: z.string().transform((value, ctx) => {
     if (!value.trim()) return "";

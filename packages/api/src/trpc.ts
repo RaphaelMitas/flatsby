@@ -1,11 +1,3 @@
-/**
- * YOU PROBABLY DON'T NEED TO EDIT THIS FILE, UNLESS:
- * 1. You want to modify request context (see Part 1)
- * 2. You want to create a new middleware or type of procedure (see Part 3)
- *
- * tl;dr - this is where all the tRPC server stuff is created and plugged in.
- * The pieces you will need to use are documented accordingly near the end
- */
 import type { Auth } from "@flatsby/auth";
 import type { Locale } from "@flatsby/i18n/locale";
 import { initTRPC, TRPCError } from "@trpc/server";
@@ -20,19 +12,6 @@ import { translatorFor } from "@flatsby/i18n/translator";
 
 import type { ReceiptScanner } from "./utils/receipt-scan";
 import { captureUserEvent } from "./lib/posthog";
-
-/**
- * 1. CONTEXT
- *
- * This section defines the "contexts" that are available in the backend API.
- *
- * These allow you to access things when processing a request, like the database, the session, etc.
- *
- * This helper generates the "internals" for a tRPC context. The API handler and RSC clients each
- * wrap this and provides the required context.
- *
- * @see https://trpc.io/docs/server/context
- */
 
 export const createTRPCContext = async (opts: {
   headers: Headers;
@@ -67,20 +46,12 @@ export const createTRPCContext = async (opts: {
     scanReceipt: opts.scanReceipt,
   };
 };
-/**
- * 2. INITIALIZATION
- *
- * This is where the trpc api is initialized, connecting the context and
- * transformer
- */
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
-  // Errors keep catalog keys server-side so error reporting groups across languages.
   errorFormatter: ({ shape, error, ctx }) => {
     const translate = translatorFor(ctx?.locale ?? defaultLocale);
     return {
       ...shape,
-      // A failed query's message carries its SQL and params, which hold user data
       message:
         redactQueryParams(shape.message) === shape.message
           ? translateIfKey(translate, shape.message)
@@ -100,20 +71,8 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
   },
 });
 
-/**
- * 3. ROUTER & PROCEDURE (THE IMPORTANT BIT)
- *
- * These are the pieces you use to build your tRPC API. You should import these
- * a lot in the /src/server/api/routers folder
- */
-
-/**
- * This is how you create new routers and subrouters in your tRPC API
- * @see https://trpc.io/docs/router
- */
 export const createTRPCRouter = t.router;
 
-// Most inputs name the group; joining an invite only learns it, so its result carries it
 function groupIdOf(value: unknown): number | undefined {
   if (typeof value !== "object" || value === null) return undefined;
   if ("groupId" in value && typeof value.groupId === "number") {
@@ -125,7 +84,6 @@ function groupIdOf(value: unknown): number | undefined {
 const timingMiddleware = t.middleware(
   async ({ ctx, next, path, type, getRawInput }) => {
     if (t._config.isDev) {
-      // simulates production latency so request waterfalls show up locally
       const waitMs = Math.floor(Math.random() * 400) + 100;
       await new Promise((resolve) => setTimeout(resolve, waitMs));
     }
@@ -138,13 +96,11 @@ const timingMiddleware = t.middleware(
       console.log(`[TRPC] ${path} took ${durationMs}ms to execute`);
     }
 
-    // Capturing the objection itself would send the account to PostHog one more time
     if (
       ctx.session &&
       type === "mutation" &&
       path !== "user.setAnalyticsOptOut"
     ) {
-      // a streaming procedure returns before its body runs, so its duration and outcome are unknown here
       const isStream = result.ok && Symbol.asyncIterator in Object(result.data);
       captureUserEvent({
         user: ctx.session.user,
@@ -165,23 +121,8 @@ const timingMiddleware = t.middleware(
   },
 );
 
-/**
- * Public (unauthed) procedure
- *
- * This is the base piece you use to build new queries and mutations on your
- * tRPC API. It does not guarantee that a user querying is authorized, but you
- * can still access user session data if they are logged in
- */
 export const publicProcedure = t.procedure.use(timingMiddleware);
 
-/**
- * Protected (authenticated) procedure
- *
- * If you want a query or mutation to ONLY be accessible to logged in users, use this. It verifies
- * the session is valid and guarantees `ctx.session.user` is not null.
- *
- * @see https://trpc.io/docs/procedures
- */
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
@@ -190,7 +131,6 @@ export const protectedProcedure = t.procedure
     }
     return next({
       ctx: {
-        // infers the `session` as non-nullable
         session: { ...ctx.session, user: ctx.session.user },
       },
     });

@@ -37,7 +37,6 @@ export function GroupSwitcher({
         id: group.id,
         title: group.name,
         subtitle: memberCount(group.memberCount),
-        // Settings act on the selected group, so only its own row offers them
         more: group.id === selectedGroupId ? settings : undefined,
       }))}
       selectedId={selectedGroupId}

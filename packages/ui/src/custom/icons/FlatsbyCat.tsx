@@ -35,7 +35,6 @@ export default function FlatsbyCat({
 }: {
   animate?: boolean;
   className?: ComponentProps<"div">["className"];
-  // Drawn in the cat's own coordinates, so it hops with the cat
   children?: ReactNode;
 }) {
   return (

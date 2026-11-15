@@ -5,7 +5,6 @@ import { onlineManager, useIsMutating } from "@tanstack/react-query";
 
 import { queryClient } from "./api";
 
-// A refetch landing mid-write would wipe its optimistic patch
 export const holdWhileMutating = (mutationKey: MutationKey) => () =>
   queryClient.isMutating({ mutationKey }) > 0 ? Number.POSITIVE_INFINITY : 0;
 

@@ -10,7 +10,6 @@ const inputIdValue = z.union([z.string().max(64), z.number()]);
 export const trpcFailureSchema = z.object({
   path: z.string().max(200),
   type: z.enum(["query", "mutation"]),
-  // Absent when the server never answered
   code: z.string().max(50).optional(),
   httpStatus: z.number().int().optional(),
   inputIds: z.record(inputIdKey, inputIdValue),
@@ -42,7 +41,6 @@ export function trpcFailureCaches(
           path: procedurePath(query.queryKey),
           type: "query",
           inputIds: idsOf(isRecord(keyMeta) ? keyMeta.input : undefined),
-          // The cache counts the final failure before it calls onError
           attempts: query.state.fetchFailureCount,
           hadCachedData: query.state.data !== undefined,
         });
@@ -57,7 +55,6 @@ export function trpcFailureCaches(
           path: procedurePath(mutation.options.mutationKey),
           type: "mutation",
           inputIds: idsOf(variables),
-          // The cache calls onError before it counts the final failure
           attempts: mutation.state.failureCount + 1,
         });
       },
@@ -79,8 +76,6 @@ function classify(error: Error) {
   };
 }
 
-// A body without tRPC error data (a proxy's error page, a superjson mismatch) still means the server answered.
-// The web's stream link drops the response, so there only the parse error tells.
 function wasAnswered(error: TRPCClientError<AppRouter>) {
   return (
     error.meta?.response !== undefined || error.cause instanceof SyntaxError

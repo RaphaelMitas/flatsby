@@ -2,7 +2,6 @@ import { Circle, G, Path, Rect, Svg } from "react-native-svg";
 
 import { isChristmas } from "./christmas";
 
-// The cat's own 229x255 frame, raised so the tip of the hat isn't clipped
 const HEADROOM = 24;
 const FUR = "#f8fafc";
 const FUR_EDGE = "#cbd5e1";

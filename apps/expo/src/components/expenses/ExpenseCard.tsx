@@ -60,7 +60,6 @@ export function ExpenseCard({
         onMutate: async (input) => {
           await cancelLists();
 
-          // Optimistically remove the expense from the list
           const listSnapshot = patchLists((old) => {
             const updatedPages = old.pages.map((page) => {
               if (page.success === false) return page;

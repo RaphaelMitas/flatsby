@@ -82,7 +82,6 @@ function StatsHeader() {
   return (
     <div className="flex items-end justify-between pr-4">
       <p className="text-muted-foreground mb-2 text-sm">{t("last30Days")}</p>
-      {/* In season the cat sits in the band under the group header instead */}
       {!season.HomeBackdrop && (
         <PeekingCat variant="home" className="h-8 w-16" />
       )}

@@ -32,7 +32,6 @@ export function FirstList({
   const { currentGroup } = useGroupContext();
   const createList = useCreateList(groupId);
 
-  // This page was rendered for one group; a switch in the sidebar needs a fresh render
   useEffect(() => {
     if (currentGroup && currentGroup.id !== groupId) router.refresh();
   }, [currentGroup, groupId, router]);

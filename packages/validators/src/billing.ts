@@ -1,6 +1,5 @@
 import { z } from "zod/v4";
 
-// Only released app builds call getUsage and getSubscription
 export const usageDataSchema = z.object({
   credits: z.object({ balance: z.number(), usage: z.number() }),
 });

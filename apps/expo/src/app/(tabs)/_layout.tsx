@@ -37,7 +37,6 @@ export default function TabLayout() {
   });
   const deletingGroup =
     useIsMutating({ mutationKey: trpc.group.deleteGroup.mutationKey() }) > 0;
-  // Once the tabs show, a later fetch (say, one resuming after reconnecting) must not tear them down
   const [tabsShown, setTabsShown] = useState(false);
 
   useEffect(() => {
@@ -84,17 +83,11 @@ export default function TabLayout() {
     }
   }, [selectedGroupId, selectedShoppingListId, session.data?.user]);
 
-  // Guarding per screen segfaults in UIKit: signing out from Settings
-  // redirected from the backgrounded home tab, tearing down one tab's
-  // navigation stack while another was still mounted.
-  // No isPending guard: StackLayout blanks the first load, and refetches keep data
   if (!session.data?.user) {
     return <Redirect href="/auth/login" />;
   }
-  // A delete empties the list optimistically, and that must not count
   const noGroups =
     groups.data?.success && groups.data.data.length === 0 && !deletingGroup;
-  // Blank so a new user skips Home; isLoading, not isPending, so a paused offline fetch can't blank the app for good
   if (
     !tabsShown &&
     (groups.isLoading ||

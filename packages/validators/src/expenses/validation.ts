@@ -1,7 +1,3 @@
-// ============================================================================
-// Validation Utilities - Check splits before saving
-// ============================================================================
-
 import { msg } from "@flatsby/i18n/message-key";
 
 import type {
@@ -40,7 +36,6 @@ export function validateSplits({
   totalAmountCents: number;
   method: SplitMethod;
 }): SplitValidationResult {
-  // Basic validation
   if (splits.length === 0) {
     return {
       isValid: false,
@@ -48,7 +43,6 @@ export function validateSplits({
     };
   }
 
-  // Check for duplicate members
   const memberIds = splits.map((s) => s.groupMemberId);
   const uniqueMemberIds = new Set(memberIds);
   if (uniqueMemberIds.size !== memberIds.length) {
@@ -58,7 +52,6 @@ export function validateSplits({
     };
   }
 
-  // Check for negative amounts
   if (splits.some((s) => (s.amountInCents ?? 0) < 0)) {
     return {
       isValid: false,
@@ -66,7 +59,6 @@ export function validateSplits({
     };
   }
 
-  // Settlement validation - must have exactly one recipient
   if (method === "settlement") {
     if (splits.length !== 1) {
       return {
@@ -94,15 +86,11 @@ export function validateSplits({
   }
 
   if (method === "equal") {
-    // For equal splits, we calculate the expected amounts and verify the sum
-    // The actual amounts should be calculated using distributeEqualAmounts
-    // Here we just verify that if amounts exist, they sum correctly
     const totalSplitCents = splits.reduce(
       (sum, split) => sum + (split.amountInCents ?? 0),
       0,
     );
 
-    // If amounts are provided, verify they sum to total
     if (totalSplitCents > 0 && totalSplitCents !== totalAmountCents) {
       return {
         isValid: false,
@@ -114,13 +102,11 @@ export function validateSplits({
   }
 
   if (method === "percentage") {
-    // Percentages are stored in basis points (100% = 10000)
     const totalBasisPoints = splits.reduce(
       (sum, split) => sum + (split.percentage ?? 0),
       0,
     );
 
-    // Allow tolerance of 1 basis point for rounding
     if (Math.abs(totalBasisPoints - 10000) > 1) {
       return {
         isValid: false,
@@ -131,7 +117,6 @@ export function validateSplits({
       };
     }
 
-    // Also verify amounts sum correctly if provided
     const totalSplitCents = splits.reduce(
       (sum, split) => sum + (split.amountInCents ?? 0),
       0,
@@ -147,7 +132,6 @@ export function validateSplits({
     return { isValid: true };
   }
 
-  // Share amounts are derived from the counts on save, so only the counts can be wrong
   if (method === "shares") {
     return hasMissingShares(splits)
       ? {
@@ -177,7 +161,6 @@ export function validateExpenseSplitsStrict(
   splits: { amountInCents: number; shares?: number | null }[],
   splitMethod: SplitMethod,
 ): StrictValidationResult {
-  // Settlement validation
   if (splitMethod === "settlement") {
     if (splits.length !== 1) {
       return {
@@ -188,7 +171,6 @@ export function validateExpenseSplitsStrict(
     }
   }
 
-  // Empty splits validation
   if (splits.length === 0) {
     return {
       valid: false,
@@ -198,7 +180,6 @@ export function validateExpenseSplitsStrict(
     };
   }
 
-  // Negative amount validation
   if (splits.some((s) => s.amountInCents < 0)) {
     return {
       valid: false,
@@ -216,7 +197,6 @@ export function validateExpenseSplitsStrict(
     };
   }
 
-  // Sum validation - strict, no tolerance
   const totalSplitAmount = splits.reduce(
     (sum, split) => sum + split.amountInCents,
     0,
@@ -234,9 +214,6 @@ export function validateExpenseSplitsStrict(
   return { valid: true };
 }
 
-/**
- * Validate that an array of splits has unique member IDs
- */
 export function validateUniqueMemberIds(
   splits: { groupMemberId: number }[],
 ): SplitValidationResult {
@@ -253,9 +230,6 @@ export function validateUniqueMemberIds(
   return { isValid: true };
 }
 
-/**
- * Combined validation for expense splits with all checks
- */
 export function validateExpenseSplitsFull(params: {
   splits: ExpenseSplit[];
   totalAmountCents: number;
@@ -263,12 +237,10 @@ export function validateExpenseSplitsFull(params: {
 }): SplitValidationResult {
   const { splits, totalAmountCents, method } = params;
 
-  // Unique member check
   const uniqueCheck = validateUniqueMemberIds(splits);
   if (!uniqueCheck.isValid) {
     return uniqueCheck;
   }
 
-  // Method-specific validation (includes settlement check)
   return validateSplits({ splits, totalAmountCents, method });
 }

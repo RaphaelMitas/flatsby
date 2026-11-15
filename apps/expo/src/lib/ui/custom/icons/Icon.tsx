@@ -37,7 +37,6 @@ const Icon = ({ name, color, size, className }: IconProps) => {
     return <PasskeyIcon size={size} color={colorValue} className={className} />;
   }
   if (name === "loader") {
-    // CSS keyframes don't run on native, so a spinning icon would stand still
     return (
       <View
         style={{ width: size, height: size }}

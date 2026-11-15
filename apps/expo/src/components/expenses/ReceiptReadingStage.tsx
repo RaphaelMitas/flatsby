@@ -60,7 +60,6 @@ const MAG = 1.9;
 const CAT = 150;
 const PEEK = 56;
 const HIDDEN = 420;
-// Reading order over the receipt, as fractions of its width and height
 const PATH_X = [0.5, 0.28, 0.7, 0.3, 0.72, 0.35, 0.68, 0.45, 0.5];
 const PATH_Y = [0.1, 0.24, 0.3, 0.45, 0.52, 0.66, 0.74, 0.88, 0.1];
 const STEPS = PATH_X.map((_, i) => i);

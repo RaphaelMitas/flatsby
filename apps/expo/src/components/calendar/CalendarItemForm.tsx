@@ -182,7 +182,6 @@ function ItemFields({
       update.mutate({ ...trimmed, id: item.id, today });
       router.dismissTo("/(tabs)/calendar");
     } else {
-      // Leaving first rules out a second submit; the optimistic row needs the range it lands in cached
       router.dismissTo({
         pathname: "/(tabs)/calendar",
         params: { date: startsOn },

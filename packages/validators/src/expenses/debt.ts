@@ -6,7 +6,6 @@ import type { ConvertibleExpense } from "./conversion";
 import type { DebtEntry, GroupDebtSummary, MemberBalances } from "./types";
 import { inLedgerCurrency } from "./conversion";
 
-/** debtor -> creditor -> cents, every amount positive */
 type DebtGraph = Map<number, Map<number, number>>;
 
 export function calculateDebts(
@@ -112,7 +111,6 @@ export type DebtKind = "direct" | "simplified";
 
 export interface CounterpartDebts {
   groupMemberId: number;
-  /** Positive: they owe the member. Negative: the member owes them. */
   amounts: { amountInCents: number; debt: DebtEntry }[];
   direction: string;
 }
@@ -176,7 +174,6 @@ export function debtsBetweenOthers(
   );
 }
 
-/** Prefers the payer's own debt to the receiver over the reverse direction */
 export function pairDebt(
   summary: GroupDebtSummary,
   payer: number,
@@ -269,7 +266,6 @@ function setDebt(graph: DebtGraph, from: number, to: number, amount: number) {
   graph.set(from, creditors);
 }
 
-/** Nets against the opposite direction, so a pair only ever has one edge */
 function addDebt(graph: DebtGraph, from: number, to: number, amount: number) {
   const net =
     (graph.get(from)?.get(to) ?? 0) - (graph.get(to)?.get(from) ?? 0) + amount;

@@ -18,12 +18,10 @@ const Switch = ({
 
   return (
     <RNSwitch
-      // Force remount when checked changes to work around RN Switch controlled mode quirk
       key={checked ? "on" : "off"}
       value={checked}
       onValueChange={onCheckedChange}
       disabled={disabled}
-      // iOS 26 always draws a white thumb, which vanishes on the dark-mode primary track
       trackColor={{
         false: getColor("input"),
         true: Platform.OS === "ios" ? undefined : getColor("primary"),

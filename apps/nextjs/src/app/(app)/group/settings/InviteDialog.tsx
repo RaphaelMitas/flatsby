@@ -33,7 +33,6 @@ export const InviteDialog = ({
 }: {
   groupId: number;
   groupName: string;
-  /** Controlled dialogs are opened by their caller and bring no trigger */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) => {

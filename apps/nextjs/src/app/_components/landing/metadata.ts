@@ -26,7 +26,6 @@ export function marketingMetadata({
     alternates: {
       canonical: url,
       languages: localeAlternates(path),
-      // The markdown twins exist in English only.
       ...(locale === defaultLocale && {
         types: { "text/markdown": markdownPath },
       }),

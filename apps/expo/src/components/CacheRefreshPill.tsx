@@ -32,7 +32,6 @@ const FLING_VELOCITY = 500;
 const isRestored = (query: Query) =>
   query.state.dataUpdatedAt > 0 && query.state.dataUpdatedAt < launchedAt;
 
-// A failed refetch keeps its old dataUpdatedAt, so it would show the pill on every focus
 const failedRefresh = (query: Query) =>
   isRestored(query) && query.state.errorUpdatedAt >= launchedAt;
 

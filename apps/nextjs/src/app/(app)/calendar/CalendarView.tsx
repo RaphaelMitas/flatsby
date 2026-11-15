@@ -76,7 +76,6 @@ type Panel =
   | { type: "detail"; entry: AgendaEntry }
   | { type: "form"; item?: CalendarItemView; date?: string };
 
-// Coming back to a tab left open overnight has to move "today" along
 const onReturn = (notify: () => void) => {
   document.addEventListener("visibilitychange", notify);
   window.addEventListener("focus", notify);
@@ -92,7 +91,6 @@ export function CalendarView() {
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: currentGroup?.id ?? 0 }),
   );
-  // "Today" is the viewer's local day, which the server can't know while rendering
   const today = useSyncExternalStore(onReturn, localDate, () => null);
 
   if (!groupData.success) return null;
@@ -157,7 +155,6 @@ function CalendarScreen({
     update,
   } = useCalendarMutations(group);
 
-  // Stepping keeps a half-filled form; a view switch moves the panel to another container, which would remount it empty
   const moveTo = (next: CalendarPosition) => {
     setPosition(next);
     setPanel((open) =>
@@ -167,7 +164,6 @@ function CalendarScreen({
   const step = (delta: number) => moveTo(stepPosition(position, delta, today));
   const swipeStart = useRef<{ x: number; y: number } | undefined>(undefined);
 
-  // Arrow keys belong to an open form or detail
   const onArrow = useEffectEvent((delta: number) => {
     if (!panel) step(delta);
   });
@@ -200,7 +196,6 @@ function CalendarScreen({
 
   const save = async (input: CreateCalendarItemInput, id?: number) => {
     if (id === undefined) {
-      // Closing the form first rules out a second submit; the optimistic entry needs its range cached
       const next = revealDate(position, input.startsOn, today);
       moveTo(next);
       setPanel(null);
@@ -244,7 +239,6 @@ function CalendarScreen({
         onEdit={(latest) => setPanel({ type: "form", item: latest })}
         onJump={(date) => moveTo(revealDate(position, date, today))}
         onSkip={() => {
-          // A chore left for days is skipped for all of them, or the next one would take its place
           setSkipped.mutate({
             groupId,
             itemId: item.id,

@@ -70,13 +70,7 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         },
       },
       async (answers) => {
-        /**
-         * Install deps and format everything
-         */
         if ("name" in answers && typeof answers.name === "string") {
-          // execSync("pnpm dlx sherif@latest --fix", {
-          //   stdio: "inherit",
-          // });
           execSync("pnpm i", { stdio: "inherit" });
           execSync(
             `pnpm prettier --write packages/${answers.name}/** --list-different`,

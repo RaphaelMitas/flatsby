@@ -26,7 +26,6 @@ export function BottomNavigation() {
   const isCalendarPage = pathname.startsWith("/calendar");
   const isSettingsPage = pathname.startsWith("/user-settings");
 
-  // Determine active state - only one can be active
   const isGroupActive = isGroupPage && !pathname.startsWith("/group/settings");
   const isShoppingActive = isShoppingPage;
   const isExpensesActive = isExpensesPage;

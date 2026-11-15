@@ -7,7 +7,6 @@ const ReceiptText = requireOptionalNativeModule<{
   recognizeLines(uri: string): Promise<unknown>;
 }>("ReceiptText");
 
-// Builds without the module (an older binary, web) just lose the highlights
 export async function recognizeLines(uri: string): Promise<ReceiptTextLine[]> {
   if (!ReceiptText) return [];
   const lines = receiptTextLineSchema

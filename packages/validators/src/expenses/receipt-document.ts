@@ -47,7 +47,6 @@ const box = ([x, y, width, height]: Bar): ReceiptBox => ({
   height: height / HEIGHT,
 });
 
-// A PDF has no photo to show, so the reading stage shows this drawn invoice instead
 export const receiptDocument = {
   width: WIDTH,
   height: HEIGHT,

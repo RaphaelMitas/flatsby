@@ -29,7 +29,6 @@ export function DatePickerField({
   accessibilityLabel,
 }: DatePickerFieldProps) {
   const locale = useLocale();
-  // Month names follow the app language, date order the device region
   const region = getLocales()[0]?.regionCode;
   const pickerLocale = region ? `${locale}-${region}` : locale;
   const [showPicker, setShowPicker] = useState(false);
@@ -59,7 +58,6 @@ export function DatePickerField({
           maximumDate={maximumDate}
           display="default"
           themeVariant={colorScheme}
-          // A passed locale drops the user's 24-hour override, so times keep the system's
           locale={mode === "date" ? pickerLocale : undefined}
           onValueChange={(_, selectedDate) => onChange(selectedDate)}
         />
@@ -72,7 +70,6 @@ export function DatePickerField({
       {!!label && <Label>{label}</Label>}
       <Pressable
         testID={testID}
-        // A label on a Pressable replaces its text, so the value has to be part of it
         accessibilityLabel={
           accessibilityLabel && `${accessibilityLabel}, ${formatted}`
         }

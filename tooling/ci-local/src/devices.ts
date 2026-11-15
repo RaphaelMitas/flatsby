@@ -34,7 +34,6 @@ export interface DeviceContext {
   avdDir: string;
   log: string;
   gateway: Gateway | undefined;
-  /** Registered as soon as a device exists, before it is ready. */
   onCleanup: (release: () => Promise<unknown>) => void;
 }
 
@@ -52,7 +51,6 @@ export const avdmanager = join(
   "cmdline-tools/latest/bin/avdmanager",
 );
 
-// CI's models: e2e.yml's simulator and android-emulator-runner's profile.
 export const IOS_MODEL = "^iPhone [0-9]+ Pro Max$";
 const ANDROID_MODEL = "Pixel 7";
 const BOOT_TIMEOUT_MS = 10 * 60_000;
@@ -66,7 +64,6 @@ function deleteSimulator(udid: string, log: string) {
   );
 }
 
-// Empty when `ps` fails, e.g. killed by the Ctrl-C a cleanup is waiting out.
 function processes(): { pid: number; command: string }[] {
   return (tryCapture("ps", ["-eo", "pid=,command="]) ?? "")
     .split("\n")
@@ -81,8 +78,6 @@ const emulatorPids = (avd: string) =>
     .filter(({ command }) => command.includes(`-avd ${avd} `))
     .map(({ pid }) => pid);
 
-// The emulator alone, not its process group: the first emulator started on a
-// machine also hosts netsimd, which every other emulator's network goes through.
 async function stopEmulator(avd: string): Promise<void> {
   for (const pid of emulatorPids(avd)) signal(pid, "SIGTERM");
   for (let i = 0; i < 30 && emulatorPids(avd).length; i++) await sleep(1000);
@@ -101,7 +96,6 @@ function iosModel(): { type: string; runtime: string; name: string } {
 export function androidImage(): string | undefined {
   const images = join(androidHome, "system-images");
   if (!existsSync(images)) return undefined;
-  // Numbered levels only: a preview such as android-Tiramisu won't boot the app.
   const level = (api: string) =>
     Number(/^android-(\d+(?:\.\d+)?)$/.exec(api)?.[1]);
   const apis = readdirSync(images)
@@ -111,7 +105,6 @@ export function androidImage(): string | undefined {
         existsSync(join(images, api, "google_apis", localAndroidAbi)),
     )
     .sort((a, b) => level(a) - level(b));
-  // CI runs API 34.
   const api = apis.includes("android-34") ? "android-34" : apis.at(-1);
   return api && `system-images;${api};google_apis;${localAndroidAbi}`;
 }
@@ -142,10 +135,7 @@ async function throwawayEmulator(
     throw new Error(
       `No google_apis ${localAndroidAbi} system image in ${androidHome}`,
     );
-  // Its own AVD home keeps the AVD out of Android Studio's list.
   const avdHome = join(ctx.avdDir, name);
-  // Claimed so two runs never drive one emulator; 5560-5584 sits in the range
-  // the default adb server scans.
   const ports = Array.from({ length: 13 }, (_, i) => 5560 + i * 2);
   const { port, unclaim } = await claimPorts("emulator-ports", ports, 2);
   const serial = `emulator-${port}`;
@@ -204,7 +194,6 @@ async function throwawayEmulator(
     const prop = (key: string) =>
       tryCapture(adb, ["-s", serial, "shell", "getprop", key]);
     if (prop("sys.boot_completed") === "1") {
-      // Another emulator can take the port before ours binds it.
       const avd = prop("ro.boot.qemu.avd_name");
       if (avd && avd !== name)
         throw new Error(`${serial} is not this run's emulator`);
@@ -218,7 +207,6 @@ async function throwawayEmulator(
 const SimlockError = z.object({ code: z.string(), message: z.string() });
 const Lease = z.object({
   id: z.string(),
-  // A simulator UDID, or a Simlock emulator's AVD name.
   udid: z.string().regex(/^[0-9A-F-]{36}$|^simlock_[0-9a-f-]+$/),
   address: z.string().regex(/^emulator-\d+$|^[0-9A-F-]{36}$/),
   ttlMs: z.number(),
@@ -326,9 +314,6 @@ async function leaseDevice(
     lease = request.lease;
   }
   const leaseId = lease.id;
-  // Maestro has to run beside the device, and device names repeat across
-  // workers, so the lease must be on this machine's own worker. Only a gateway
-  // names the worker; a worker reached directly is this one if it's local.
   const worker = lease.worker?.label;
   const local = worker ? worker === localWorker() : isLoopback(gateway.url);
   if (!local) {
@@ -359,8 +344,6 @@ async function leaseDevice(
       );
     return lease.udid;
   }
-  // Simlock's emulators sit on Simlock's own adb server, and Maestro only
-  // talks to the default one: attach through the emulator's adb port.
   const serial = `127.0.0.1:${Number(lease.address.replace("emulator-", "")) + 1}`;
   ctx.onCleanup(() =>
     run(adb, ["disconnect", serial], { log: ctx.log, cleanup: true }),
@@ -376,7 +359,6 @@ export async function acquireDevices(
 ): Promise<string[]> {
   const { gateway } = ctx;
   if (gateway) {
-    // A token may wait on one request per platform, so lease in turn.
     const ids: string[] = [];
     for (let i = 0; i < count; i++) ids.push(await leaseDevice(ctx, gateway));
     return ids;
@@ -389,8 +371,6 @@ export async function acquireDevices(
   );
 }
 
-// Throwaway devices carry their run's pid: a run killed mid-cleanup leaves
-// them behind, and the next run deletes the ones whose run is gone.
 export async function sweepDeadRuns(log: string): Promise<void> {
   const dead = (pid: string | undefined) =>
     pid !== undefined && !alive(Number(pid));

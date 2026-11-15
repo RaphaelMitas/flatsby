@@ -26,22 +26,6 @@ import { auth } from "~/auth/server";
 import { env } from "~/env";
 import { E2E_EMAIL_DOMAIN } from "../email-domain";
 
-/**
- * E2E-only route: creates a unique test user, group, and session per call via
- * better-auth's testUtils plugin. Returns properly signed session cookies for
- * Playwright to inject.
- *
- * Every call mints a fresh user + group, so parallel tests are fully isolated
- * from each other regardless of worker count.
- *
- * Guarded to only work outside production.
- *
- * `?name=` and `?email=` override the user's display name and address (the
- * store-screenshot flow mints extra members with presentable identities).
- * Custom emails are confined to the e2e domain so the cleanup sweep still
- * owns them, and collide onto the existing row so reruns within the sweep
- * window keep working.
- */
 async function upsertE2EUser(name: string, customEmail?: string) {
   const now = new Date();
   let userId = `e2e-${randomUUID()}`;
@@ -56,15 +40,10 @@ async function upsertE2EUser(name: string, customEmail?: string) {
 
   if (existingUser) {
     userId = existingUser.id;
-    // Refresh createdAt so a concurrent suite's stale-sweep can't delete the
-    // user mid-flow.
     await db
       .update(users)
       .set({ name, createdAt: now, updatedAt: now })
       .where(eq(users.id, userId));
-    // Deactivate memberships left over from previous runs; otherwise the
-    // dashboard fills up with stale groups (splits reference memberships, so
-    // rows can't be deleted here).
     await db
       .update(groupMembers)
       .set({ isActive: false })
@@ -153,13 +132,6 @@ const STORE_COPY = {
   },
 } satisfies Record<Locale, unknown>;
 
-/**
- * Seeds the full store-screenshot scenario server-side: a group with three
- * members, a stocked list, expenses and a calendar. The screenshot flow then
- * only logs in, navigates, and captures — it performs no mutations, because a
- * Maestro tap that silently misses a button would leave state missing and the
- * flow waiting on UI that never appears.
- */
 async function seedStoreScenario(
   adminUserId: string,
   adminEmail: string,
@@ -172,14 +144,6 @@ async function seedStoreScenario(
     .returning();
   if (!group) throw new Error("Failed to create seeded group");
 
-  // The member identities carry the admin email's platform tag (alex-ios@...
-  // -> anna-ios@...): the iOS and Android screenshot jobs seed in parallel
-  // against the same database, and shared fixed identities race — each
-  // upsert deactivates the other platform's memberships mid-capture. The tag
-  // is hyphenated, not plus-addressed: a "+" in the deep link's query string
-  // decodes to a space in the app's route params, which seeded an admin
-  // email with a space — every procedure returning it then failed its own
-  // output validation (runs 31273748894 and 31276180622).
   const platformTag = /-(ios|android)@/i.exec(adminEmail)?.[1];
   const tag = platformTag ? `-${platformTag.toLowerCase()}` : "";
   const anna = await upsertE2EUser(
@@ -314,7 +278,6 @@ async function seedStoreScenario(
   return { group };
 }
 
-// Relative to today, so the flows' "1 of 3 done" holds on any capture day
 async function seedStoreCalendar(
   groupId: number,
   [alex, anna, tom]: [number, number, number],
@@ -409,7 +372,6 @@ async function seedStoreCalendar(
   });
 }
 
-/** Same EUR scenario as debt.test.ts, so the e2e direct debts match its assertions */
 async function seedDebtsScenario(groupId: number, you: number) {
   const seededUsers = await Promise.all(
     ["Lena", "Max", "Sophie"].map((name) => upsertE2EUser(name)),
@@ -497,10 +459,6 @@ export async function POST(request: Request) {
   const localeParam = searchParams.get("locale");
   const locale = localeParam && isLocale(localeParam) ? localeParam : "en";
 
-  // Reject anything that is not a plain mailbox at the e2e domain — a
-  // malformed override (e.g. a "+" decoded to a space upstream) would
-  // otherwise seed a user whose email fails tRPC output validation and
-  // break every screen that renders it.
   const customEmail =
     emailParam && /^[a-z0-9._-]+@flatsby\.test$/.test(emailParam)
       ? emailParam
@@ -543,7 +501,6 @@ export async function POST(request: Request) {
     .set({ lastGroupUsed: group.id })
     .where(eq(users.id, userId));
 
-  // Use better-auth's testUtils plugin to create a properly signed session
   const ctx = await auth.$context;
   const testHelpers = (ctx as Record<string, unknown>).test as
     | {
@@ -586,14 +543,6 @@ export async function POST(request: Request) {
 
 const STALE_AFTER_MS = 60 * 60 * 1000;
 
-/**
- * Cleanup route: removes stale E2E test users and their associated data
- * (groups, expenses, shopping lists, sessions).
- *
- * Only data older than one hour is deleted, so concurrent test suites
- * sharing a database never delete each other's in-flight users. Each suite's
- * own leftovers are swept by whichever cleanup runs an hour later.
- */
 export async function DELETE() {
   if (!env.E2E_TESTING) {
     return NextResponse.json(
@@ -615,8 +564,6 @@ export async function DELETE() {
     );
   const userIds = e2eUsers.map((u) => u.id);
 
-  // Groups the stale e2e users belong to, plus any orphaned E2E-named groups
-  // past the cutoff (e.g. created via the UI by an already-deleted user)
   const memberships =
     userIds.length > 0
       ? await db

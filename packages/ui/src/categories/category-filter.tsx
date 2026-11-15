@@ -32,7 +32,6 @@ export function CategoryFilter({
 
   return (
     <div className="flex gap-2 overflow-x-auto px-4 pb-2">
-      {/* All button */}
       <Button
         variant={selectedCategory === null ? "default" : "outline"}
         size="sm"
@@ -55,7 +54,6 @@ export function CategoryFilter({
         )}
       </Button>
 
-      {/* Category buttons */}
       {availableCategories.map((category) => {
         const Icon = category.icon;
         const count = counts[category.id] ?? 0;

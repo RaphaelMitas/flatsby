@@ -12,7 +12,6 @@ import { MemberAvatar } from "../expenses/MemberAvatar";
 
 export interface CalendarPeople {
   meId: number;
-  /** null is a member whose account is gone */
   person: (groupMemberId: number | null) => DebtPerson;
 }
 

@@ -16,7 +16,6 @@ function localDay(date: Date): string {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
-// The fetched rate follows the expense day; a typed or stored rate holds until the currencies change
 export function useExpenseConversion({
   group,
   expense,
@@ -47,7 +46,6 @@ export function useExpenseConversion({
     expense?.convertedCurrency && isCurrencyCode(expense.convertedCurrency)
       ? expense.convertedCurrency
       : group.currency;
-  // A stored choice wins; an expense saved in the group currency never had one, so it gets the group's default
   const [convert, setConvert] = useState(
     expense &&
       (expense.convertedAmountInCents !== null ||

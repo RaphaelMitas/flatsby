@@ -54,7 +54,6 @@ export function Welcome({
     trpc.shoppingList.updateLastUsed.mutationOptions(),
   );
 
-  // Home should open with the invite card complete, so stay busy until the group and its invite are cached
   const createGroup = useCreateGroup(async (groupId) => {
     await Promise.allSettled([
       updateLastUsed.mutateAsync({ groupId, shoppingListId: null }),
@@ -76,12 +75,10 @@ export function Welcome({
     openJoin: () => setJoinOpen(true),
   });
 
-  // Success stays busy too: the group exists and Home is still loading
   const busy =
     updateName.isPending ||
     createGroup.isPending ||
     createGroup.data?.success === true;
-  // The server page covers a fresh load; this covers a group whose create response got lost
   if (!busy && groups?.success && groups.data.length > 0) redirect("/home");
 
   const failure =

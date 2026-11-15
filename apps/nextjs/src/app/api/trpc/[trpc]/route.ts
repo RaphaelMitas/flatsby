@@ -14,10 +14,6 @@ import { posthog } from "@flatsby/api/posthog";
 import { auth } from "~/auth/server";
 import { env } from "~/env";
 
-/**
- * Configure basic CORS headers
- * You should extend this to match your needs
- */
 const setCorsHeaders = (res: Response) => {
   res.headers.set("Access-Control-Allow-Origin", "*");
   res.headers.set("Access-Control-Request-Method", "*");
@@ -34,7 +30,6 @@ export const OPTIONS = () => {
 };
 
 const handler = async (req: NextRequest) => {
-  // Vercel freezes the instance after the response, with batched events still queued
   after(() => posthog?.flush());
   const response = await fetchRequestHandler({
     endpoint: "/api/trpc",

@@ -26,7 +26,6 @@ import { DoneBy, TurnPill } from "./CalendarPeople";
 const MAX_DOTS = 4;
 
 interface CalendarListProps {
-  /** Undefined while loading */
   agenda: { days: AgendaDay[]; overdue: DueChore[] } | undefined;
   dates: string[];
   today: string;
@@ -77,7 +76,6 @@ export function CalendarList({
               key={date}
               type="button"
               onClick={() =>
-                // The first day goes to the very top, so the overdue chores above it show too
                 date === dates[0]
                   ? scroller.current?.scrollTo({ top: 0, behavior: "smooth" })
                   : scroller.current

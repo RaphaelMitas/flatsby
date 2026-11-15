@@ -21,7 +21,6 @@ export const userImageSchema = z.string().optional().nullable();
 
 const GMAIL_DOMAINS = new Set(["gmail.com", "googlemail.com"]);
 
-// Gmail ignores dots in the local part
 export function inboxOf(email: string) {
   const [local = "", domain = ""] = email.toLowerCase().split("@");
   const untagged = local.split("+")[0] ?? "";
@@ -30,10 +29,8 @@ export function inboxOf(email: string) {
     : `${untagged}@${domain}`;
 }
 
-// Email codes and Apple's hidden name bring no name, so the address's local part stands in
 export const defaultUserName = (email: string) => email.split("@")[0] || email;
 
-// Wide enough for a phone clock that runs a few minutes off
 const JUST_CREATED_MS = 10 * 60 * 1000;
 
 export interface SignedInUser {
@@ -59,7 +56,6 @@ export const userSchema = z.object({
   updatedAt: z.date(),
   lastGroupUsed: z.number().optional().nullable(),
   lastShoppingListUsed: z.number().optional().nullable(),
-  // Legal consent tracking
   termsAcceptedAt: z.date().optional().nullable(),
   termsVersion: z.string().optional().nullable(),
   privacyAcceptedAt: z.date().optional().nullable(),
@@ -68,17 +64,9 @@ export const userSchema = z.object({
 });
 export type User = z.infer<typeof userSchema>;
 
-/**
- * Schema for user name form validation
- * Used for updating user names
- */
 export const updateUserNameFormSchema = userSchema.pick({ name: true });
 export type UpdateUserNameFormValues = z.infer<typeof updateUserNameFormSchema>;
 
-/**
- * Schema for updating legal consent
- * Used when user accepts terms and/or privacy policy
- */
 export const updateConsentInputSchema = z.object({
   termsAccepted: z.boolean(),
   privacyAccepted: z.boolean(),
@@ -86,13 +74,11 @@ export const updateConsentInputSchema = z.object({
 });
 export type UpdateConsentInput = z.infer<typeof updateConsentInputSchema>;
 
-/** Bump when the consent sheet's wording changes, so the log shows which text a choice was made on */
 export const ANALYTICS_CONSENT_VERSION = "2";
 
 export const analyticsConsentSchema = z.object({ screens: z.boolean() });
 
 export const logAnalyticsConsentInputSchema = analyticsConsentSchema.extend({
-  // Version 1 also asked for screen recordings, and builds that never got the update still send it
   recordings: z.boolean().default(false),
   version: z.string().max(MAX_CONSENT_VERSION_LENGTH),
   platform: z.enum(["ios", "android"]),
@@ -100,9 +86,6 @@ export const logAnalyticsConsentInputSchema = analyticsConsentSchema.extend({
 
 export const setAnalyticsOptOutInputSchema = z.object({ optOut: z.boolean() });
 
-/**
- * Schema for GDPR user data export response
- */
 export const userDataExportSchema = z.object({
   exportedAt: z.date(),
   user: z.object({

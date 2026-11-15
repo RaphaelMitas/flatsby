@@ -13,7 +13,6 @@ import { CalendarView } from "./CalendarView";
 export default async function CalendarPage() {
   const groupId = await getCurrentGroupId();
 
-  // The range depends on the device's local day, so only the group is prefetched
   prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
 
   return (

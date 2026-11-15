@@ -17,7 +17,6 @@ import {
 import { marketingTranslator } from "./i18n";
 import { contentPages } from "./pages";
 
-// The markdown twins are for AI agents and stay English.
 const t = marketingTranslator("en");
 
 export const englishContentPages = contentPages(t);

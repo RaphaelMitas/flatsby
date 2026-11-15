@@ -101,7 +101,6 @@ export function RooftopScene() {
         <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" fill="#f2f6ff" />
       </svg>
       <Flakes near={false} />
-      {/* Anchored right so the gap behind the cat lines up */}
       <div className="absolute right-0 bottom-0 flex flex-row-reverse">
         {TILES.map((tile) => (
           <svg

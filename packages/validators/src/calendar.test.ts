@@ -114,7 +114,6 @@ describe("expandOccurrences", () => {
   });
 
   it("repeats every other week on several weekdays", () => {
-    // 2026-10-06 is a Tuesday
     expect(
       dates(item({ type: "weekly", interval: 2, days: ["mo", "th"] })),
     ).toEqual(["2026-10-08", "2026-10-19", "2026-10-22"]);
@@ -146,7 +145,6 @@ describe("expandOccurrences", () => {
   });
 
   it("rotates turns by occurrence, counting a partial first week", () => {
-    // Starts on a Wednesday, so Monday of that week never happened
     const rotating = item(
       { type: "weekly", interval: 1, days: ["mo", "we", "fr"] },
       "2026-10-07",
@@ -792,7 +790,6 @@ describe("end dates", () => {
 });
 
 describe("continuedRotation", () => {
-  // Tuesdays from 10-06 for 1, 2, 3: 10-20 is the third, so 3 is up
   const weekly = item(
     { type: "weekly", interval: 1, days: ["tu"] },
     undefined,

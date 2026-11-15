@@ -16,7 +16,6 @@ import { Database } from "./services/Database";
 export const getListInGroupWithAccess = Effect.fn(
   "ShoppingLists.getListInGroupWithAccess",
 )(function* (groupId: number, listId: number) {
-  // Membership first, so non-members can't probe which list ids exist
   const member = yield* requireMember(groupId);
   const database = yield* Database;
   const list = yield* database.findOneOrFail("shoppingList", (db) =>
@@ -55,7 +54,6 @@ export const getListWithAccess = Effect.fn("ShoppingLists.getListWithAccess")(
       }),
     );
     const [member] = list.group.groupMembers;
-    // Same answer as a missing list, so non-members can't probe which ids exist
     return member ?? (yield* fail.notFound("shoppingList"));
   },
 );
@@ -123,7 +121,6 @@ export const getShoppingListItemWithAccess = Effect.fn(
   return { item, member };
 });
 
-// "operation" is what the legacy throw after an empty returning() surfaced as
 export const firstReturned = <T>(rows: readonly T[]) => {
   const [row] = rows;
   return row === undefined

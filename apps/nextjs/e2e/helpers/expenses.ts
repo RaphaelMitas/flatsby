@@ -23,7 +23,6 @@ export async function openExpenseForm(
   page: Page,
   options: { amount: string; description: string; categoryId: string },
 ) {
-  // SSR renders the mobile layout; its streamed copy lingers hidden after the desktop swap.
   const addButton = page
     .getByTestId("expense-add-button")
     .filter({ visible: true });
@@ -85,7 +84,6 @@ export async function createTestExpense(
 }
 
 export async function openExpenseEdit(page: Page) {
-  // The created toast sits over the form's Next button until it expires
   await expect(page.getByText("Expense created successfully")).toBeHidden({
     timeout: 10000,
   });

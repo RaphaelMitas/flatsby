@@ -197,7 +197,6 @@ export function SettlementForm({
             });
           }
 
-          // Get the paidBy and toMember for the optimistic settlement
           const paidByMember = membersForOptimistic.find(
             (m) => m.id === input.paidByGroupMemberId,
           );
@@ -205,7 +204,6 @@ export function SettlementForm({
             (m) => m.id === input.splits[0]?.groupMemberId,
           );
 
-          // Optimistically add the new settlement
           const pendingId = Date.now();
           const listSnapshot = patchLists((old) => {
             const optimisticSettlement: ExpenseWithSplitsAndMembers & {
@@ -331,7 +329,6 @@ export function SettlementForm({
       resultMutation({
         onMutate: async (input) => {
           if (!expense || !expenseQueryKey) return;
-          // Cancel any outgoing queries
           await queryClient.cancelQueries(
             trpc.expense.getExpense.queryOptions({
               expenseId: expense.id,
@@ -340,7 +337,6 @@ export function SettlementForm({
 
           const previousData = queryClient.getQueryData(expenseQueryKey);
 
-          // Optimistically update the settlement in the list
           queryClient.setQueryData(expenseQueryKey, (old) => {
             if (!old || old.success === false) return old;
 
@@ -552,7 +548,6 @@ export function SettlementForm({
             </View>
 
             <View className="flex-row gap-4">
-              {/* Currency Selection */}
               <FormField
                 control={form.control}
                 name="currency"
@@ -577,7 +572,6 @@ export function SettlementForm({
                 )}
               />
 
-              {/* Amount Input */}
               <FormField
                 control={form.control}
                 name="amountInCents"
@@ -612,7 +606,6 @@ export function SettlementForm({
               />
             )}
 
-            {/* Error Display */}
             {errorMessage !== undefined && (
               <Alert variant="destructive">
                 <AlertTitle variant="destructive">
@@ -624,7 +617,6 @@ export function SettlementForm({
               </Alert>
             )}
 
-            {/* Submit Button */}
             <View className="border-border flex-row gap-2 border-t pt-4">
               <Button
                 testID="settlement-cancel-button"

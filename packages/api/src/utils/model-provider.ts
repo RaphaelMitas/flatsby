@@ -14,7 +14,6 @@ type ProviderOptions = NonNullable<
 const RECEIPT_MODEL = "openai/gpt-6-luna";
 
 const RECEIPT_PROVIDER_OPTIONS = {
-  // The privacy policy names only OpenAI and says it keeps nothing; the gateway also serves GPT models through Azure and Bedrock.
   gateway: { only: ["openai"], zeroDataRetention: true },
   openai: { reasoningEffort: "none" },
 } satisfies ProviderOptions;
@@ -45,9 +44,6 @@ interface CaptureGenerationArgs {
   error?: unknown;
 }
 
-// @posthog/ai's withTracing wrapper does not support the LanguageModelV4
-// interface used by AI SDK 7 gateway models, so generations are captured
-// through its lower-level captureAiGeneration primitive instead.
 export function captureGeneration({
   tracing,
   model,
@@ -83,7 +79,6 @@ export function captureGeneration({
   });
 }
 
-// A provider error carries the request body, which holds the person's messages or receipt
 export const errorSummary = (error: unknown) =>
   error instanceof Error ? `${error.name}: ${error.message}` : "Unknown error";
 

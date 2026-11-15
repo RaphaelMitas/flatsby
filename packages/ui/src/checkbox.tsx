@@ -16,8 +16,6 @@ const Checkbox = forwardRef<
     <CheckboxPrimitive.Root
       ref={ref}
       onCheckedChange={(checked) => {
-        // Unticking clears it, so the ring never outlives the tick it belongs
-        // to and a re-tick inside the window gets a fresh span to animate.
         setRippling(checked === true);
         onCheckedChange?.(checked);
       }}
@@ -48,8 +46,6 @@ const Checkbox = forwardRef<
           strokeLinejoin="round"
           className="h-3.5 w-3.5"
         >
-          {/* Transitioned rather than keyframed, so a list of already
-              completed items draws nothing on mount. */}
           <path
             d="M20 6 9 17l-5-5"
             pathLength={1}

@@ -56,7 +56,6 @@ export function PlaceholderNameForm({
       <form
         className="flex items-start gap-2"
         onSubmit={(event) => {
-          // An optional field with no button: an empty Enter is not a mistake
           if (hideSubmitWhenEmpty && empty) return event.preventDefault();
           void form.handleSubmit(({ name }) => {
             onSubmit(name);

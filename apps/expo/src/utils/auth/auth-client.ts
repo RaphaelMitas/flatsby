@@ -1,5 +1,4 @@
 import type { SignInCodeClient } from "@flatsby/validators/useSignInCode";
-// Better Auth's own passkeyClient needs the browser's WebAuthn API, which React Native lacks
 import { expoPasskeyClient } from "expo-better-auth-passkey";
 import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
@@ -23,7 +22,6 @@ export const authClient = createAuthClient({
     expoPasskeyClient(),
   ],
   fetchOptions: {
-    // Sign-in codes are mailed in the app's language
     onRequest: (context) => {
       context.headers.set("Accept-Language", languageTags().join(","));
     },
@@ -38,7 +36,6 @@ export const signInCode: SignInCodeClient = {
   signIn: (email, code) => authClient.signIn.emailOtp({ email, otp: code }),
 };
 
-// Reminders on this phone belong to the account that scheduled them, and so do pending sign-in steps
 export async function signOut() {
   queueSignInSteps([]);
   await Promise.all([

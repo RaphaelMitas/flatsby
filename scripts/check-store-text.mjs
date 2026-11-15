@@ -4,7 +4,6 @@ import { join } from "node:path";
 const storeDir = join(import.meta.dirname, "../apps/expo/store");
 
 const limits = {
-  // Play's cap; the App Store allows 4000.
   "release_notes.txt": 500,
   "description.txt": 4000,
   "name.txt": 30,

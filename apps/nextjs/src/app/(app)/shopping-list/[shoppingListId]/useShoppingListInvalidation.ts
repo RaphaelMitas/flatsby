@@ -5,10 +5,6 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useTRPC } from "~/trpc/react";
 
-/**
- * Hook that provides invalidation functions for shopping list queries.
- * This reduces duplicate code across shopping list components.
- */
 export function useShoppingListInvalidation(
   groupId: number,
   shoppingListId: number,

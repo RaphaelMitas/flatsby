@@ -1,7 +1,3 @@
-// ============================================================================
-// Formatting Utilities - Currency and Date Display
-// ============================================================================
-
 import type { Translate } from "@flatsby/i18n/message-key";
 
 import type { ConvertibleExpense } from "./conversion";
@@ -13,13 +9,6 @@ import { expenseCategoryLabelKeys } from "./categories";
 import { centsToDecimal, rateBetween } from "./conversion";
 import { debtsBetweenOthers, expenseBalanceFor } from "./debt";
 
-/**
- * Format currency amount with currency symbol
- * @param params.amountDecimal - Amount in decimal (not cents)
- * @param params.currency - ISO 4217 currency code (e.g., "USD", "EUR")
- * @param params.locale - Locale to use for formatting
- * @returns Formatted string (e.g., "$10.50" or "€10.50")
- */
 export function formatCurrency({
   amountDecimal,
   currency,
@@ -37,13 +26,6 @@ export function formatCurrency({
   }).format(amountDecimal);
 }
 
-/**
- * Format currency amount from cents
- * @param params.cents - Amount in cents
- * @param params.currency - ISO 4217 currency code
- * @param params.locale - Locale to use for formatting
- * @returns Formatted string
- */
 export function formatCurrencyFromCents({
   cents,
   currency,
@@ -60,7 +42,6 @@ export function formatCurrencyFromCents({
   });
 }
 
-/** The amount an expense counts as first, and what was actually paid when that differs */
 export function formatExpenseAmounts(
   expense: Pick<
     ConvertibleExpense,
@@ -114,13 +95,6 @@ export function formatRate(
 const omitCurrentYear = (date: Date) =>
   date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined;
 
-/**
- * Format an expense date for list and card views
- * The year is omitted for expenses in the current year to keep rows compact.
- * @param date - Date the expense was incurred
- * @param locale - Locale to use for formatting
- * @returns Formatted string (e.g., "Mar 4" or "Mar 4, 2024")
- */
 export function formatExpenseDateShort(
   date: Date,
   locale: Intl.LocalesArgument,
@@ -170,12 +144,6 @@ export function withMonthHeaders<T extends { id: number; expenseDate: Date }>(
   });
 }
 
-/**
- * Format an expense date for detail views
- * @param date - Date the expense was incurred
- * @param locale - Locale to use for formatting
- * @returns Formatted string (e.g., "Monday, March 4, 2024")
- */
 export function formatExpenseDateLong(
   date: Date,
   locale: Intl.LocalesArgument,
@@ -203,7 +171,6 @@ export function formatSplitPortion({
   t: Translate;
   locale: Intl.LocalesArgument;
 }): string | null {
-  // An equal split's portion only repeats the "split between n people" line
   if (expense.splitMethod === "equal") return null;
   if (expense.splitMethod === "shares") {
     const totalShares = expense.expenseSplits.reduce(
@@ -276,7 +243,6 @@ export function formatSignedCents(
   return `${cents > 0 ? "+" : ""}${formatCurrencyFromCents({ cents, currency, locale })}`;
 }
 
-/** "Max", "Max and Sophie", "Lena, Max and Sophie" */
 function joinNames(names: string[], t: Translate): string {
   const last = names.at(-1);
   if (names.length < 2 || last === undefined) return last ?? "";

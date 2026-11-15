@@ -21,7 +21,6 @@ export function useShareInvite() {
 
   return async (code: string, placeholder?: InvitePlaceholder) => {
     const result = await Share.share({ message: message(code, placeholder) });
-    // Android always reports sharedAction; iOS reports dismissing the sheet
     if (result.action === Share.sharedAction) {
       getPostHog().capture("invite_shared", { groupId, method: "share_sheet" });
     }

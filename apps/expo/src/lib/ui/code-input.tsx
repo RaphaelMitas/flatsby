@@ -10,7 +10,6 @@ interface CodeInputProps extends TextInputProps {
   error?: boolean;
 }
 
-// One invisible input over the slots, so paste and code autofill fill every slot at once
 const CodeInput = ({
   value,
   length,
@@ -53,14 +52,11 @@ const CodeInput = ({
       ))}
       <TextInput
         value={value}
-        // A paste always appends, so codeFromText finds it after the typed digits
         selection={{ start: value.length, end: value.length }}
         autoCorrect={false}
         caretHidden
         selectionColor="transparent"
-        // iOS drops touches on opacity-0, so tap and long-press paste need transparent text
         className="absolute inset-0 text-transparent"
-        // Android draws fully transparent text in the default color
         style={Platform.OS === "android" ? { color: "#00000001" } : undefined}
         {...props}
       />

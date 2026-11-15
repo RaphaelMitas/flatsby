@@ -66,11 +66,9 @@ export const TimedAlert: React.FC<TimedAlertProps> = ({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Start fade out animation
       opacity.value = withTiming(0, { duration: 300 });
       translateY.value = withTiming(-20, { duration: 300 });
 
-      // Handle dismiss after animation completes
       setTimeout(() => {
         setIsVisible(false);
         onDismiss?.();

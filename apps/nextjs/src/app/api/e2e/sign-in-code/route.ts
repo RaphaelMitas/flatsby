@@ -4,7 +4,6 @@ import { auth } from "~/auth/server";
 import { env } from "~/env";
 import { E2E_EMAIL_DOMAIN } from "../email-domain";
 
-// e2e stacks have no mail provider, so tests read the code here
 export async function GET(request: Request) {
   if (!env.E2E_TESTING) {
     return NextResponse.json(

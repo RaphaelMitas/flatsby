@@ -21,7 +21,6 @@ export const posthog =
       })
     : null;
 
-// Campaign params that PostHog tracks (sync with posthog-js)
 const CAMPAIGN_PARAMS = [
   "utm_source",
   "utm_medium",
@@ -102,7 +101,6 @@ function getPathname(url: string | undefined): string | undefined {
 function getBrowserLanguage(headers: Headers): string | undefined {
   const acceptLanguage = headers.get("accept-language");
   if (!acceptLanguage) return undefined;
-  // Parse first language from "en-US,en;q=0.9,de;q=0.8"
   return acceptLanguage.split(",")[0]?.trim();
 }
 
@@ -123,7 +121,6 @@ const clientHeadersSchema = z.object({
   "x-posthog-session-id": z.uuid().optional().catch(undefined),
 });
 
-// The app's user agent is okhttp or CFNetwork, which reads as an unknown desktop
 export function clientProperties(headers: Headers) {
   const client = clientHeadersSchema.parse(Object.fromEntries(headers));
   const os = client["x-os-name"];
@@ -145,14 +142,12 @@ interface PageUrls {
 export function buildPostHogProperties(headers: Headers, page?: PageUrls) {
   const userAgent = headers.get("user-agent");
   const rawReferer = headers.get("referer");
-  // An API call's referer is the page it was made from, so it stands in for both
   const rawUrl = page ? page.url : rawReferer;
   const rawReferrer = page ? page.referrer : rawReferer;
   const currentUrl = rawUrl ? redactInvitePath(rawUrl) : undefined;
   const referer = rawReferrer ? redactInvitePath(rawReferrer) : null;
 
-  // Detect browser/device info from user agent using @posthog/core
-  const vendor = ""; // Not available server-side
+  const vendor = "";
   const [osName, osVersion] = userAgent
     ? detectOS(userAgent)
     : [undefined, undefined];
@@ -163,56 +158,44 @@ export function buildPostHogProperties(headers: Headers, page?: PageUrls) {
   const device = userAgent ? detectDevice(userAgent) : undefined;
   const deviceType = userAgent ? detectDeviceType(userAgent) : undefined;
 
-  // Get referrer info
   const referringDomain = getReferringDomain(referer);
   const searchEngine = getSearchEngine(referer);
 
-  // Get campaign params from current URL
   const campaignParams = currentUrl ? getCampaignParamsFromUrl(currentUrl) : {};
 
-  // Build properties object, filtering out undefined values
   const properties: Record<string, unknown> = {
-    // URL and host info
     $host: headers.get("host"),
     $current_url: currentUrl,
     $pathname: getPathname(currentUrl),
 
-    // User agent
     $raw_user_agent:
       userAgent && userAgent.length > 1000
         ? `${userAgent.slice(0, 997)}...`
         : userAgent,
 
-    // Browser detection
     $browser: browser,
     $browser_version: browserVersion,
     $browser_language: getBrowserLanguage(headers),
     $browser_language_prefix: getBrowserLanguagePrefix(headers),
 
-    // OS detection
     $os: osName,
     $os_version: osVersion,
 
-    // Device detection
     $device: device,
     $device_type: deviceType,
 
-    // Referrer info
     $referrer: referer ?? "$direct",
     $referring_domain: referringDomain ?? "$direct",
     $search_engine: searchEngine,
 
-    // Campaign params
     ...campaignParams,
   };
 
-  // Remove undefined values
   return Object.fromEntries(
     Object.entries(properties).filter(([, v]) => v !== undefined),
   );
 }
 
-// Wrappers like TRPCError copy or quote their cause's message, params included
 export function withoutQueryParams(error: unknown): unknown {
   if (!(error instanceof Error)) return error;
   const cause = withoutQueryParams(error.cause);
@@ -250,7 +233,6 @@ export function captureError({
   });
 }
 
-// posthog-node only parses V8 stacks, Firefox and Safari write theirs differently
 const browserErrors = new ErrorTracking.ErrorPropertiesBuilder(
   [new ErrorTracking.ErrorCoercer()],
   ErrorTracking.createDefaultStackParser(),
@@ -302,7 +284,6 @@ export function captureEvent({
   });
 }
 
-// Turning off usage analytics is an objection (Art. 21 GDPR), so the account's usage events stop
 export function captureUserEvent({
   user,
   ...event
@@ -321,7 +302,6 @@ function clientIp(headers: Headers) {
   );
 }
 
-// Click IDs like gclid, or anything else a link carries, could recognize a visitor across days
 function keepOnlyUtmParams(url: string) {
   try {
     const parsed = new URL(url);
@@ -334,7 +314,6 @@ function keepOnlyUtmParams(url: string) {
   }
 }
 
-// PostHog hashes IP, user agent and host with a daily salt, so the device stores nothing
 export async function captureCookieless({
   event,
   headers,
@@ -355,7 +334,6 @@ export async function captureCookieless({
     properties: {
       ...buildPostHogProperties(headers, { url, referrer }),
       $cookieless_mode: true,
-      // Without it PostHog hashes our server's IP and every visitor collapses into one
       $ip: clientIp(headers),
       $process_person_profile: false,
       ...additionalProperties,

@@ -19,9 +19,6 @@ test.describe("Shopping List Tick Feedback", () => {
   }) => {
     await createShoppingList(authPage);
 
-    // Two items, ticking the first: with one item the row happens to keep its
-    // position, which is the only arrangement where a move could not disturb
-    // the animation.
     const itemName = `Tick Me ${Date.now()}`;
     await addShoppingListItem(authPage, itemName);
     await addShoppingListItem(authPage, `Leave Me ${Date.now()}`);
@@ -48,13 +45,10 @@ test.describe("Shopping List Tick Feedback", () => {
     const checkbox = listItem.getByRole("checkbox");
     await expect(checkbox).toBeEnabled();
 
-    // A surviving probe means the row was reordered, not remounted.
     await checkbox.evaluate((element: HTMLElement) => {
       element.dataset.tickProbe = "alive";
     });
 
-    // Click the padding beside the 16px box, which is where most ticks land.
-    // It only reaches the control through the checkbox's ::before hit area.
     await checkbox.locator("..").click({ position: { x: 16, y: 32 } });
 
     await expect(authPage.getByText("Purchased Items")).toBeVisible();

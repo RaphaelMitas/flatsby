@@ -7,9 +7,6 @@ import {
   categorysIdWithAiAutoSelectSchema,
 } from "./categories";
 
-// Note: We use z.number() directly instead of groupSchema.shape.id to avoid
-// circular dependency with group.ts (which imports from this file)
-
 export const shoppingListNameSchema = z
   .string()
   .min(1, {
@@ -73,10 +70,6 @@ export const deleteShoppingListSchema = z.object({
   groupId: z.number(),
 });
 
-/**
- * Schema for shopping list name form validation
- * Used for creating and renaming shopping lists
- */
 export const shoppingListFormSchema = shoppingListSchema.pick({
   name: true,
   icon: true,
@@ -84,11 +77,6 @@ export const shoppingListFormSchema = shoppingListSchema.pick({
 });
 export type ShoppingListFormValues = z.infer<typeof shoppingListFormSchema>;
 
-/**
- * Schema for validating shopping list item name
- * - Minimum length: 1 character
- * - Maximum length: 256 characters
- */
 export const shoppingListItemNameSchema = z
   .string()
   .min(1, {
@@ -132,10 +120,6 @@ export const deleteShoppingListItemSchema = shoppingListItemSchema.pick({
   id: true,
 });
 
-/**
- * Schema for shopping list item form validation
- * Used for adding items to shopping lists
- */
 export const createShoppingListItemFormSchema = shoppingListItemSchema.pick({
   name: true,
   categoryId: true,
@@ -144,10 +128,6 @@ export type CreateShoppingListItemFormValues = z.infer<
   typeof createShoppingListItemFormSchema
 >;
 
-/**
- * Schema for shopping list item edit form validation
- * Used for editing items in shopping lists
- */
 export const editShoppingListItemFormSchema = shoppingListItemSchema.pick({
   name: true,
   categoryId: true,

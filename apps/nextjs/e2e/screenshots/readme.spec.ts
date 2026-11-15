@@ -2,18 +2,11 @@ import { expect, test } from "@playwright/test";
 
 import { createAuthSession } from "../fixtures/auth";
 
-// README screenshot flow, the web counterpart of the mobile store-screenshot
-// Maestro flow: everything on screen comes from the server-side `seed=store`
-// scenario, so the captures are reads only and identical on every run.
-// The release workflow globs this path to publish the `assets` branch the
-// README embeds, so renaming it silently breaks the publish job.
 const OUT = "test-results/readme-screenshots";
 
 async function settle(page: import("@playwright/test").Page) {
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(500);
-  // The dev-tools indicator only exists on local dev-server runs; CI captures
-  // run against a production build.
   await page.evaluate(() => {
     for (const el of document.querySelectorAll("nextjs-portal")) el.remove();
   });
@@ -26,7 +19,6 @@ test("captures README screenshots", async ({ page, baseURL }) => {
     email: "alex-web@flatsby.test",
   });
 
-  // The one-time right-to-object notice isn't part of the README picture
   await page.addInitScript(() =>
     localStorage.setItem("analytics_notice_seen", "true"),
   );

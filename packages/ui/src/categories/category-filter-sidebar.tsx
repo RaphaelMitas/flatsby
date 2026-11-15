@@ -23,12 +23,10 @@ export function CategoryFilterSidebar({
   onSelectCategory,
 }: CategoryFilterSidebarProps) {
   const t = useTranslations();
-  // Filter categories excluding ai-auto-select
   const availableCategories = categoryMapping.filter(
     (category) => category.id !== "ai-auto-select",
   );
 
-  // Only hide when explicitly 0 items, not when loading (undefined)
   if (total === 0) {
     return null;
   }
@@ -37,7 +35,6 @@ export function CategoryFilterSidebar({
     <div className="border-border h-full w-56 border-r">
       <ScrollArea className="h-full">
         <div className="space-y-1 p-4">
-          {/* All Items button */}
           <Button
             variant={selectedCategory === null ? "default" : "ghost"}
             size="sm"
@@ -55,7 +52,6 @@ export function CategoryFilterSidebar({
             )}
           </Button>
 
-          {/* Category buttons */}
           {availableCategories.map((category) => {
             const Icon = category.icon;
             const count = counts[category.id] ?? 0;

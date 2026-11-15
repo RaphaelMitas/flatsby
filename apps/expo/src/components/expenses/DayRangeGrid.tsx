@@ -31,7 +31,6 @@ export const draftRange = (draft: DayRangeDraft): DayRange => ({
   to: draft.to ?? draft.from,
 });
 
-// The band starts and ends mid-cell, under the picked days' circles
 function bandColumns(week: string[], month: string, draft?: DayRangeDraft) {
   if (draft?.to === undefined || draft.from === draft.to) return undefined;
   const { from, to } = draft;

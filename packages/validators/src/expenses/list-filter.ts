@@ -16,7 +16,6 @@ import { MAX_EXPENSE_DESCRIPTION_LENGTH } from "./types";
 export const memberRoles = ["any", "paid", "split"] as const;
 export type MemberRole = (typeof memberRoles)[number];
 
-/** Every field is optional so released apps, which send none, keep getting the whole list. */
 export const expenseListFilterSchema = z.object({
   search: z.string().trim().max(MAX_EXPENSE_DESCRIPTION_LENGTH).optional(),
   memberId: z.number().int().optional(),
@@ -37,7 +36,6 @@ export interface FilterableExpense {
   expenseDate: Date;
 }
 
-/** The client-side twin of getGroupExpenses' WHERE clause; keep the two in step. */
 export function matchesExpenseFilter(
   expense: FilterableExpense,
   filter: ExpenseListFilter,
@@ -71,17 +69,14 @@ export function matchesExpenseFilter(
 
 type ListedExpense = FilterableExpense & { id: number; amountInCents: number };
 
-// The date keeps last month's identical rent from standing in for this month's
 const sameExpense = (expense: ListedExpense) =>
   `${expense.paidByGroupMemberId}:${expense.amountInCents}:${new Date(expense.expenseDate).getTime()}:${expense.description}`;
 
-// Lists come freshest first; without a filter the cached order stays
 export function visibleExpenses<T extends ListedExpense>(
   lists: T[][],
   filter: ExpenseListFilter | undefined,
 ): T[] {
   const items = lists.flat();
-  // The lists refetch separately after a create, so one can hold the saved expense while another still holds its pending row
   const saved = new Set(
     items.filter((item) => !("isPending" in item)).map(sameExpense),
   );
@@ -117,7 +112,6 @@ export const datePresets = [
 ] as const;
 export type DatePreset = (typeof datePresets)[number];
 
-/** Inclusive, device-local days. */
 export interface DayRange {
   from: string;
   to: string;
@@ -127,7 +121,6 @@ export interface DayRange {
 export function presetRange(preset: DatePreset, today: string): DayRange {
   const month = monthOf(today);
   const year = Number(today.slice(0, 4));
-  // Through the end of the period: rent is often entered before its date
   const monthEnd = addDays(`${shiftMonth(month, 1)}-01`, -1);
   switch (preset) {
     case "this-month":

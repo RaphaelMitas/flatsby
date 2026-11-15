@@ -28,19 +28,16 @@ export function AnalyticsSync() {
     }),
   );
 
-  // Applying consent deletes the old SDK file, so it waits for the migration below to read it
   useEffect(() => {
     if (choice !== null && prompt !== null && prompt !== "unknown")
       void applyConsent(choice === "screens");
   }, [choice, prompt]);
 
   useEffect(() => {
-    // The render right after a swap still holds the retired client
     if (posthog !== getPostHog()) return;
     if (userId && getAnalyticsConsent()) posthog.identify(userId);
   }, [posthog, userId]);
 
-  // Once per install: earlier builds stored an ID, and maybe the old opt-out, without asking
   useEffect(() => {
     if (prompt !== "unknown" || session.isPending) return;
     void (async () => {
@@ -51,7 +48,6 @@ export function AnalyticsSync() {
         const result = await setOptOut({ optOut: true }).catch(() => null);
         if (!result?.success) return;
       }
-      // Consent given meanwhile would otherwise load the old IDs into its client
       deletePostHogFiles();
       analyticsPrompt.save(
         legacy.optedOut ? "done" : legacy.existed ? "notice" : "invite",

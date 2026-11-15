@@ -57,9 +57,6 @@ import {
 } from "../utils";
 import { classify } from "../utils/classify";
 
-/**
- * Wrapper to convert validateExpenseSplitsStrict result to Effect
- */
 function validateExpenseSplitsEffect(
   expenseAmountInCents: number,
   splits: Parameters<typeof validateExpenseSplitsStrict>[1],
@@ -79,7 +76,6 @@ function validateExpenseSplitsEffect(
 }
 
 const PAIR_ACTIVITY_PAGE = 5;
-// Keeps each insert under Postgres's 65535 bind-parameter limit.
 const BULK_INSERT_BATCH = 250;
 
 async function fetchExchangeRate(from: string, to: string, day: string) {
@@ -285,7 +281,6 @@ export const expenseRouter = createTRPCRouter({
                 return { ...expense, splits };
               }),
           );
-          // App builds before conversion never send the field, so they'd all count as kept
           if (
             input.currency !== group.currency &&
             input.convertedCurrency !== undefined &&
@@ -336,7 +331,6 @@ export const expenseRouter = createTRPCRouter({
                 .from(expenseSplits)
                 .where(eq(expenseSplits.expenseId, expense.id)),
           );
-          // Members who left stay on their old expenses, so only newly assigned ones must be active
           const alreadyOnExpense = new Set([
             expense.paidByGroupMemberId,
             ...storedSplits.map((split) => split.groupMemberId),
@@ -352,7 +346,6 @@ export const expenseRouter = createTRPCRouter({
             "transaction: update expense",
             (db) =>
               db.transaction(async (trx) => {
-                // Serializes edits so a re-split never starts from splits another edit replaced
                 const [locked] = await trx
                   .select({
                     splitMethod: expenses.splitMethod,
@@ -369,7 +362,6 @@ export const expenseRouter = createTRPCRouter({
                   splitMethodSchema.parse(locked.splitMethod);
                 const amountInCents =
                   input.amountInCents ?? locked.amountInCents;
-                // A new method or amount without splits re-splits the stored members, as the editors would
                 const source =
                   input.splits ??
                   (input.splitMethod !== undefined ||
@@ -423,7 +415,6 @@ export const expenseRouter = createTRPCRouter({
                   amountInCents !== locked.amountInCents ||
                   currency !== locked.currency
                 ) {
-                  // App builds before conversion never send the converted fields, and a stale converted amount would count instead
                   updateData.convertedAmountInCents = null;
                   updateData.convertedCurrency = null;
                 }
@@ -487,7 +478,6 @@ export const expenseRouter = createTRPCRouter({
             "transaction: delete expense and splits",
             (db) =>
               db.transaction(async (trx) => {
-                // Delete splits first (foreign key constraint)
                 await trx
                   .delete(expenseSplits)
                   .where(eq(expenseSplits.expenseId, input.expenseId));
@@ -694,7 +684,6 @@ export const expenseRouter = createTRPCRouter({
               .limit(PAIR_ACTIVITY_PAGE + 1);
             const items = rows.slice(0, PAIR_ACTIVITY_PAGE);
             const last = items.at(-1);
-            // A converted expense's pair share depends on every split's rounding
             const splits =
               items.length > 0
                 ? await db.query.expenseSplits.findMany({

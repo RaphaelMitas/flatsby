@@ -14,11 +14,6 @@ interface Localized {
   readonly values?: MessageValues;
 }
 
-/**
- * Domain Error Types
- * These represent the various error scenarios that can occur in our API.
- * They carry a catalog key; the text is resolved in the request locale.
- */
 export class NotFoundError extends Data.TaggedError("NotFoundError")<
   Localized & { readonly identifier?: string | number }
 > {}
@@ -77,9 +72,6 @@ const ApiErrorResultSchema = z.object({
   details: z.record(z.string(), z.unknown()),
 });
 
-/**
- * Union type of all possible domain errors
- */
 export type ApiError =
   | NotFoundError
   | ForbiddenError
@@ -97,9 +89,6 @@ export interface ApiErrorResult {
 
 export type ApiResult<T> = { success: true; data: T } | ApiErrorResult;
 
-/**
- * Utility functions for working with ApiResult ZOD helper
- */
 export const getApiResultZod = <T extends z.ZodTypeAny>(dataSchema: T) => {
   return z.discriminatedUnion("success", [
     z.object({
@@ -115,9 +104,6 @@ export const getApiResultZod = <T extends z.ZodTypeAny>(dataSchema: T) => {
 
 export type NotFoundResource = keyof Messages["errors"]["notFound"];
 
-/**
- * Error factory functions for creating specific errors
- */
 export const Errors = {
   notFound: (resource: NotFoundResource, identifier?: string | number) =>
     new NotFoundError({
@@ -170,9 +156,6 @@ export const Errors = {
     }),
 };
 
-/**
- * Utility functions for working with Effects and errors
- */
 export const fail = {
   notFound: (...args: Parameters<typeof Errors.notFound>) =>
     Effect.fail(Errors.notFound(...args)),
@@ -198,9 +181,6 @@ export const fail = {
     Effect.fail(Errors.internalServer(...args)),
 };
 
-/**
- * Helper to convert unknown errors to our domain errors
- */
 export const fromUnknownError = (
   error: unknown,
   operation?: string,
@@ -213,7 +193,6 @@ export const fromUnknownError = (
   }
 
   if (error instanceof Error) {
-    // Check for common database constraint errors
     if (
       error.message.includes("UNIQUE constraint failed") ||
       error.message.includes("duplicate key value")
@@ -239,7 +218,6 @@ export const fromUnknownError = (
       );
     }
 
-    // Check for network/connection errors
     if (
       error.message.includes("ECONNREFUSED") ||
       error.message.includes("ENOTFOUND") ||
@@ -252,7 +230,6 @@ export const fromUnknownError = (
       );
     }
 
-    // Default to database error for other database-related errors
     if (
       error.message.includes("database") ||
       error.message.includes("query") ||
@@ -262,7 +239,6 @@ export const fromUnknownError = (
     }
   }
 
-  // Fallback to internal server error
   return Errors.internalServer(operation, error);
 };
 

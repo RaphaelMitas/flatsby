@@ -61,7 +61,6 @@ export default function Index() {
     if (version) void posthog.register({ home_version: version });
   }, [posthog, version]);
 
-  // The tab layout owns the redirect to login.
   if (!session || !version) {
     return null;
   }

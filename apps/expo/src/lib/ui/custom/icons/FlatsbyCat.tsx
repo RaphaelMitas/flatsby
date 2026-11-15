@@ -115,7 +115,6 @@ export default function FlatsbyCat({
   const ownLook = useSharedValue(0);
   const look = lookOverride ?? ownLook;
 
-  // Same rhythm as the web cat's fc-blink and fc-look keyframes.
   useEffect(() => {
     if (asleep || squint) {
       blink.value = withTiming(asleep ? 0.06 : 0.42, { duration: 400 });

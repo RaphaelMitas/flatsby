@@ -77,7 +77,6 @@ export function ExpenseListPanel({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between gap-2 border-b p-4">
         <h2
           data-testid="expense-heading"
@@ -113,7 +112,6 @@ export function ExpenseListPanel({
         </p>
       )}
 
-      {/* Expense List */}
       <ScrollArea className="flex-1">
         <div className="flex flex-col px-4 pb-4">
           {!filters.isActive && (
@@ -197,7 +195,6 @@ export function ExpenseListPanel({
               {search.hasMore && (
                 <InView
                   as="div"
-                  // Re-observe after each page so a sentinel still in view loads the next one
                   skip={search.isFetchingMore}
                   onChange={(inView) => {
                     if (inView) search.loadMore();

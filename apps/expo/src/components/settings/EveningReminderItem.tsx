@@ -18,7 +18,6 @@ export function EveningReminderItem() {
   const [permission, setPermission] =
     useState<NotificationPermissionsStatus | null>(null);
 
-  // Read again on return, since it can change in the phone's settings
   useEffect(() => {
     const read = () => {
       Notifications.getPermissionsAsync()

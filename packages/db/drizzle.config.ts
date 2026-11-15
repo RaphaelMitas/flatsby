@@ -7,5 +7,5 @@ export default {
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: { url: env.DATABASE_URL },
-  tablesFilter: ["flat-cove_*"], // still called flat-cove because of the old name
+  tablesFilter: ["flat-cove_*"],
 } satisfies Config;

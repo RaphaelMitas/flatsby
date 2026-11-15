@@ -17,7 +17,6 @@ test.describe("Calendar events", () => {
     await form.getByTestId("calendar-form-kind-event").click();
     await form.getByTestId("calendar-form-all-day").click();
     await form.getByTestId("calendar-form-event-ends-on").click();
-    // The picker opens focused on the start day
     await authPage.keyboard.press("ArrowRight");
     await authPage.keyboard.press("ArrowRight");
     await authPage.keyboard.press("Enter");
@@ -27,7 +26,6 @@ test.describe("Calendar events", () => {
       authPage.getByTestId(
         `calendar-agenda-${date === today ? "today" : date}`,
       );
-    // Only the saved row carries a server id, so reloading after it can't abort the write
     const rows = (date: string) =>
       section(date)
         .getByTestId(/^calendar-entry-\d+$/)
@@ -43,7 +41,6 @@ test.describe("Calendar events", () => {
       .getByTestId("calendar-month-entry")
       .filter({ hasText: title });
     await expect(bars.first()).toBeVisible();
-    // Three days always leave at least one stretch of two days within a week
     const cell = await authPage
       .getByTestId(`calendar-day-${today}`)
       .boundingBox();

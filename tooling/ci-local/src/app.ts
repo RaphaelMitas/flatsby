@@ -26,7 +26,6 @@ export type Platform = "ios" | "android";
 
 export const localAndroidAbi = arch() === "arm64" ? "arm64-v8a" : "x86_64";
 
-/** Never over ~/.maestro, which other tools on the machine may own. */
 export async function installMaestro(): Promise<string> {
   const { stdout } = await promisify(execFile)(
     "bash",
@@ -38,8 +37,6 @@ export async function installMaestro(): Promise<string> {
 
 const KEEP_BUILDS = 3;
 
-// Native builds are hundreds of MB and every native change adds one; keep the
-// most recently used, skipping any another run holds.
 function pruneNative(platform: Platform, abi: string): void {
   const dir = join(cacheDir, "native");
   const builds = readdirSync(dir)
@@ -55,16 +52,12 @@ function pruneNative(platform: Platform, abi: string): void {
   }
 }
 
-// The native part comes from a cache every worktree shares; repack.sh swaps
-// in this worktree's JS.
 export async function buildApp(
   platform: Platform,
   workDir: string,
   log: string,
   toolEnv: NodeJS.ProcessEnv,
 ): Promise<string> {
-  // Metro's cache lives in TMPDIR and repack resets it, so each run gets its
-  // own and leaves other worktrees' bundles alone.
   const tmp = `${workDir}-tmp`;
   mkdirSync(tmp, { recursive: true });
   const env = { ...toolEnv, TMPDIR: tmp };
@@ -80,7 +73,6 @@ export async function buildApp(
     });
 
   rmSync(workDir, { recursive: true, force: true });
-  // Copied under the lock, so a prune elsewhere can't delete it mid-copy.
   const builtNow = await withLock(`${cached}.lock`, async () => {
     const missing = !existsSync(cached);
     if (missing) {
@@ -99,7 +91,6 @@ export async function buildApp(
     workDir,
     platform === "ios" ? "Flatsby.app" : "app-release.apk",
   );
-  // A build made just now already carries this worktree's JS.
   if (builtNow) return app;
   const repack =
     platform === "ios"
@@ -112,8 +103,6 @@ export async function buildApp(
         ];
   if ((await run("bash", repack, { log, env })) === 0) return app;
 
-  // A bundle the cached build can't take (new images, another Hermes train):
-  // this worktree's own build, which the next matching worktree can't reuse.
   rmSync(workDir, { recursive: true, force: true });
   await build(workDir);
   return app;

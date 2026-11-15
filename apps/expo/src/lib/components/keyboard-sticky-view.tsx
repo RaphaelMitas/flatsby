@@ -33,7 +33,6 @@ export function AppKeyboardStickyView({
       }
     >
       <KeyboardStickyView
-        // Keyboard height counts from the window bottom, but this view already sits coveredBelow above it
         offset={{ opened: coveredBelow, closed: 0 }}
         className={className}
         {...props}

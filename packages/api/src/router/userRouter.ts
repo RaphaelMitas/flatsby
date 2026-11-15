@@ -38,7 +38,6 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { GroupUtils, memberName } from "../utils";
 import { getCreditUsage } from "../utils/credits";
 
-// Released iOS builds open the paywall for "free"; any other id sends them to a harmless screen
 const includedPlan = {
   planId: "included",
   // i18n-ignore
@@ -55,7 +54,6 @@ export const userRouter = createTRPCRouter({
     .output(usageDataSchema)
     .query(async ({ ctx }) => {
       const { balance, usage } = await getCreditUsage(ctx.session.user.id);
-      // Released builds show a bundled upgrade card at 0; a capped scan still fails with the server's message
       return { credits: { balance: Math.max(balance, 1), usage } };
     }),
 
@@ -119,7 +117,6 @@ export const userRouter = createTRPCRouter({
               }),
           );
           const user = groups[0]?.user;
-          // Leaving a group keeps these ids, and old rows were written unchecked
           const activeGroupIds = new Set(groups.map(({ group }) => group.id));
           return {
             user: user
@@ -215,7 +212,6 @@ export const userRouter = createTRPCRouter({
               db.transaction(async (trx) => {
                 const user = ctx.session.user;
 
-                // Lock groups before updating users, the order deleteGroup uses, so the two can't deadlock
                 const userGroups = await trx
                   .selectDistinct({ groupId: groupMembers.groupId })
                   .from(groupMembers)
@@ -225,13 +221,11 @@ export const userRouter = createTRPCRouter({
                   await GroupUtils.lockGroup(trx, groupId);
                 }
 
-                // Clear user's last used references
                 await trx
                   .update(users)
                   .set({ lastGroupUsed: null, lastShoppingListUsed: null })
                   .where(eq(users.id, user.id));
 
-                // Fetch all group memberships of the user, including related data
                 const userGroupMemberships =
                   await trx.query.groupMembers.findMany({
                     where: eq(groupMembers.userId, user.id),
@@ -246,7 +240,6 @@ export const userRouter = createTRPCRouter({
                         columns: { id: true },
                         with: {
                           groupMembers: {
-                            // Placeholders can't take over a group, so only people count as others
                             where: and(
                               isNotNull(groupMembers.userId),
                               ne(groupMembers.userId, user.id),
@@ -262,7 +255,6 @@ export const userRouter = createTRPCRouter({
                     },
                   });
 
-                // Process each group membership
                 for (const membership of userGroupMemberships) {
                   const {
                     id: groupMemberId,
@@ -282,14 +274,10 @@ export const userRouter = createTRPCRouter({
                   }
                   if (isAdmin) {
                     if (otherAdmins.length > 0) {
-                      // There are other admins, so we can safely remove the user
-                      // Remove the user's membership
                       await trx
                         .delete(groupMembers)
                         .where(eq(groupMembers.id, groupMemberId));
                     } else if (otherMembers.length > 0) {
-                      // The user is the last admin but there are other members
-                      // Promote the member who joined first to admin
                       const sortedMembers = otherMembers.sort((a, b) =>
                         a.joinedOn < b.joinedOn ? -1 : 1,
                       );
@@ -307,18 +295,15 @@ export const userRouter = createTRPCRouter({
                         .delete(groupMembers)
                         .where(eq(groupMembers.id, groupMemberId));
                     } else {
-                      // The user is the last member and admin
                       await GroupUtils.deleteGroupData(trx, groupId);
                     }
                   } else {
-                    // The user is not an admin, simply remove their membership
                     await trx
                       .delete(groupMembers)
                       .where(eq(groupMembers.id, groupMemberId));
                   }
                 }
 
-                // Finally, delete the user
                 if (user.email)
                   await trx
                     .delete(verificationTokens)
@@ -489,7 +474,6 @@ export const userRouter = createTRPCRouter({
                 },
               });
 
-              // Removed or departed members keep an inactive row; they must not export that household.
               const userGroups = await db.query.groupMembers.findMany({
                 where: and(
                   eq(groupMembers.userId, userId),
@@ -549,7 +533,6 @@ export const userRouter = createTRPCRouter({
                     })
                   : [];
 
-              // Settlements are expenses too, so this also covers them.
               const userExpenses =
                 memberIds.length > 0
                   ? await db.query.expenses.findMany({

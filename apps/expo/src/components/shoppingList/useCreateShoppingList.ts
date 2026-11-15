@@ -22,7 +22,6 @@ export function useCreateShoppingList(groupId: number) {
             t("common.error"),
             message ?? t("shoppingList.createFailed"),
           ),
-        // The Shopping tab can only open the new list once the cache holds it
         onSuccess: async ({ shoppingListId }, { name }) => {
           await queryClient.cancelQueries({ queryKey: listsKey });
           patchResultQuery(

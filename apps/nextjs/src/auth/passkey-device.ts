@@ -18,7 +18,6 @@ export const savePasskeyDevice = (state: PasskeyDevice) =>
 
 const noSubscription = () => () => undefined;
 
-// The server render can't know this browser, so hydration starts from "unknown"
 export const usePasskeyDevice = () =>
   useSyncExternalStore(
     noSubscription,

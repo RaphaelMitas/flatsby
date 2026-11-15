@@ -39,7 +39,6 @@ export function CategoryFilterSidebar({
           count={total && total > 0 ? total : undefined}
         />
 
-        {/* Category buttons using CategoryBadge */}
         {categoryIds.map((categoryId) => {
           const count = counts[categoryId] ?? 0;
           const isSelected = selectedCategory === categoryId;

@@ -35,7 +35,6 @@ export const auth = initAuth({
   appleTeamId: env.APPLE_TEAM_ID,
   appleKeyId: env.APPLE_KEY_ID,
   appleClientSecret: await makeAppleClientSecret(),
-  // Previews are opened on the branch alias as well as on VERCEL_URL, the base URL.
   trustedOrigins: env.VERCEL_BRANCH_URL
     ? [`https://${env.VERCEL_BRANCH_URL}`]
     : [],
@@ -44,7 +43,6 @@ export const auth = initAuth({
   onOAuthCallback,
 });
 
-// The Expo client starts OAuth with a deep link as its callback, the web app with a path
 function oauthPlatform(state: { callbackURL: string } | null) {
   if (!state) return undefined;
   const { callbackURL } = state;
@@ -58,12 +56,10 @@ const callbackPage = {
   referrer: null,
 };
 
-// Cookieless and never identified, so the signup counts toward its source without tying the visit to the account
 async function onUserCreated(requestHeaders: Headers | undefined) {
   if (!requestHeaders) return;
   try {
     const state = await getOAuthState();
-    // Outside OAuth only the Expo client sends expo-origin
     const platform = state
       ? oauthPlatform(state)
       : requestHeaders.has("expo-origin")
@@ -75,7 +71,6 @@ async function onUserCreated(requestHeaders: Headers | undefined) {
       }),
     );
   } catch (error) {
-    // A throw here would fail a signup Better Auth already committed
     captureError({ error, operation: "auth.onUserCreated" });
   }
 }
@@ -97,17 +92,14 @@ async function onOAuthCallback({
       provider: provider.data,
       platform,
       attempt_id: attempt.data?.attemptId,
-      // Like the app's own events before sign-in, so $identify still merges them into the account
       $process_person_profile: false,
     };
-    // Web stays cookieless; the app's id joins the callback to its install
     const distinctId =
       platform === "app" ? attempt.data?.distinctId : undefined;
     after(() =>
       captureFor(distinctId, event, headers, callbackPage, properties),
     );
   } catch (error) {
-    // A throw here would fail the sign-in itself
     captureError({ error, operation: "auth.onOAuthCallback" });
   }
 }

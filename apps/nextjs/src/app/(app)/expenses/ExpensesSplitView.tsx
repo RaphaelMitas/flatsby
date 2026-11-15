@@ -37,7 +37,6 @@ export function ExpensesSplitView() {
   if (!isLargeScreen) {
     return (
       <div className="flex h-full min-h-0 flex-1">
-        {/* Hidden, not unmounted, so search and filters survive opening an expense */}
         <div
           className={cn(
             "flex h-full w-full flex-col",
@@ -67,7 +66,6 @@ export function ExpensesSplitView() {
                 </div>
               }
             >
-              {/* Mobile back button */}
               <div className="border-b p-2 lg:hidden">
                 <Button variant="ghost" onClick={() => router.back()}>
                   <ArrowLeft className="mr-2 h-4 w-4" />

@@ -63,7 +63,6 @@ export function PlaceholderNameField({
         editable={!disabled}
         returnKeyType="done"
         onSubmitEditing={submit}
-        // With the Add button hidden, Return on an empty field is how the keyboard closes
         submitBehavior={
           hideSubmitWhenEmpty && empty ? "blurAndSubmit" : "submit"
         }

@@ -39,7 +39,6 @@ export function SignInCodeEmail({
       <Preview>{preview}</Preview>
       <Body lang={locale} style={body}>
         <Container style={container}>
-          {/* Gmail and Outlook drop negative margins, so the card's top edge is drawn around the logo */}
           <Row>
             <Column style={edge}>
               <div style={{ ...cardTop, borderTopLeftRadius: "18px" }} />

@@ -16,7 +16,6 @@ export const MAX_INTERVAL = {
   months: 24,
   years: 10,
 } as const;
-/** Far enough ahead to always reach a rule's next occurrence */
 export const LONGEST_GAP_DAYS = 366 * MAX_INTERVAL.years;
 
 export const weeksOfMonth = [
@@ -27,7 +26,6 @@ export const weeksOfMonth = [
   "last",
 ] as const;
 const dayOfMonthSchema = z.int().min(1).max(31);
-/** A day past the end of a shorter month falls on its last day. */
 export const monthDaySchema = z.union([
   z.object({ day: dayOfMonthSchema }),
   z.object({ week: z.enum(weeksOfMonth), weekday: weekdaySchema }),
@@ -39,7 +37,6 @@ const yearDaySchema = z.object({
 });
 export type YearDay = z.infer<typeof yearDaySchema>;
 
-// Stored as jsonb; a new kind of repeat is a new member here, not a migration
 export const recurrenceSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("daily"),
@@ -75,7 +72,6 @@ export const eventTimeSchema = z.object({
 export type EventTime = z.infer<typeof eventTimeSchema>;
 const MAX_EVENT_DAYS = 365;
 
-// Every item from before zones were recorded was made in Germany
 export const DEFAULT_TIME_ZONE = "Europe/Berlin"; // i18n-ignore
 export const MAX_TIME_ZONE_LENGTH = 64;
 
@@ -88,7 +84,6 @@ const isTimeZone = (zone: string) => {
   }
 };
 
-// A zone the runtime doesn't know falls back to the default rather than blocking the save
 const timeZoneSchema = z
   .string()
   .max(MAX_TIME_ZONE_LENGTH)
@@ -116,7 +111,6 @@ export const calendarColors = [
 export const calendarColorSchema = z.enum(calendarColors);
 export type CalendarColor = z.infer<typeof calendarColorSchema>;
 
-// Matches how each kind looked before items had a color
 export const defaultColorFor = (kind: CalendarItemKind): CalendarColor =>
   kind === "event" ? "blue" : "gray";
 
@@ -138,9 +132,7 @@ const calendarItemFields = z.object({
   startsOn: calendarDateSchema,
   time: eventTimeSchema.nullable(),
   recurrence: recurrenceSchema.nullable(),
-  // undefined keeps the stored end; apps up to v0.12.0 leave it out
   endsOn: calendarDateSchema.nullable().optional(),
-  // The picked length, see withOvernight; undefined keeps the previous one, as apps up to v0.14.1 leave it out
   days: eventDaysSchema.optional(),
   memberIds: z.array(z.number()).max(50),
 });
@@ -155,21 +147,18 @@ const isConsistentItem = (item: z.infer<typeof calendarItemFields>) =>
     ? item.time === null && (item.days ?? 1) === 1
     : item.memberIds.length === 0) && !endsBeforeStart(item);
 
-// An end at 00:00 is the midnight that closes the day, as other calendars read it
 const endClock = (time: EventTime) =>
   time.end === "00:00" ? "24:00" : time.end;
 
 const runsPastMidnight = (time: EventTime | null) =>
   time !== null && endClock(time) <= time.start;
 
-// Forms and older apps write an overnight event as one day ending at or before its start; it's stored as two
 export const withOvernight = (time: EventTime | null, days: number) =>
   days === 1 && runsPastMidnight(time) ? 2 : days;
 
 export const withoutOvernight = (time: EventTime | null, days: number) =>
   days === 2 && runsPastMidnight(time) ? 1 : days;
 
-/** The time and picked length an event form starts from. */
 export const eventSpanOf = (item?: {
   time: EventTime | null;
   days: number;
@@ -226,7 +215,6 @@ export const setOccurrenceDoneSchema = z.object({
   itemId: z.number(),
   date: calendarDateSchema,
   done: z.boolean(),
-  /** Earlier open days of the same chore, skipped in the same write */
   skip: z.array(calendarDateSchema).max(MAX_RANGE_DAYS).optional(),
 });
 
@@ -251,13 +239,11 @@ export const fromDayNumber = (day: number) =>
 export const addDays = (date: string, days: number) =>
   fromDayNumber(toDayNumber(date) + days);
 
-// 1970-01-01 was a Thursday
 const weekdayIndex = (day: number) => (((day + 3) % 7) + 7) % 7;
 
 export const weekdayOf = (date: string): Weekday =>
   weekdays[weekdayIndex(toDayNumber(date))] ?? "mo";
 
-/** The device's calendar day, which is what "today" means to the person holding it. */
 export const localDate = (now = new Date()) =>
   [now.getFullYear(), pad(now.getMonth() + 1), pad(now.getDate())].join("-");
 
@@ -267,11 +253,9 @@ export interface ExpandableItem {
   endsOn: string | null;
   recurrence: Recurrence | null;
   days: number;
-  /** Active members in rotation order */
   memberIds: number[];
 }
 
-/** Months since year 0, so month arithmetic is plain subtraction */
 const monthIndexOf = (day: number) => {
   const date = new Date(day * DAY_MS);
   return date.getUTCFullYear() * 12 + date.getUTCMonth();
@@ -299,7 +283,6 @@ function dayIn(monthIndex: number, on: MonthDay) {
   );
 }
 
-/** Every `period` months from `firstMonth`, whose own date may fall before the start and not count. */
 function monthlyOrdinal(
   day: number,
   start: number,
@@ -312,7 +295,6 @@ function monthlyOrdinal(
   return offset / rule.period - missedFirst;
 }
 
-/** How many times the rule fired before `day`, or null when it doesn't fire on `day`. */
 function ordinalOn(item: ExpandableItem, day: number): number | null {
   const start = toDayNumber(item.startsOn);
   if (day < start || (item.endsOn && day > toDayNumber(item.endsOn)))
@@ -366,7 +348,6 @@ export interface OccurrenceOverride {
   date: string;
   skipped: boolean;
   completedByGroupMemberId: number | null;
-  /** Sent with each completion, so someone who has since left the group keeps their name */
   completedBy: DebtPerson | null;
   completedAt: Date | null;
 }
@@ -424,10 +405,8 @@ export function expandOccurrences(
   return occurrences;
 }
 
-// Building a formatter costs milliseconds on Hermes, and a calendar formats hundreds of dates per render
 const formatters = new Map<string, Intl.DateTimeFormat>();
 
-/** Calendar dates carry no time zone, so they format as UTC to keep the day from shifting. */
 export const formatCalendarDate = (
   date: string,
   locale: Intl.LocalesArgument,
@@ -450,12 +429,10 @@ export const weekdayName = (
   locale: Intl.LocalesArgument,
   width: "long" | "short",
 ) =>
-  // 2024-01-01 was a Monday
   formatCalendarDate(addDays("2024-01-01", weekdays.indexOf(day)), locale, {
     weekday: width,
   });
 
-/** Device-local midnight, which is how date pickers represent a day; localDate() turns it back. */
 export const pickerDate = (date: string) => {
   const [year = 1970, month = 1, day = 1] = date.split("-").map(Number);
   return new Date(year, month - 1, day);
@@ -473,7 +450,6 @@ const timeOf = (minutes: number) => {
   return [Math.floor(wrapped / 60), wrapped % 60].map(pad).join(":");
 };
 
-/** Moving the start keeps the event's length, which can carry its end into another day. */
 export function withStart(time: EventTime, days: number, start: string) {
   const end =
     (withOvernight(time, days) - 1) * DAY_MINUTES +
@@ -502,7 +478,6 @@ export const eventEndChoices = (
   max: lastDayOf(startsOn, MAX_EVENT_DAYS),
 });
 
-// A repeating event without `date` has no last day to name, so its length reads as a count
 export function describeEventTime(
   item: Pick<ExpandableItem, "days" | "recurrence" | "startsOn"> & {
     time: EventTime | null;
@@ -518,7 +493,6 @@ export function describeEventTime(
     return time
       ? `${time.start}–${time.end} +${days - 1}`
       : t("calendar.days", { count: days });
-  // Weekdays alone repeat once an event runs a week or more
   const format: Intl.DateTimeFormatOptions =
     time && days < 7
       ? { weekday: "short" }
@@ -559,7 +533,6 @@ export function describeRecurrence(
     case "yearly":
       return t("calendar.repeat.yearly", {
         count,
-        // 2024 was a leap year, so Feb 29 formats too
         date: formatCalendarDate(
           `2024-${pad(recurrence.on.month)}-${pad(recurrence.on.day)}`,
           locale,
@@ -569,7 +542,6 @@ export function describeRecurrence(
   }
 }
 
-// Older apps could leave an end on an item they turned into a one-off
 export const hasEnded = (
   item: Pick<ExpandableItem, "recurrence" | "endsOn">,
   today: string,
@@ -673,7 +645,6 @@ export const weekStart = (date: string) =>
 export const weekDays = (start: string) =>
   Array.from({ length: 7 }, (_, i) => addDays(start, i));
 
-/** Six Monday-first weeks covering `month` ("2026-10"), so the grid never changes height. */
 export function monthGrid(month: string) {
   const start = weekStart(`${month}-01`);
   const weeks = Array.from({ length: GRID_WEEKS }, (_, week) =>
@@ -713,7 +684,6 @@ function rangeEntries(range: CalendarRange): CalendarEntry[] {
     .sort(
       (a, b) =>
         a.occurrence.date.localeCompare(b.occurrence.date) ||
-        // All-day entries after the timed ones
         (a.item.time?.start ?? "99").localeCompare(
           b.item.time?.start ?? "99",
         ) ||
@@ -768,7 +738,6 @@ export const timesMissed = (entry: AgendaEntry, today: string) =>
     ? (entry.missed?.length ?? 0) + (entry.occurrence.date < today ? 1 : 0)
     : 0;
 
-/** Done once means done now; the days a chore was left are skipped, not done. */
 export const tickInput = (
   groupId: number,
   { item, occurrence, missed }: AgendaEntry,
@@ -781,7 +750,6 @@ export const tickInput = (
   skip: done ? missed : undefined,
 });
 
-/** A chore left for days shows once per member, on their latest open day up to today. */
 function latestOpen(openTasks: CalendarEntry[], today: string) {
   const due: DueChore[] = [];
   for (const entry of openTasks) {
@@ -801,7 +769,6 @@ function latestOpen(openTasks: CalendarEntry[], today: string) {
   return due;
 }
 
-/** Turn counts cover every member, even when `member` narrows what's shown. */
 function agenda(days: AgendaDay[], overdue: DueChore[], member: number | null) {
   const turns = new Map<number, number>();
   for (const entry of [...overdue, ...days.flatMap(({ entries }) => entries)]) {
@@ -825,7 +792,6 @@ const LOOKBACK_DAYS = MAX_RANGE_DAYS - LIST_LAST_DAY;
 
 const listEnd = (start: string) => addDays(start, LIST_LAST_DAY);
 
-/** Starting today, the list also reaches back for overdue chores. */
 export const listWindow = (start: string, today: string) => ({
   from: start === today ? addDays(today, -LOOKBACK_DAYS) : start,
   to: listEnd(start),
@@ -852,7 +818,6 @@ export function listAgenda(
     start === today
       ? latestOpen(rangeEntries(range).filter(isOpenTask), today)
       : [];
-  // A chore still open today carries its missed days there, so one tick settles them like on home
   const days = agendaDays(range, weekDays(start), meId).map((day) => ({
     ...day,
     entries: day.entries.map(
@@ -874,7 +839,6 @@ const monthAgenda = (
   member: number | null,
 ) => agenda(agendaDays(range, monthGrid(month).weeks.flat(), meId), [], member);
 
-/** Lays a week out in lanes, so an event over several days keeps one lane and draws as a single bar. */
 function weekLayout(week: AgendaDay[], lines: number) {
   const lanes = week.map((): (AgendaEntry | null)[] => []);
   const place = (columns: number[], entry: AgendaEntry) => {
@@ -910,12 +874,10 @@ function weekLayout(week: AgendaDay[], lines: number) {
     for (const entry of day.entries)
       if (entry.item.days === 1) place([column], entry);
   });
-  // A week where any day overflows keeps a line free for "+N" on all of them, so bars stay level
   const limit = lanes.some((used) => used.length > lines) ? lines - 1 : lines;
   return {
     bars: bars.filter((bar) => bar.lane < limit),
     cells: lanes.map((used) => ({
-      // One per shown lane; null where a bar passes or the lane is empty
       slots: Array.from(used.slice(0, limit), (entry) =>
         entry && entry.item.days === 1 ? entry : null,
       ),
@@ -931,7 +893,6 @@ export const monthWeeks = (days: AgendaDay[], lines: number) =>
 
 export type CalendarView = "list" | "month";
 
-/** A null start or month follows today, so a screen left open overnight moves on with it. */
 export interface CalendarPosition {
   view: CalendarView;
   start: string | null;
@@ -943,7 +904,6 @@ export const shownDates = (
   today: string,
 ) => ({ start: start ?? today, month: month ?? monthOf(today) });
 
-/** The list starts at `date`; the month view moves to the month holding it. */
 export function showDate(
   position: CalendarPosition,
   date: string,
@@ -1042,7 +1002,6 @@ function notOverYet(
   return (item.time ? endClock(item.time) : "24:00") > now;
 }
 
-/** `now` is the wall-clock time ("HH:MM"), to pass over events that ended today */
 export function homeAgenda(
   range: CalendarRange,
   today: string,
@@ -1097,7 +1056,6 @@ export function eveningReminders(
 type Schedule = Pick<ExpandableItem, "startsOn" | "recurrence">;
 type Series = Schedule & Pick<ExpandableItem, "endsOn">;
 
-// Spelled out rather than JSON, since jsonb hands keys back in its own order
 function ruleKey(recurrence: Recurrence | null) {
   if (!recurrence) return "";
   const { type, interval } = recurrence;
@@ -1132,7 +1090,6 @@ export const editedEndsOn = (
   return next.endsOn === undefined ? previous.endsOn : next.endsOn;
 };
 
-/** Days that are over keep their ticks and schedule. */
 export const rewritesPast = (previous: Series, next: Series, today: string) =>
   hasEnded(previous, today)
     ? !sameSchedule(previous, next) || next.endsOn !== previous.endsOn
@@ -1145,7 +1102,6 @@ export const splitEndsOn = (previous: Series, startsOn: string) => {
     : dayBefore;
 };
 
-/** A new schedule for a running series starts a new item, so the old one keeps its history. */
 export const splitsSeries = (previous: Series, next: Schedule, today: string) =>
   isRunning(previous, today) &&
   !sameSchedule(previous, next) &&
@@ -1157,7 +1113,6 @@ export function continuedRotation(
 ) {
   const start = toDayNumber(next.startsOn);
   for (let day = start; day <= start + LONGEST_GAP_DAYS; day++) {
-    // The old rule may already end before its next turn would come round
     const turn = turnOn({ ...previous, endsOn: null }, fromDayNumber(day));
     if (turn === null) continue;
     const first = next.memberIds.indexOf(turn);
@@ -1198,7 +1153,6 @@ export const withDone = (
   ),
 });
 
-/** Un-skipping brings the occurrence back, which the cache no longer holds. */
 export function withSkipped(
   range: CalendarRange,
   change: { itemId: number; date: string; skipped: boolean },
@@ -1235,7 +1189,6 @@ export const withoutItem = (
   ),
 });
 
-/** Reads an item's ticks and skips back out of a cached range; a scheduled day that isn't shown was skipped. */
 function cachedOverrides(
   range: CalendarRange,
   itemId: number,
@@ -1263,7 +1216,6 @@ function cachedOverrides(
   });
 }
 
-/** Optimistic create or edit; like the server, ticks and skips stay on days the new schedule still has. */
 export function withSavedItem(
   range: CalendarRange,
   item: CalendarItemView,
@@ -1280,7 +1232,6 @@ export function withSavedItem(
   };
 }
 
-/** Optimistic split: the old series ends by the day before the new one takes over. */
 export function withSplitSeries(
   range: CalendarRange,
   previous: ExpandableItem,
@@ -1312,7 +1263,6 @@ export const repeatUnits = [
 ] as const;
 export type RepeatUnit = (typeof repeatUnits)[number];
 
-/** What the repeat section of the create and edit forms holds; each null follows the start date until someone picks. */
 export interface RepeatForm {
   unit: RepeatUnit;
   every: number;
@@ -1346,7 +1296,6 @@ export function repeatFormOf(recurrence: Recurrence | null): RepeatForm {
 export const maxEvery = ({ unit }: RepeatForm) =>
   unit === "never" ? 1 : MAX_INTERVAL[unit];
 
-/** A date's day of the month, and its weekday counted from the end when it falls in the month's last seven days. */
 function monthDaysOf(date: string): [MonthDay, MonthDay] {
   const day = Number(date.slice(8, 10));
   const week =
@@ -1361,7 +1310,6 @@ const yearDayOf = (date: string): YearDay => ({
   day: Number(date.slice(8, 10)),
 });
 
-/** The monthly toggle's two options; a picked one keeps its day while the other follows the start date. */
 export function monthDayChoices(form: RepeatForm, startsOn: string) {
   const options = monthDaysOf(startsOn);
   const picked = form.monthDay ?? options[0];
@@ -1371,7 +1319,6 @@ export function monthDayChoices(form: RepeatForm, startsOn: string) {
   });
 }
 
-/** Picking a start date moves a monthly or yearly day along with it. */
 export const withPickedStart = (
   form: RepeatForm,
   startsOn: string,
@@ -1401,7 +1348,6 @@ export function formEndsOn(
   return pickedEnd < earliest ? earliest : pickedEnd;
 }
 
-/** The edit form's start: a changed repeat of a running series starts today unless a date was picked, so the old part keeps its history. */
 export function editedStartsOn(
   item: Series,
   repeat: RepeatForm,

@@ -1,4 +1,3 @@
-/* The lens path matches the waypoints in the Expo ReceiptReadingStage */
 .rs-stage {
   --walk: 8s;
 }
@@ -37,7 +36,6 @@
   transition: opacity 0.3s;
   animation: rs-walk var(--walk) ease-in-out infinite;
 }
-/* A browser that can't decode the photo has nothing to magnify */
 .rs-photo[data-broken] .rs-lens {
   display: none;
 }

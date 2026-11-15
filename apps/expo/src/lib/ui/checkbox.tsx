@@ -22,8 +22,6 @@ interface CheckboxProps {
   accessibilityLabel?: string;
 }
 
-// Geometric length of lucide's check path; react-native-svg has no pathLength
-// to normalise it away.
 const CHECK_LENGTH = 22.63;
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -37,7 +35,6 @@ const Checkbox = ({
 }: CheckboxProps) => {
   const { getColor } = useThemeColors();
   const squish = useSharedValue(1);
-  // 1 is the resting, finished state, so an untouched checkbox has no ring.
   const ripple = useSharedValue(1);
 
   const fill = useDerivedValue(() =>

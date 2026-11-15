@@ -14,10 +14,8 @@ function gatewayCost(providerMetadata: Record<string, unknown> | undefined) {
   return gatewayCostSchema.safeParse(providerMetadata?.gateway).data?.cost;
 }
 
-// A fair-use cap far above normal use: $0.50 of AI a month
 export const FREE_MONTHLY_CREDITS = 500_000;
 
-// Fine enough that a category call (~$0.00003) still counts instead of rounding to 0
 const CREDITS_PER_DOLLAR = 1_000_000;
 
 function costToCredits(cost: string | undefined): number {
@@ -27,7 +25,6 @@ function costToCredits(cost: string | undefined): number {
     : 0;
 }
 
-// The database clock decides the month, so check and charge never disagree on it
 const currentMonth = sql<string>`date_trunc('month', now() at time zone 'utc')::date`;
 
 export type CreditUser = Pick<Session["user"], "id">;
@@ -49,13 +46,11 @@ export async function getCreditUsage(
 export async function checkCredits(
   user: CreditUser,
 ): Promise<{ allowed: boolean }> {
-  // CI stacks have no AI keys; denying here keeps e2e from ever reaching a model
   if (env.E2E_TESTING) return { allowed: false };
   const { balance } = await getCreditUsage(user.id);
   return { allowed: balance > 0 };
 }
 
-// A failed charge is reported, never shown: the person already has their answer
 export async function chargeAIUsage({
   user,
   feature,

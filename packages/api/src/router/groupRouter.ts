@@ -76,11 +76,9 @@ const updateGroup = protectedProcedure
             .where(eq(groups.id, id))
             .returning({ id: groups.id }),
         );
-        // A concurrent delete can win between the admin check and the update
         if (!updated) {
           return yield* Errors.notFound("group", id);
         }
-        // Captured on save so a failed update isn't counted
         if (settings.convertAutomatically !== undefined) {
           captureUserEvent({
             user: ctx.session.user,
@@ -97,7 +95,6 @@ const updateGroup = protectedProcedure
     ),
   );
 
-// Two Annas would make "I'm Anna" ambiguous when one of them joins
 const withFreePlaceholderName = <T>(
   db: DbClient,
   groupId: number,
@@ -280,7 +277,6 @@ export const groupRouter = createTRPCRouter({
             (db) =>
               db.transaction(async (trx) => {
                 await GroupUtils.lockGroup(trx, target.groupId);
-                // Inactive, not deleted, so expense history survives
                 const [deactivated] = await trx
                   .update(groupMembers)
                   .set({ isActive: false })
@@ -293,13 +289,10 @@ export const groupRouter = createTRPCRouter({
                     ),
                   )
                   .returning({ id: groupMembers.id });
-                // Someone claimed or released the spot since it was read
                 if (!deactivated)
                   return Errors.conflict("errors.placeholderTaken");
                 await GroupUtils.detachMemberFromItems(trx, target.id);
-                // A placeholder has no account to keep out, so the group's live link stays
                 if (target.userId === null) return undefined;
-                // Removal kills the live link so they can't rejoin; leaving only kills links the leaver created
                 await trx
                   .delete(groupInvites)
                   .where(
@@ -529,7 +522,6 @@ export const groupRouter = createTRPCRouter({
             "transaction: delete group and all related data",
             (db) =>
               db.transaction(async (trx) => {
-                // Same lock order as joins and removals, which lock the group before its rows
                 await GroupUtils.lockGroup(trx, input.id);
                 await GroupUtils.deleteGroupData(trx, input.id);
                 return input.id;
@@ -585,7 +577,6 @@ export const groupRouter = createTRPCRouter({
                         shoppingListItems.shoppingListId,
                         shoppingListIds,
                       ),
-                      // Each item can yield both a created and a completed activity
                       limit: input.limit * 2,
                       orderBy: (items, { desc }) => [
                         desc(items.completedAt),

@@ -24,7 +24,6 @@ export function QuickAddDial({
   onOpenList,
 }: {
   last: ShoppingListSummary | undefined;
-  /** False right after a group switch, when the list is just the first one */
   lastUsed: boolean;
   others: ShoppingListSummary[];
   onOpenList: (list: ShoppingListSummary) => void;
@@ -53,7 +52,6 @@ export function QuickAddDial({
     transformOrigin: "bottom right",
     transform: [{ scale: 0.92 + progress.value * 0.08 }],
   }));
-  // bg-black/30 rendered no scrim on the iOS simulator, so the color is inline
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
     backgroundColor: "rgba(0, 0, 0, 0.35)",

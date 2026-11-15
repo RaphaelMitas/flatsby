@@ -101,7 +101,6 @@ export function InviteFlatmatesCard() {
     sharePressed.mutate({ groupId, personal: placeholder !== undefined });
     const text = messageFor(code.code, placeholder);
     try {
-      // Desktop browsers have navigator.share too, but there the message belongs in the clipboard
       if (platformForUserAgent(navigator.userAgent) === "other") {
         await copy(text, placeholder?.name);
       } else {

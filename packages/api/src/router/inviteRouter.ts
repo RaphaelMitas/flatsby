@@ -101,7 +101,6 @@ const listWithNewestOpenItem = Effect.fn("Invites.listWithNewestOpenItem")(
   },
 );
 
-// Expired, reset and made-up codes all fail the same way, so a code reveals nothing.
 const findLiveInvite = Effect.fn("Invites.findLiveInvite")(function* (
   code: string,
 ) {
@@ -129,7 +128,6 @@ const findLiveInvite = Effect.fn("Invites.findLiveInvite")(function* (
 });
 
 export const inviteRouter = createTRPCRouter({
-  // A query that writes: an admin opening the sheet after expiry should see a fresh code, not a dead one.
   get: protectedProcedure
     .input(groupIdInputSchema)
     .query(({ ctx, input }) =>
@@ -142,7 +140,6 @@ export const inviteRouter = createTRPCRouter({
       runResult(ctx, issueInvite(input.groupId, { onlyIfExpired: false })),
     ),
 
-  /** Public so the join page can show who is inviting before sign-in. */
   preview: publicProcedure
     .input(inviteCodeInputSchema)
     .query(({ ctx, input }) =>
@@ -162,7 +159,6 @@ export const inviteRouter = createTRPCRouter({
             isMember: group.groupMembers.some(
               (member) => member.userId === ctx.session?.user.id,
             ),
-            // Names are only for the person about to join, not for link previews
             placeholders: ctx.session
               ? group.groupMembers.flatMap(({ id, userId, placeholderName }) =>
                   userId === null && placeholderName !== null
@@ -195,7 +191,6 @@ export const inviteRouter = createTRPCRouter({
                 : Errors.notFound("invite"),
             input.placeholderId,
           ).pipe(
-            // A stale preview from another tab or device still offers Join, so joining again just opens the group
             Effect.catchTag("ConflictError", (error) =>
               error.messageKey === "errors.alreadyMember"
                 ? Effect.void
@@ -205,7 +200,6 @@ export const inviteRouter = createTRPCRouter({
           return {
             groupId: group.id,
             groupName: group.name,
-            // The join already committed; without the list the joiner lands on Home as before
             openList: yield* listWithNewestOpenItem(group.id).pipe(
               Effect.orElseSucceed(() => null),
             ),
@@ -214,7 +208,6 @@ export const inviteRouter = createTRPCRouter({
       ),
     ),
 
-  // invite_shared only sees the share sheet's result, and Android reports every share as sent
   sharePressed: protectedProcedure
     .input(inviteSharePressedInputSchema)
     .mutation(({ ctx, input }) =>

@@ -6,7 +6,6 @@ import { msg } from "@flatsby/i18n/message-key";
 import type { AuthError } from "./login";
 import { passkeyCancelled, startFailureCode, thrownFailureCode } from "./login";
 
-// "used" once this device made or used a passkey, "dismissed" once the offer was declined here
 export type PasskeyDevice = "used" | "dismissed" | "unknown";
 
 export const parsePasskeyDevice = (saved: string | null): PasskeyDevice =>
@@ -16,7 +15,6 @@ export const PASSKEY_DEVICE_KEY = "passkey-device";
 
 export const PASSKEY_NAME_MAX_LENGTH = 64;
 
-// Better Auth only registers passkeys on a session younger than a day
 const passkeyError = (error: AuthError) =>
   error.code === "SESSION_NOT_FRESH"
     ? msg("auth.passkey.signInAgain")
@@ -35,7 +33,6 @@ export function usePasskey({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<MessageKey | null>(null);
-  // A double tap would open a second system sheet behind the first
   const inFlight = useRef(false);
 
   const start = async () => {
@@ -45,7 +42,6 @@ export function usePasskey({
     setError(null);
     try {
       const { error: failure } = await run();
-      // An existing passkey on this device for this account is what was asked for
       if (
         !failure ||
         failure.code === "ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED"

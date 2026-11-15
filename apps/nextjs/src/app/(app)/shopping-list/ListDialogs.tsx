@@ -198,7 +198,6 @@ export function EditListDialog({
   if (!list) return null;
 
   const handleDelete = () => {
-    // /shopping-list redirects to the last used list, so leave only once this one is gone
     deleteMutation.mutate(
       { groupId, shoppingListId: list.id },
       {

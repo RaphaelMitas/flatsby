@@ -26,9 +26,6 @@ import type {
 import { Errors, fail } from "./errors";
 
 export const DbUtils = {
-  /**
-   * Check if user has access to a resource
-   */
   checkAccess: (
     hasAccess: boolean,
     messageKey: MessageKey,
@@ -36,9 +33,6 @@ export const DbUtils = {
     return hasAccess ? Effect.succeed(undefined) : fail.forbidden(messageKey);
   },
 
-  /**
-   * Ensure user has admin role in a group
-   */
   ensureGroupAdmin: (
     userId: string,
     groupMembers: Pick<GroupMember, "userId" | "role">[],
@@ -49,9 +43,6 @@ export const DbUtils = {
     return DbUtils.checkAccess(isAdmin, messageKey);
   },
 
-  /**
-   * Ensure it's not the last admin being removed
-   */
   ensureNotLastAdmin: (
     _targetMemberId: number,
     targetRole: Role,
@@ -70,13 +61,7 @@ export const DbUtils = {
   },
 };
 
-/**
- * Validation utilities
- */
 export const ValidationUtils = {
-  /**
-   * Validate that a string is not empty
-   */
   notEmpty: (
     value: string,
     field: keyof Messages["errors"]["empty"],
@@ -87,9 +72,6 @@ export const ValidationUtils = {
   },
 };
 
-/**
- * Group membership and access control utilities
- */
 export const GroupUtils = {
   activeAdminWhere: (groupId: number, userId: string) =>
     and(
@@ -99,7 +81,6 @@ export const GroupUtils = {
       eq(groupMembers.isActive, true),
     ),
 
-  /** Serializes membership changes in a group; call it first inside the transaction. */
   lockGroup: (tx: DbTransaction, groupId: number) =>
     tx
       .select({ id: groups.id })
@@ -137,7 +118,6 @@ export const GroupUtils = {
     return deleted.length;
   },
 
-  /** Foreign keys don't cascade, so every child row goes before its parent. */
   deleteGroupData: async (tx: DbTransaction, groupId: number) => {
     const groupLists = tx
       .select({ id: shoppingLists.id })
@@ -162,7 +142,6 @@ export const GroupUtils = {
   },
 };
 
-// Postgres's default LIKE escape character is the backslash
 export const escapeLike = (text: string) => text.replace(/[\\%_]/g, "\\$&");
 
 export const memberUserColumns = {
@@ -176,7 +155,6 @@ export const memberName = (member: {
   user: { name: string } | null;
 }) => member.user?.name ?? member.placeholderName ?? "";
 
-/** Placeholders have no user, so they get one built from their name; released apps read `member.user` unguarded. */
 export const withMemberUser = <
   M extends { placeholderName: string | null; user: MemberUser | null },
 >({
@@ -248,7 +226,6 @@ export const activePlaceholderWhere = (memberId?: number) =>
     eq(groupMembers.isActive, true),
   );
 
-/** Callers check the right to add; `refusal` runs under the group lock, so it sees concurrent removals. */
 export const addMemberTx = async (
   tx: DbTransaction,
   groupId: number,
@@ -281,7 +258,6 @@ export const addMemberTx = async (
       .returning({ id: groupMembers.id });
     return claimed?.id ?? Errors.conflict("errors.placeholderTaken");
   }
-  // A spot they once claimed keeps its placeholder's history, so it never comes back with them
   const existing = rows.find((row) => row.placeholderName === null);
   const [member] = existing
     ? await tx
@@ -297,7 +273,6 @@ export const addMemberTx = async (
   return member.id;
 };
 
-/** Does not check group access, callers must. */
 export const fetchGroupDebtSummary = async (db: Database, groupId: number) =>
   calculateDebts(
     await db.query.expenses.findMany({

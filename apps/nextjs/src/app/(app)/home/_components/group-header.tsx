@@ -39,7 +39,6 @@ export function GroupHeader() {
           id: group.id,
           title: group.name,
           subtitle: memberCount(group.memberCount),
-          // Settings act on the selected group, so only its own row offers them
           more:
             group.id === currentGroup.id
               ? {
@@ -87,7 +86,6 @@ export function GroupHeader() {
     <div className="relative overflow-hidden rounded-2xl">
       <Backdrop />
       <div className="relative p-4 pb-28">{header}</div>
-      {/* Lines up with the gap the skyline leaves next to its right edge */}
       <PeekingCat
         variant="home"
         className="absolute right-8 bottom-4 h-8 w-16"

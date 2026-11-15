@@ -12,7 +12,6 @@ import {
 
 const HANDLED_KEY = "install_referrer_handled";
 
-// The web join page passes the invite code through the Play Store install referrer
 export function InstallReferrer() {
   const router = useRouter();
   const pathname = usePathname();
@@ -26,19 +25,16 @@ export function InstallReferrer() {
     if (Platform.OS !== "android") return;
     void (async () => {
       if (await AsyncStorage.getItem(HANDLED_KEY)) return;
-      // An update to an install older than any invite would replay a long-dead referrer
       if (outlivesAnyInvite(await Application.getInstallationTimeAsync())) {
         await AsyncStorage.setItem(HANDLED_KEY, "true");
         return;
       }
-      // Play's referrer service can be briefly unavailable; the next launch tries again
       const referrer = await Application.getInstallReferrerAsync().catch(
         () => null,
       );
       if (referrer === null) return;
       await AsyncStorage.setItem(HANDLED_KEY, "true");
       const invite = readInviteReferrer(new URLSearchParams(referrer));
-      // A link to the same invite may have opened the app already; the pathname carries no query
       if (invite && pathnameRef.current !== invitePath(invite.code)) {
         router.push(invitePath(invite.code, invite.placeholderId));
       }

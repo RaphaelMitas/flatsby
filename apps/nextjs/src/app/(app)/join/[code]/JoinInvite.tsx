@@ -60,7 +60,6 @@ export function JoinInvite({
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
-  // An unknown personalId matches no placeholder, so nothing is preselected
   const [claimId, setClaimId] = useState<number | null>(personalId ?? null);
   const [takenName, setTakenName] = useState<string>();
 
@@ -73,7 +72,6 @@ export function JoinInvite({
         void queryClient.invalidateQueries(
           trpc.user.getCurrentUserWithGroups.queryFilter(),
         );
-        // The list page reads the last-used group, so it only works once that was saved
         router.push(
           shoppingListId && data?.success
             ? `/shopping-list/${shoppingListId}`
@@ -299,7 +297,6 @@ function InstallApp({
 }) {
   const t = useTranslations();
   const invite = `?${inviteReferrer({ code, placeholderId: personalId })}`;
-  // Chrome only follows an absolute fallback URL out of an intent link
   const playStoreFallback = `${SITE_URL}${PLAY_STORE_LINK}${invite}`;
 
   return (

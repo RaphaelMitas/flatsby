@@ -14,13 +14,11 @@ import { defaultUserName } from "@flatsby/validators/user";
 
 import { allowSignInCode } from "./sign-in-code-limit";
 
-// The Android app proves itself with its signing certificate instead of a web origin
 const androidOrigin = (fingerprint: string) =>
   `android:apk-key-hash:${Buffer.from(fingerprint.replaceAll(":", ""), "hex").toString("base64url")}`;
 
 const SEND_CODE_PATH = "/email-otp/send-verification-otp";
 
-// Better Auth logs a failed send and answers success, so the after hook turns it back into an error
 const failedSends = new WeakSet<Request>();
 
 export interface SignInCode {
@@ -54,7 +52,6 @@ export function initAuth(options: {
   onUserCreated?: (headers: Headers | undefined) => Promise<void>;
   onOAuthCallback?: (callback: OAuthCallback) => Promise<void>;
 }) {
-  // e2e runs a production build, and every test shares one IP
   const limitRequests =
     options.nodeEnv === "production" && !options.enableTestUtils;
   const site = new URL(options.baseUrl);
@@ -70,7 +67,6 @@ export function initAuth(options: {
       emailOTP({
         expiresIn: SIGN_IN_CODE_TTL_SECONDS,
         storeOTP: "encrypted",
-        // A resend after a slow first email keeps that email's code valid
         resendStrategy: "reuse",
         sendVerificationOTP: async ({ email, otp }, ctx) => {
           try {
@@ -99,7 +95,6 @@ export function initAuth(options: {
       nextCookies(),
       ...(options.enableTestUtils ? [testUtils()] : []),
     ],
-    // Codes only sign in; the other routes count guesses without a lock and send mail past the per-address cap
     disabledPaths: [
       "/email-otp/check-verification-otp",
       "/email-otp/verify-email",
@@ -114,13 +109,9 @@ export function initAuth(options: {
       storage: "database",
       modelName: "rateLimits",
       customRules: {
-        // Every app open checks the session; a write per check buys nothing
         "/get-session": false,
-        // Above the 3 tries a code allows, so a 4th wrong code reads as spent rather than rate limited
         "/sign-in/email-otp": { window: 60, max: 10 },
-        // Flatmates on one Wi-Fi share an IP; the per-address cap still bounds mail to any one inbox
         [SEND_CODE_PATH]: { window: 60, max: 10 },
-        // Database storage counts the built-in 3 per 10s across instances, which a household signing in together would hit
         "/sign-in/social": { window: 60, max: 10 },
       },
     },
@@ -161,10 +152,8 @@ export function initAuth(options: {
           }
           return;
         }
-        // Every outcome Better Auth handles leaves the callback as a redirect, so it's read from the location
         const providerId = ctx.params?.id;
         const location = ctx.context.responseHeaders?.get("location");
-        // Apple's form_post arrives as a POST that only forwards to the GET callback
         if (
           !ctx.path.startsWith("/callback/") ||
           ctx.method === "POST" ||
@@ -184,7 +173,6 @@ export function initAuth(options: {
       user: {
         create: {
           before: async (user, context) => {
-            // A code sign-up's name and image come from the request body; the name step sets the real name
             const fromCode = context?.path === "/sign-in/email-otp";
             if (user.name && !fromCode) return;
             return {
@@ -205,10 +193,8 @@ export function initAuth(options: {
     },
     user: {
       modelName: "users",
-      // On the session the tRPC context already loads, so the analytics gate costs no query
       additionalFields: {
         analyticsOptOut: { type: "boolean", defaultValue: false, input: false },
-        // Set only through updatePaypalHandle, which validates it
         paypalHandle: { type: "string", required: false, input: false },
       },
     },
@@ -217,7 +203,6 @@ export function initAuth(options: {
     },
     account: {
       modelName: "accounts",
-      // No trustedProviders: an unverified provider email mustn't link into an email-code account
       accountLinking: { enabled: true },
     },
     verification: { modelName: "verificationTokens" },

@@ -1,22 +1,4 @@
 #!/usr/bin/env node
-/**
- * Composes the store listing assets from the Maestro store-screenshot
- * captures, or with --readme the README's section images.
- *
- * <captures-dir>/<platform>/<locale>/ holds that locale's captures from the
- * flows in apps/expo/e2e/screenshots/ (full screens, crop-* elements and the
- * iPad's ipad-* screens). Writes, per store locale:
- *   <out>/<platform>/<store-locale>/NN.png   framed phone screenshots, plus
- *                                            the raw ipad-*.png for iOS
- *   <out>/app-store/<store-locale>/{search,header}.png   iOS 27 creative assets
- *   <out>/app-store/<store-locale>/header.mp4            and the header video
- *   <out>/play/<store-locale>/featureGraphic.png
- * The App Store and Play assets need iPhone captures; they are skipped without.
- *
- * --readme reads the `assets` branch layout instead (<captures-dir>/ios and
- * /web) and writes <out>/<section>.png per readme/sections.json, skipping a
- * section whose captures are missing.
- */
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -100,7 +82,6 @@ async function open(url, viewport, deviceScaleFactor) {
 async function shoot(url, viewport, deviceScaleFactor, file, element) {
   const page = await open(url, viewport, deviceScaleFactor);
   await mkdir(dirname(file), { recursive: true });
-  // The store rejects an alpha channel; README images need one for GitHub's light and dark pages.
   await (element
     ? page.locator(element).screenshot({ path: file, omitBackground: true })
     : page.screenshot({ path: file }));
@@ -178,7 +159,6 @@ async function renderStore() {
       const storeLocale = STORE_LOCALES[locale];
       if (!storeLocale) continue;
       const captures = join(capturesDir, platform, locale);
-      // Rendering at the capture's size keeps each device's store resolution.
       const viewport = pngSize(join(captures, "01-home.png"));
       for (const [i] of frames.entries()) {
         await shoot(

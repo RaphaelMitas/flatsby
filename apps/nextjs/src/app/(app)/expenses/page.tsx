@@ -17,7 +17,6 @@ export default async function ExpensesPage(props: {
   const searchParams = await props.searchParams;
   const groupId = await getCurrentGroupId();
 
-  // Prefetch initial expenses and group data
   prefetch(
     trpc.expense.getGroupExpenses.infiniteQueryOptions(
       { groupId, limit: PAGE_SIZE.expenses },
@@ -30,7 +29,6 @@ export default async function ExpensesPage(props: {
   prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
   prefetch(trpc.expense.getDebtSummary.queryOptions({ groupId }));
 
-  // Prefetch selected expense if present
   if (searchParams.selected) {
     const expenseId = parseInt(searchParams.selected, 10);
     if (!Number.isNaN(expenseId)) {

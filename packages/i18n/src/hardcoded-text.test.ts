@@ -14,7 +14,6 @@ const scannedRoots = [
   "packages/validators/src",
 ];
 
-// Text these files hold is read by a model or a developer, never by a user.
 const ignoredFiles = [
   /\.test\.tsx?$/,
   /\.d\.ts$/,
@@ -103,7 +102,6 @@ function hasLetters(text: string) {
   return /\p{L}/u.test(text);
 }
 
-// Lowercase ids, class lists, routes and URLs: never shown as text.
 function isTechnicalToken(text: string) {
   const trimmed = text.trim();
   return (
@@ -116,12 +114,10 @@ function isTechnicalToken(text: string) {
   );
 }
 
-// "not an admin" reads as text; "flex gap-2" and "text-sm" do not.
 function isLowercasePhrase(text: string) {
   return /^\p{Ll}+(\s+\p{Ll}[\p{Ll}']*)+[.!?]?$/u.test(text.trim());
 }
 
-// Stricter test for strings in positions that are often technical.
 function isSentence(text: string) {
   const trimmed = text.trim();
   if (isTechnicalToken(trimmed)) return false;

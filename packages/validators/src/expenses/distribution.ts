@@ -1,26 +1,5 @@
-// ============================================================================
-// Distribution Algorithms - Split amounts in cents
-// ============================================================================
-
 import type { ExpenseSplit, SplitMethod } from "./types";
 
-/**
- * Distribute an amount equally among members
- * Handles remainders by giving extra cents to the first N members
- *
- * @param memberIds - Array of member IDs to split between
- * @param totalAmountCents - Total amount in cents (integer)
- * @returns Array of ExpenseSplit with amounts that sum exactly to totalAmountCents
- *
- * @example
- * distributeEqualAmounts([1, 2, 3], 100)
- * // Returns: [
- * //   { groupMemberId: 1, amountInCents: 34, percentage: null },
- * //   { groupMemberId: 2, amountInCents: 33, percentage: null },
- * //   { groupMemberId: 3, amountInCents: 33, percentage: null }
- * // ]
- * // Total: 34 + 33 + 33 = 100 ✓
- */
 export function distributeEqualAmounts(
   memberIds: number[],
   totalAmountCents: number,
@@ -28,15 +7,13 @@ export function distributeEqualAmounts(
   const memberCount = memberIds.length;
   if (memberCount === 0) return [];
 
-  // Calculate base amount and remainder
   const baseAmount = Math.floor(totalAmountCents / memberCount);
   const remainder = totalAmountCents - baseAmount * memberCount;
 
   return memberIds.map((groupMemberId, index) => ({
     groupMemberId,
-    // First 'remainder' members get baseAmount + 1
     amountInCents: baseAmount + (index < remainder ? 1 : 0),
-    percentage: null, // Equal splits don't store percentage
+    percentage: null,
   }));
 }
 
@@ -44,10 +21,6 @@ export function emptySplit(groupMemberId: number): ExpenseSplit {
   return { groupMemberId, amountInCents: 0, percentage: null };
 }
 
-/**
- * Distribute an amount based on percentages (in basis points) using the largest remainder method.
- * Amounts only sum to totalAmountCents once the percentages total 100%; partial input stays floored.
- */
 export function distributePercentageAmounts(
   splits: Pick<ExpenseSplit, "groupMemberId" | "percentage">[],
   totalAmountCents: number,
@@ -56,7 +29,6 @@ export function distributePercentageAmounts(
     (sum, s) => sum + (s.percentage ?? 0),
     0,
   );
-  // Tolerance matches validateSplits; scaling by the entered total lets 99.99% still sum exactly
   const isComplete = Math.abs(totalBasisPoints - 10000) <= 1;
   const basis = isComplete ? totalBasisPoints : 10000;
   const rawAmounts = splits.map(
@@ -95,7 +67,6 @@ export function distributeShareAmounts(
   }));
 }
 
-// The server derives share amounts from the counts, so callers never have to match its rounding
 export function splitsForStorage(
   method: SplitMethod,
   splits: ExpenseSplit[],

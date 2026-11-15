@@ -44,7 +44,6 @@ export function InviteScreen({
 
   const hasCapturedShown = useRef(false);
 
-  // QR scans and read-out codes leave no trace, so showing them is what's countable
   useEffect(() => {
     if (!invite.success || hasCapturedShown.current) return;
     hasCapturedShown.current = true;
@@ -67,7 +66,6 @@ export function InviteScreen({
   }
 
   const link = inviteLink(getBaseUrl(), invite.data.code);
-  // Sits below the names when they show, so naming flatmates comes first
   const doneButton = onDone && (
     <Button
       testID="group-invite-done"

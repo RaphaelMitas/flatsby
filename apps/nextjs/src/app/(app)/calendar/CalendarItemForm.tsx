@@ -93,7 +93,6 @@ export function CalendarItemForm({
     item?.recurrence ? item.endsOn : null,
   );
   const [memberIds, setMemberIds] = useState(item?.memberIds ?? []);
-  // Typing "10" passes through an empty field, which the number itself can't hold
   const [everyText, setEveryText] = useState(String(repeat.every));
 
   const isTask = kind === "task";

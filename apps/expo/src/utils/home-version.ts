@@ -2,14 +2,12 @@ import { usePostHog } from "posthog-react-native";
 
 import { storedChoice } from "./stored-choice";
 
-// "undecided" is the classic home with the invite to try the new one.
 export type HomeVersion = "new" | "classic" | "undecided";
 
 const homeVersion = storedChoice<HomeVersion>("home-version", (saved) =>
   saved === "new" || saved === "classic" ? saved : "undecided",
 );
 
-/** null until the stored choice is read */
 export function useHomeVersion() {
   const posthog = usePostHog();
   const current = homeVersion.useValue();

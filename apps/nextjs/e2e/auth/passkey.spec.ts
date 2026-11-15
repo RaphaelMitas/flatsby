@@ -13,7 +13,6 @@ async function signUp(page: Page) {
 }
 
 test.describe("Passkeys", () => {
-  // Chrome's virtual authenticator stands in for Touch ID and keeps the passkey for the whole test
   test.beforeEach(async ({ page }) => {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send("WebAuthn.enable");
@@ -39,7 +38,6 @@ test.describe("Passkeys", () => {
     await expect(page).toHaveURL(/\/welcome/);
     const userId = await currentUserId(page);
 
-    // This browser has used a passkey, so the login leads with it
     await page.context().clearCookies();
     await page.goto("/auth/login");
     await waitForHydration(page.getByTestId("auth-login-passkey-button"));
@@ -65,7 +63,6 @@ test.describe("Passkeys", () => {
     const email = await signUp(page);
     await page.getByTestId("auth-passkey-later").click();
     await expect(page).toHaveURL(/\/welcome/);
-    // Without a group there is no settings page, so onboarding offers the way out
     await waitForHydration(page.getByTestId("onboarding-sign-out"));
     await page.getByTestId("onboarding-sign-out").click();
     await expect(page).toHaveURL(/\/auth\/login/);

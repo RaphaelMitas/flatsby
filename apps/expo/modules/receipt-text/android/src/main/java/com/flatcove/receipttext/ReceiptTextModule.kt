@@ -23,7 +23,6 @@ class ReceiptTextModule : Module() {
         promise.resolve(emptyList<Map<String, Any>>())
         return@AsyncFunction
       }
-      // Boxes come in the upright image's pixels, which swaps width and height when rotated
       val upright = image.rotationDegrees % 180 == 0
       val width = (if (upright) image.width else image.height).toFloat()
       val height = (if (upright) image.height else image.width).toFloat()

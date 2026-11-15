@@ -92,7 +92,6 @@ export function ExpenseFilterBar({
     sheetRef.current?.present();
   };
 
-  // iOS animates the sheet out for a while; let the new check paint first
   const chooseAndClose = (run: () => void) => {
     run();
     requestAnimationFrame(() => sheetRef.current?.dismiss());

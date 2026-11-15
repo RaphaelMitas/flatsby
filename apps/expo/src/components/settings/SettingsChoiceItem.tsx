@@ -30,7 +30,6 @@ export function SettingsChoiceItem<T extends string>(props: {
             choices={props.choices}
             selected={props.selected}
             buttonClassName="flex-1 py-0"
-            // Spans the container's p-2 (7pt) so the target fills the row
             hitSlop={{ top: 7, bottom: 7 }}
             onSelect={(value) => {
               props.onSelect(value);

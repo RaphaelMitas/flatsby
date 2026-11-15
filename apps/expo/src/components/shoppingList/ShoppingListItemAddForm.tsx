@@ -37,7 +37,6 @@ export const ShoppingListItemAddForm = ({
   const router = useRouter();
   const { focus } = useLocalSearchParams<{ focus?: string }>();
 
-  // The home's plus opens the list ready to type
   useEffect(() => {
     if (!focus) return;
     inputRef.current?.focus();
