@@ -62,6 +62,7 @@
       }
     }
   },
+  "plugins": ["./tooling/biome/no-comments.js"],
   "overrides": [
     {
       "includes": [
