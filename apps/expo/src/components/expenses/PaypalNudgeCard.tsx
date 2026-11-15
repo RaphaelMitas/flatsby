@@ -7,19 +7,17 @@ import { Button } from "~/lib/ui/button";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
-import { storedFlag } from "~/utils/stored-choice";
+import { useStoredFlag } from "~/utils/stored-choice";
 
-const dismissedFlag = storedFlag("paypal_nudge_dismissed");
+const dismissedKey = "paypal_nudge_dismissed";
 
 export function PaypalNudgeCard() {
   const t = useTranslations("debts.pay");
   const router = useRouter();
-  const dismissed = dismissedFlag.useValue();
+  const { isSet: dismissed, set: dismiss } = useStoredFlag(dismissedKey);
   const { data: user } = useQuery(trpc.user.getCurrentUser.queryOptions());
 
   if (dismissed !== false || !user || user.paypalHandle) return null;
-
-  const dismiss = () => dismissedFlag.save(true);
 
   return (
     <Card testID="paypal-nudge-card" className="mt-4">

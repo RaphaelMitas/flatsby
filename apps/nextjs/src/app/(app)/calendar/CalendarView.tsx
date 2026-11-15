@@ -164,25 +164,23 @@ function CalendarScreen({
   const step = (delta: number) => moveTo(stepPosition(position, delta, today));
   const swipeStart = useRef<{ x: number; y: number } | undefined>(undefined);
 
-  const onArrow = useEffectEvent((delta: number) => {
-    if (!panel) step(delta);
+  const onKey = useEffectEvent((event: KeyboardEvent) => {
+    if (
+      panel ||
+      event.defaultPrevented ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      (event.target instanceof Element &&
+        event.target.closest(
+          "input, textarea, select, [contenteditable], [role=dialog], [role=tab], [role=separator]",
+        ))
+    )
+      return;
+    if (event.key === "ArrowLeft") step(-1);
+    if (event.key === "ArrowRight") step(1);
   });
   useMountEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (
-        event.defaultPrevented ||
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey ||
-        (event.target instanceof Element &&
-          event.target.closest(
-            "input, textarea, select, [contenteditable], [role=dialog], [role=tab], [role=separator]",
-          ))
-      )
-        return;
-      if (event.key === "ArrowLeft") onArrow(-1);
-      if (event.key === "ArrowRight") onArrow(1);
-    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });

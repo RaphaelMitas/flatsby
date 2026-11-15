@@ -29,6 +29,7 @@ import type { Nudge } from "./ForYouCard";
 import type { HomeRowProps } from "./HomeRows";
 import { AnalyticsPrompt } from "~/components/analytics/AnalyticsPrompt";
 import { fromPickerTime } from "~/components/calendar/calendarDates";
+import { revealInCalendar } from "~/components/calendar/calendarPosition";
 import { calendarRangeOptions } from "~/components/calendar/calendarRangeOptions";
 import { useCalendarMutations } from "~/components/calendar/useCalendarMutations";
 import { settleHref } from "~/components/expenses/settleHref";
@@ -188,11 +189,10 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       ),
     ]);
 
-  const openCalendar = (date?: string) =>
-    router.navigate({
-      pathname: "/(tabs)/calendar",
-      params: date ? { date } : {},
-    });
+  const openCalendar = (date?: string) => {
+    if (date) revealInCalendar(date);
+    router.navigate("/(tabs)/calendar");
+  };
   const dayAndTime = (date: string, start?: string) =>
     [formatCalendarDate(date, locale, { weekday: "short" }), start]
       .filter(Boolean)

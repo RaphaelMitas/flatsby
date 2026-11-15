@@ -1,5 +1,4 @@
 import type { InvitePlaceholder } from "@flatsby/validators/group";
-import { useSyncExternalStore } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
@@ -26,17 +25,9 @@ import { Button } from "~/lib/ui/button";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
-import { storedFlag } from "~/utils/stored-choice";
+import { useStoredFlag } from "~/utils/stored-choice";
 
-const dismissedFlags = new Map<number, ReturnType<typeof storedFlag>>();
-
-const dismissedFlag = (groupId: number) => {
-  const flag =
-    dismissedFlags.get(groupId) ??
-    storedFlag(`invite_card_dismissed_${groupId}`);
-  dismissedFlags.set(groupId, flag);
-  return flag;
-};
+const dismissedKey = (groupId: number) => `invite_card_dismissed_${groupId}`;
 
 export function InviteFlatmatesCard({
   groupId,
@@ -46,8 +37,9 @@ export function InviteFlatmatesCard({
   className?: string;
 }) {
   const t = useTranslations();
-  const flag = dismissedFlag(groupId);
-  const dismissed = useSyncExternalStore(flag.subscribe, flag.get);
+  const { isSet: dismissed, set: dismiss } = useStoredFlag(
+    dismissedKey(groupId),
+  );
   const once = useOnce();
   const { data: group } = useQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
@@ -67,8 +59,6 @@ export function InviteFlatmatesCard({
   const sharePressed = useMutation(trpc.invite.sharePressed.mutationOptions());
 
   if (!visible || !group?.success) return null;
-
-  const dismiss = () => flag.save(true);
 
   const placeholders = openPlaceholders(group.data.groupMembers);
   const code = invite.data?.success ? invite.data.data : undefined;

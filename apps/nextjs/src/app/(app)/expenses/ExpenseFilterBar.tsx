@@ -8,7 +8,7 @@ import type {
 } from "@flatsby/validators/expenses/list-filter";
 import type { ReactNode } from "react";
 import type { DateRange } from "react-day-picker";
-import { useRef, useState } from "react";
+import { useEffectEvent, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -80,12 +80,12 @@ export function ExpenseFilterBar({
   const twoMonths = useMediaQuery("md");
   const { choice } = filters;
 
+  const focusSearch = useEffectEvent((event: KeyboardEvent) => {
+    if (event.key !== "/" || isTyping(event.target)) return;
+    event.preventDefault();
+    inputRef.current?.focus();
+  });
   useMountEffect(() => {
-    const focusSearch = (event: KeyboardEvent) => {
-      if (event.key !== "/" || isTyping(event.target)) return;
-      event.preventDefault();
-      inputRef.current?.focus();
-    };
     window.addEventListener("keydown", focusSearch);
     return () => window.removeEventListener("keydown", focusSearch);
   });

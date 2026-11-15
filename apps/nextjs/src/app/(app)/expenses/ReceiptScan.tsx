@@ -53,6 +53,8 @@ const base64Of = (dataUrl: string) => dataUrl.slice(dataUrl.indexOf(",") + 1);
 
 const DOCUMENT_URL = `data:image/svg+xml,${encodeURIComponent(receiptDocument.svg)}`;
 
+const keepInPage = (event: DragEvent) => event.preventDefault();
+
 export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const t = useTranslations("expenses.receiptScan");
   const tCommon = useTranslations("common");
@@ -66,14 +68,13 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   };
   const revokeOnUnmount = useEffectEvent(revokePhoto);
 
+  useMountEffect(() => revokeOnUnmount);
   useMountEffect(() => {
-    const keep = (event: DragEvent) => event.preventDefault();
-    window.addEventListener("dragover", keep);
-    window.addEventListener("drop", keep);
+    window.addEventListener("dragover", keepInPage);
+    window.addEventListener("drop", keepInPage);
     return () => {
-      window.removeEventListener("dragover", keep);
-      window.removeEventListener("drop", keep);
-      revokeOnUnmount();
+      window.removeEventListener("dragover", keepInPage);
+      window.removeEventListener("drop", keepInPage);
     };
   });
 

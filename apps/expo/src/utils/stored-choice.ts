@@ -48,5 +48,13 @@ export const storedChoice = <T extends string>(
   parse: (saved: string | null) => T,
 ) => storedValue(key, parse);
 
-export const storedFlag = (key: string) =>
-  storedValue(key, (saved) => saved !== null);
+const flags = new Map<string, ReturnType<typeof storedValue<boolean>>>();
+
+export function useStoredFlag(key: string) {
+  const flag = flags.get(key) ?? storedValue(key, (saved) => saved !== null);
+  flags.set(key, flag);
+  return {
+    isSet: useSyncExternalStore(flag.subscribe, flag.get),
+    set: () => flag.save(true),
+  };
+}
