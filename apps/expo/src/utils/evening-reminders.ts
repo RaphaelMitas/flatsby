@@ -18,6 +18,7 @@ import {
   pickerDate,
 } from "@flatsby/validators/calendar";
 
+import { revealInCalendar } from "~/components/calendar/calendarPosition";
 import { calendarRangeOptions } from "~/components/calendar/calendarRangeOptions";
 import { trpc } from "./api";
 import { useSession } from "./auth/auth-client";
@@ -224,10 +225,8 @@ export function useEveningReminders() {
     if (!tapped.success || !group) return;
     Notifications.clearLastNotificationResponse();
     if (group.id !== selectedGroupId) setSelectedGroup(group.id, group.name);
-    router.navigate({
-      pathname: "/(tabs)/calendar",
-      params: { date: tapped.data.date },
-    });
+    revealInCalendar(tapped.data.date);
+    router.navigate("/(tabs)/calendar");
   });
   useEffect(() => {
     if (response)

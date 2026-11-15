@@ -26,6 +26,7 @@ import {
   PersonPill,
   useCalendarPeople,
 } from "./CalendarPeople";
+import { revealInCalendar } from "./calendarPosition";
 import { useCalendarMutations } from "./useCalendarMutations";
 
 interface CalendarItemDetailProps {
@@ -114,8 +115,10 @@ export function CalendarItemDetail({
         });
   const repeats = item.recurrence !== null;
   const currentTurn = upcoming[0]?.turnGroupMemberId ?? null;
-  const showOnCalendar = (day: string) =>
-    router.dismissTo({ pathname: "/(tabs)/calendar", params: { date: day } });
+  const showOnCalendar = (day: string) => {
+    revealInCalendar(day);
+    router.dismissTo("/(tabs)/calendar");
+  };
   const skip = (day: string, skipped: boolean, missed?: string[]) =>
     setSkipped.mutate({
       groupId: group.id,

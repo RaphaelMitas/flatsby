@@ -1,3 +1,4 @@
+import type { RouterOutputs } from "@flatsby/api";
 import { Pressable, Text, View } from "react-native";
 import {
   useMutation,
@@ -13,7 +14,7 @@ import {
   inviteDaysLeft,
   inviteLink,
 } from "@flatsby/validators/invite";
-import { OnMount } from "@flatsby/validators/OnMount";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import { PlaceholderMembers } from "~/components/members/PlaceholderMembers";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -25,22 +26,41 @@ import { getBaseUrl } from "~/utils/base-url";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useShareInvite } from "./useShareInvite";
 
-export function InviteScreen({
-  onDone,
-  withPlaceholders,
-}: {
+interface InviteScreenProps {
   onDone?: () => void;
   withPlaceholders?: boolean;
-}) {
-  const t = useTranslations();
-  const { selectedGroupId, selectedGroupName } = useShoppingStore();
-  const groupId = Number(selectedGroupId) || 0;
-  const queryClient = useQueryClient();
-  const shareInvite = useShareInvite();
+}
 
+export function InviteScreen(props: InviteScreenProps) {
+  const { selectedGroupId } = useShoppingStore();
+  const groupId = Number(selectedGroupId) || 0;
   const { data: invite } = useSuspenseQuery(
     trpc.invite.get.queryOptions({ groupId }),
   );
+
+  if (!invite.success) {
+    return <ErrorMessage message={invite.error.message} />;
+  }
+  return <Invite {...props} groupId={groupId} invite={invite.data} />;
+}
+
+function Invite({
+  onDone,
+  withPlaceholders,
+  groupId,
+  invite,
+}: InviteScreenProps & {
+  groupId: number;
+  invite: Extract<RouterOutputs["invite"]["get"], { success: true }>["data"];
+}) {
+  const t = useTranslations();
+  const { selectedGroupName } = useShoppingStore();
+  const queryClient = useQueryClient();
+  const shareInvite = useShareInvite();
+
+  useMountEffect(() => {
+    getPostHog().capture("invite_shown", { groupId });
+  });
 
   const resetMutation = useMutation(
     trpc.invite.reset.mutationOptions({
@@ -53,11 +73,7 @@ export function InviteScreen({
     }),
   );
 
-  if (!invite.success) {
-    return <ErrorMessage message={invite.error.message} />;
-  }
-
-  const link = inviteLink(getBaseUrl(), invite.data.code);
+  const link = inviteLink(getBaseUrl(), invite.code);
   const doneButton = onDone && (
     <Button
       testID="group-invite-done"
@@ -74,7 +90,6 @@ export function InviteScreen({
       className="bg-background"
       contentContainerClassName="items-center gap-4 p-6"
     >
-      <OnMount run={() => getPostHog().capture("invite_shown", { groupId })} />
       <Text className="text-foreground text-center text-lg font-bold">
         {t("invite.title", { group: selectedGroupName ?? "" })}
       </Text>
@@ -94,20 +109,20 @@ export function InviteScreen({
         testID="group-invite-code"
         className="text-foreground font-mono text-2xl font-bold tracking-widest"
       >
-        {formatInviteCode(invite.data.code)}
+        {formatInviteCode(invite.code)}
       </Text>
       <View className="w-full gap-3">
         <Button
           testID="group-invite-share"
           title={t("invite.shareLink")}
           icon="share"
-          onPress={() => shareInvite(invite.data.code)}
+          onPress={() => shareInvite(invite.code)}
         />
         {!withPlaceholders && doneButton}
         <View className="flex-row items-center justify-between">
           <Text className="text-muted-foreground text-xs">
             {t("invite.expiresIn", {
-              days: inviteDaysLeft(invite.data.expiresAt),
+              days: inviteDaysLeft(invite.expiresAt),
             })}
           </Text>
           <Pressable

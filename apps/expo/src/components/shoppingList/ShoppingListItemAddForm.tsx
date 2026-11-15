@@ -5,13 +5,12 @@ import type {
 import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import type { ComponentRef } from "react";
 import type { TextInput } from "react-native";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ScrollView, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useTranslations } from "use-intl";
 
 import { useShoppingListSuggestions } from "@flatsby/api/hooks/useShoppingListSuggestions";
-import { OnMount } from "@flatsby/validators/OnMount";
 import { createShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
 
 import { Badge } from "~/lib/ui/badge";
@@ -19,6 +18,12 @@ import { Button } from "~/lib/ui/button";
 import { Input } from "~/lib/ui/input";
 import { trpc } from "~/utils/api";
 import { CategoryPicker, getCategoryData } from "./ShoppingListCategory";
+
+const focusOnRequest = (input: ComponentRef<typeof TextInput> | null) => {
+  if (!input) return;
+  input.focus();
+  router.setParams({ focus: undefined });
+};
 
 interface ShoppingListItemAddFormProps {
   onSubmit: (values: CreateShoppingListItemFormValues) => void;
@@ -34,8 +39,6 @@ export const ShoppingListItemAddForm = ({
   const [categoryId, setCategoryId] =
     useState<CategoryIdWithAiAutoSelect>("ai-auto-select");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
-  const router = useRouter();
   const { focus } = useLocalSearchParams<{ focus?: string }>();
 
   const { suggestionItems, showSuggestions } = useShoppingListSuggestions(
@@ -73,15 +76,6 @@ export const ShoppingListItemAddForm = ({
 
   return (
     <View className="bg-background gap-4 p-4">
-      {focus && (
-        <OnMount
-          key={focus}
-          run={() => {
-            inputRef.current?.focus();
-            router.setParams({ focus: undefined });
-          }}
-        />
-      )}
       {showSuggestions && (
         <ScrollView
           horizontal
@@ -104,7 +98,7 @@ export const ShoppingListItemAddForm = ({
       )}
       <View className="flex-row items-center gap-3">
         <Input
-          ref={inputRef}
+          ref={focus ? focusOnRequest : undefined}
           testID="shopping-list-item-input"
           className="flex-1"
           placeholder={t("addPlaceholder")}

@@ -38,7 +38,6 @@ import {
   recurrenceOf,
   repeatFormOf,
   repeatUnits,
-  revealDate,
   weekdayName,
   weekdayOf,
   weekdays,
@@ -62,7 +61,7 @@ import { trpc } from "~/utils/api";
 import { MemberAvatar } from "../expenses/MemberAvatar";
 import { fromPickerTime, pickerTime } from "./calendarDates";
 import { useCalendarPeople } from "./CalendarPeople";
-import { calendarPosition } from "./calendarPosition";
+import { calendarPosition, revealInCalendar } from "./calendarPosition";
 import { calendarRangeOptions } from "./calendarRangeOptions";
 import { useCalendarMutations } from "./useCalendarMutations";
 
@@ -182,16 +181,14 @@ function ItemFields({
       update.mutate({ ...trimmed, id: item.id, today });
       router.dismissTo("/(tabs)/calendar");
     } else {
-      router.dismissTo({
-        pathname: "/(tabs)/calendar",
-        params: { date: startsOn },
-      });
+      revealInCalendar(startsOn);
+      router.dismissTo("/(tabs)/calendar");
       const now = localDate();
       await queryClient
         .query({
           ...calendarRangeOptions(
             group.id,
-            positionWindow(revealDate(calendarPosition(), startsOn, now), now),
+            positionWindow(calendarPosition(), now),
           ),
           staleTime: "static",
         })
