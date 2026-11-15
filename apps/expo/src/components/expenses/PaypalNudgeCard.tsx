@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
@@ -9,27 +7,19 @@ import { Button } from "~/lib/ui/button";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
+import { storedFlag } from "~/utils/stored-choice";
 
-const dismissedKey = "paypal_nudge_dismissed";
+const dismissedFlag = storedFlag("paypal_nudge_dismissed");
 
 export function PaypalNudgeCard() {
   const t = useTranslations("debts.pay");
   const router = useRouter();
-  const [dismissed, setDismissed] = useState(true);
+  const dismissed = dismissedFlag.useValue();
   const { data: user } = useQuery(trpc.user.getCurrentUser.queryOptions());
 
-  useEffect(() => {
-    AsyncStorage.getItem(dismissedKey)
-      .then((value) => setDismissed(value !== null))
-      .catch(() => setDismissed(false));
-  }, []);
+  if (dismissed !== false || !user || user.paypalHandle) return null;
 
-  if (dismissed || !user || user.paypalHandle) return null;
-
-  const dismiss = () => {
-    setDismissed(true);
-    void AsyncStorage.setItem(dismissedKey, "true");
-  };
+  const dismiss = () => dismissedFlag.save(true);
 
   return (
     <Card testID="paypal-nudge-card" className="mt-4">

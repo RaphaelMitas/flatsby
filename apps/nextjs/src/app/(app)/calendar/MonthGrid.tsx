@@ -5,7 +5,7 @@ import type {
   AgendaEntry,
   CalendarEntry,
 } from "@flatsby/validators/calendar";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useLocale } from "next-intl";
 
 import { cn } from "@flatsby/ui";
@@ -43,21 +43,12 @@ export function MonthGrid({
 }: MonthGridProps) {
   const locale = useLocale();
   const { weeks } = monthGrid(month);
-  const grid = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
   const lines = Math.max(
     1,
     Math.floor((height / WEEKS - DATE_HEIGHT) / LINE_HEIGHT),
   );
   const layout = days && monthWeeks(days, lines);
-
-  useLayoutEffect(() => {
-    const element = grid.current;
-    if (!element) return;
-    const observer = new ResizeObserver(() => setHeight(element.clientHeight));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col border-t">
@@ -72,7 +63,14 @@ export function MonthGrid({
         ))}
       </div>
       <div
-        ref={grid}
+        ref={(element) => {
+          if (!element) return;
+          const observer = new ResizeObserver(() =>
+            setHeight(element.clientHeight),
+          );
+          observer.observe(element);
+          return () => observer.disconnect();
+        }}
         className="grid min-h-80 flex-1 grid-rows-6"
         data-testid="calendar-month"
       >

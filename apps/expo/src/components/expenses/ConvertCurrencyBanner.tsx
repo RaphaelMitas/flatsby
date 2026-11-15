@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslations } from "use-intl";
 
 import { listCurrencies } from "@flatsby/validators/expenses/formatting";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import { Button } from "~/lib/ui/button";
@@ -24,13 +24,9 @@ export function ConvertCurrencyBanner({
   const router = useRouter();
   const updateGroup = useUpdateGroup(groupId);
 
-  const hasCapturedShown = useRef(false);
-
-  useEffect(() => {
-    if (hasCapturedShown.current) return;
-    hasCapturedShown.current = true;
+  useMountEffect(() => {
     getPostHog().capture("currency_banner_shown", { groupId, currencies });
-  }, [groupId, currencies]);
+  });
 
   const keepSeparate = () => {
     updateGroup.mutate({

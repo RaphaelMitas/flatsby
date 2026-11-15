@@ -36,9 +36,7 @@ export function QuickAddDial({
   const [showOthers, setShowOthers] = useState(false);
   const progress = useSharedValue(0);
 
-  useEffect(() => {
-    if (!isFocused) setOpen(false);
-  }, [isFocused]);
+  if (!isFocused && open) setOpen(false);
 
   useEffect(() => {
     progress.value = open

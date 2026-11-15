@@ -1,7 +1,7 @@
 "use client";
 
 import type { GroupWithAccess } from "@flatsby/api";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
@@ -23,6 +23,9 @@ import { CurrencySelect } from "~/components/CurrencySelect";
 import { useUpdateGroup } from "~/hooks/use-update-group";
 import { useTRPC } from "~/trpc/react";
 import { UpdateGroupAlert } from "./UpdateGroupAlert";
+
+const scrollToCenter = (element: HTMLDivElement | null) =>
+  element?.scrollIntoView({ block: "center" });
 
 const ExpenseSettings = ({ groupId }: { groupId: number }) => {
   const trpc = useTRPC();
@@ -54,13 +57,6 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
   const [convertAutomatically, setConvertAutomatically] = useState(
     opened.convertAutomatically || highlightConvert,
   );
-  const convertRowRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (highlightConvert) {
-      convertRowRef.current?.scrollIntoView({ block: "center" });
-    }
-  }, [highlightConvert]);
 
   const groupMutation = useUpdateGroup(group.id);
   const isEditable = isAdmin && !groupMutation.isPending;
@@ -102,7 +98,7 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
             )}
           </div>
           <div
-            ref={convertRowRef}
+            ref={highlightConvert ? scrollToCenter : undefined}
             className={cn(
               "flex items-start justify-between gap-4 rounded-lg",
               highlightConvert && isConvertDirty && "border-primary border p-3",

@@ -1,72 +1,27 @@
-import { createContext, useContext, useEffect, useState } from "react";
 import { Appearance } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export type Theme = "light" | "dark" | "system";
+import { storedChoice } from "~/utils/stored-choice";
 
-interface ThemeContextType {
-  setTheme: (newTheme: Theme) => void;
-  storedTheme: Theme | null;
-}
+const themes = ["light", "dark", "system"] as const;
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export type Theme = (typeof themes)[number];
 
-const THEME_STORAGE_KEY = "theme_preference";
+const themeChoice = storedChoice<Theme>(
+  "theme_preference",
+  (saved) => themes.find((theme) => theme === saved) ?? "system",
+);
 
 const applyColorScheme = (theme: Theme) => {
   Appearance.setColorScheme(theme === "system" ? "unspecified" : theme);
 };
 
-interface ThemeProviderProps {
-  children: React.ReactNode;
-  defaultTheme?: Theme;
-}
+export const restoreTheme = () => themeChoice.read().then(applyColorScheme);
 
-export function ThemeProvider({
-  children,
-  defaultTheme = "system",
-}: ThemeProviderProps) {
-  const [storedTheme, setStoredTheme] = useState<Theme | null>(null);
-
-  useEffect(() => {
-    const restoreThemeFromStorage = async () => {
-      let theme = defaultTheme;
-      try {
-        const saved = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-        if (saved === "light" || saved === "dark" || saved === "system") {
-          theme = saved;
-        }
-      } catch (error) {
-        console.error("Error restoring theme from storage:", error);
-      }
-      setStoredTheme(theme);
-      applyColorScheme(theme);
-    };
-
-    void restoreThemeFromStorage();
-  }, [defaultTheme]);
-
-  const setTheme = (newTheme: Theme) => {
-    applyColorScheme(newTheme);
-    setStoredTheme(newTheme);
-    void AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme).catch(
-      (error: unknown) => {
-        console.error("Error saving theme to storage:", error);
-      },
-    );
-  };
-
-  const value: ThemeContextType = { storedTheme, setTheme };
-
-  return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-  );
-}
+const setTheme = (newTheme: Theme) => {
+  applyColorScheme(newTheme);
+  themeChoice.save(newTheme);
+};
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-  return context;
+  return { storedTheme: themeChoice.useValue(), setTheme };
 }

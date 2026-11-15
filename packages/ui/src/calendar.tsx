@@ -1,8 +1,8 @@
 "use client";
 
 import type { Locale } from "@flatsby/i18n/locale";
+import type * as React from "react";
 import type { Chevron, DayButton, Root, WeekNumber } from "react-day-picker";
-import * as React from "react";
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -191,6 +191,8 @@ function CalendarWeekNumber({
   );
 }
 
+const focusDay = (button: HTMLButtonElement | null) => button?.focus();
+
 function CalendarDayButton({
   className,
   day,
@@ -199,14 +201,9 @@ function CalendarDayButton({
 }: React.ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames();
 
-  const ref = React.useRef<HTMLButtonElement>(null);
-  React.useEffect(() => {
-    if (modifiers.focused) ref.current?.focus();
-  }, [modifiers.focused]);
-
   return (
     <Button
-      ref={ref}
+      ref={modifiers.focused ? focusDay : undefined}
       variant="ghost"
       size="icon"
       data-day={day.date.toLocaleDateString()}

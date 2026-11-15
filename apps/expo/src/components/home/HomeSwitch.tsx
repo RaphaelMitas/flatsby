@@ -1,6 +1,7 @@
-import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTranslations } from "use-intl";
+
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import { useBottomSheetPicker } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
@@ -13,9 +14,9 @@ export function HomeInvite() {
   const t = useTranslations("home.new.invite");
   const { switchTo } = useHomeVersion();
 
-  useEffect(() => {
+  useMountEffect(() => {
     getPostHog().capture("home_invite_shown");
-  }, []);
+  });
 
   return (
     <Card testID="home-invite">

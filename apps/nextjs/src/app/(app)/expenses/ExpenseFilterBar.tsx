@@ -8,7 +8,7 @@ import type {
 } from "@flatsby/validators/expenses/list-filter";
 import type { ReactNode } from "react";
 import type { DateRange } from "react-day-picker";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -46,6 +46,7 @@ import {
   memberRoles,
   presetRange,
 } from "@flatsby/validators/expenses/list-filter";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -79,7 +80,7 @@ export function ExpenseFilterBar({
   const twoMonths = useMediaQuery("md");
   const { choice } = filters;
 
-  useEffect(() => {
+  useMountEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
       if (event.key !== "/" || isTyping(event.target)) return;
       event.preventDefault();
@@ -87,7 +88,7 @@ export function ExpenseFilterBar({
     };
     window.addEventListener("keydown", focusSearch);
     return () => window.removeEventListener("keydown", focusSearch);
-  }, []);
+  });
 
   const { data: formerData } = useQuery(
     trpc.expense.getFormerMembers.queryOptions({ groupId }),

@@ -7,6 +7,8 @@ import { cva } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import { useTranslations } from "use-intl";
 
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
+
 import { useIsMobile } from "../hooks/use-mobile";
 import { Button } from "./button";
 import { cn } from "./index";
@@ -92,20 +94,20 @@ function SidebarProvider({
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
   }, [isMobile, setOpen, setOpenMobile]);
 
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-        (event.metaKey || event.ctrlKey)
-      ) {
-        event.preventDefault();
-        toggleSidebar();
-      }
-    };
+  const handleKeyDown = React.useEffectEvent((event: KeyboardEvent) => {
+    if (
+      event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+      (event.metaKey || event.ctrlKey)
+    ) {
+      event.preventDefault();
+      toggleSidebar();
+    }
+  });
 
+  useMountEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [toggleSidebar]);
+  });
 
   const state = open ? "expanded" : "collapsed";
 

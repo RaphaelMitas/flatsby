@@ -1,5 +1,5 @@
 import type { MessageKey } from "@flatsby/i18n/message-key";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 
 import { msg } from "@flatsby/i18n/message-key";
 
@@ -47,6 +47,25 @@ async function requestSignInCode(
     onFailed("start", thrownFailureCode(thrown));
     return msg("auth.code.failed");
   }
+}
+
+let clock = 0;
+let clockTimer: ReturnType<typeof setInterval> | undefined;
+const clockListeners = new Set<() => void>();
+
+function subscribeClock(listener: () => void) {
+  if (clockListeners.size === 0) {
+    clock = Date.now();
+    clockTimer = setInterval(() => {
+      clock = Date.now();
+      for (const notify of clockListeners) notify();
+    }, 1000);
+  }
+  clockListeners.add(listener);
+  return () => {
+    clockListeners.delete(listener);
+    if (clockListeners.size === 0) clearInterval(clockTimer);
+  };
 }
 
 export function useSendSignInCode({
@@ -109,17 +128,14 @@ export function useSignInCode({
   const [busy, setBusy] = useState(false);
   const locked = useRef(false);
   const [sentAt, setSentAt] = useState(() => Date.now());
-  const [now, setNow] = useState(() => Date.now());
   const resendAt = sentAt + SIGN_IN_CODE_RESEND_SECONDS * 1000;
-  const waitSeconds = expired
-    ? 0
-    : Math.max(0, Math.ceil((resendAt - now) / 1000));
-
-  useEffect(() => {
-    if (waitSeconds === 0) return;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [waitSeconds]);
+  const secondsUntilResend = (now: number) =>
+    expired ? 0 : Math.max(0, Math.ceil((resendAt - now) / 1000));
+  const waitSeconds = useSyncExternalStore(
+    subscribeClock,
+    () => secondsUntilResend(Math.max(clock, sentAt)),
+    () => secondsUntilResend(sentAt),
+  );
 
   const run = async (request: () => Promise<boolean | void>) => {
     locked.current = true;
@@ -177,7 +193,6 @@ export function useSignInCode({
       setCode("");
       setResent(true);
       setSentAt(Date.now());
-      setNow(Date.now());
     });
 
   return { code, change, error, expired, resent, busy, waitSeconds, resend };

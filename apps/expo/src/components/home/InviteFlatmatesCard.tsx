@@ -1,7 +1,6 @@
 import type { InvitePlaceholder } from "@flatsby/validators/group";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Pressable, Text, View } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
@@ -27,8 +26,17 @@ import { Button } from "~/lib/ui/button";
 import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
+import { storedFlag } from "~/utils/stored-choice";
 
-const dismissedKey = (groupId: number) => `invite_card_dismissed_${groupId}`;
+const dismissedFlags = new Map<number, ReturnType<typeof storedFlag>>();
+
+const dismissedFlag = (groupId: number) => {
+  const flag =
+    dismissedFlags.get(groupId) ??
+    storedFlag(`invite_card_dismissed_${groupId}`);
+  dismissedFlags.set(groupId, flag);
+  return flag;
+};
 
 export function InviteFlatmatesCard({
   groupId,
@@ -38,10 +46,8 @@ export function InviteFlatmatesCard({
   className?: string;
 }) {
   const t = useTranslations();
-  const [dismissal, setDismissal] = useState<{
-    groupId: number;
-    dismissed: boolean;
-  }>();
+  const flag = dismissedFlag(groupId);
+  const dismissed = useSyncExternalStore(flag.subscribe, flag.get);
   const once = useOnce();
   const { data: group } = useQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
@@ -50,8 +56,7 @@ export function InviteFlatmatesCard({
     groupId,
     group?.success ? group.data.groupMembers : undefined,
   );
-  const visible =
-    waiting && dismissal?.groupId === groupId && !dismissal.dismissed;
+  const visible = waiting && dismissed === false;
 
   const invite = useQuery({
     ...trpc.invite.get.queryOptions({ groupId }),
@@ -61,18 +66,9 @@ export function InviteFlatmatesCard({
   const shareInvite = useShareInvite();
   const sharePressed = useMutation(trpc.invite.sharePressed.mutationOptions());
 
-  useEffect(() => {
-    AsyncStorage.getItem(dismissedKey(groupId))
-      .then((value) => setDismissal({ groupId, dismissed: value !== null }))
-      .catch(() => setDismissal({ groupId, dismissed: false }));
-  }, [groupId]);
-
   if (!visible || !group?.success) return null;
 
-  const dismiss = () => {
-    setDismissal({ groupId, dismissed: true });
-    void AsyncStorage.setItem(dismissedKey(groupId), "true");
-  };
+  const dismiss = () => flag.save(true);
 
   const placeholders = openPlaceholders(group.data.groupMembers);
   const code = invite.data?.success ? invite.data.data : undefined;

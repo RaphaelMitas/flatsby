@@ -1,10 +1,11 @@
 import type { EditShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
 import { Form, FormControl, FormField, useForm } from "@flatsby/ui/form";
 import { editShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import { CategorySelector } from "./CategorySelector";
 import { ShoppingListItemInputFormField } from "./ShoppingListItemInputFormField";
@@ -27,9 +28,7 @@ export const ShoppingListItemEditForm = ({
     defaultValues: initialValues,
   });
 
-  useEffect(() => {
-    form.setFocus("name");
-  }, [form]);
+  useMountEffect(() => form.setFocus("name"));
 
   const handleSubmit = (values: EditShoppingListItemFormValues) => {
     setIsSubmitting(true);

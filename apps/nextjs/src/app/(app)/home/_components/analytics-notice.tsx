@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -8,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@flatsby/ui/button";
 
 import { useTRPC } from "~/trpc/react";
+import { useStoredFlag } from "~/utils/stored-flag";
 
 const seenKey = "analytics_notice_seen";
 
@@ -15,18 +15,9 @@ export function AnalyticsNotice() {
   const t = useTranslations("settings.analytics");
   const trpc = useTRPC();
   const { data: user } = useQuery(trpc.user.getCurrentUser.queryOptions());
-  const [seen, setSeen] = useState(true);
-
-  useEffect(() => {
-    setSeen(localStorage.getItem(seenKey) !== null);
-  }, []);
+  const { isSet: seen, set: dismiss } = useStoredFlag(seenKey);
 
   if (seen || !user || user.analyticsOptOut) return null;
-
-  const dismiss = () => {
-    setSeen(true);
-    localStorage.setItem(seenKey, "true");
-  };
 
   return (
     <div

@@ -1,24 +1,40 @@
 import type { ReactNode } from "react";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createContext, useContext } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { z } from "zod/v4";
 
 import { trpc } from "~/utils/api";
+import { storedValue } from "~/utils/stored-choice";
 
-const STORAGE_KEY = "shopping-store";
+const persistedState = z.object({
+  selectedGroupId: z.number().nullable().catch(null),
+  selectedGroupName: z.string().nullable().catch(null),
+  selectedShoppingListId: z.number().nullable().catch(null),
+  selectedShoppingListName: z.string().nullable().catch(null),
+});
 
-interface PersistedState {
-  selectedGroupId: number | null;
-  selectedGroupName: string | null;
-  selectedShoppingListId: number | null;
-  selectedShoppingListName: string | null;
-}
+type PersistedState = z.infer<typeof persistedState>;
+
+const emptyState: PersistedState = {
+  selectedGroupId: null,
+  selectedGroupName: null,
+  selectedShoppingListId: null,
+  selectedShoppingListName: null,
+};
+
+const selection = storedValue(
+  "shopping-store",
+  (saved) => {
+    if (saved === null) return emptyState;
+    try {
+      return persistedState.parse(JSON.parse(saved));
+    } catch (error) {
+      console.error(error);
+      return emptyState;
+    }
+  },
+  JSON.stringify,
+);
 
 interface ShoppingStoreState extends PersistedState {
   hydrated: boolean;
@@ -38,134 +54,63 @@ interface ShoppingStoreState extends PersistedState {
 const ShoppingStoreContext = createContext<ShoppingStoreState | null>(null);
 
 export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
-  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [selectedGroupName, setSelectedGroupName] = useState<string | null>(
-    null,
-  );
-  const [selectedShoppingListId, setSelectedShoppingListId] = useState<
-    number | null
-  >(null);
-  const [selectedShoppingListName, setSelectedShoppingListName] = useState<
-    string | null
-  >(null);
-  const [hydrated, setHydrated] = useState(false);
+  const stored = selection.useValue();
+  const current = () => selection.get() ?? emptyState;
 
   const updateLastUsed = useMutation(
     trpc.shoppingList.updateLastUsed.mutationOptions(),
   );
 
-  const persist = useCallback((state: PersistedState) => {
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch(
-      console.error,
-    );
-  }, []);
+  const setSelectedShoppingList = (
+    shoppingListId: number,
+    shoppingListName: string,
+  ) => {
+    const state = current();
+    selection.save({
+      ...state,
+      selectedShoppingListId: shoppingListId,
+      selectedShoppingListName: shoppingListName,
+    });
+    if (state.selectedShoppingListId !== shoppingListId) {
+      updateLastUsed.mutate({ groupId: state.selectedGroupId, shoppingListId });
+    }
+  };
 
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((value) => {
-        if (value) {
-          const parsed = JSON.parse(value) as PersistedState;
-          setSelectedGroupId(parsed.selectedGroupId);
-          setSelectedGroupName(parsed.selectedGroupName);
-          setSelectedShoppingListId(parsed.selectedShoppingListId);
-          setSelectedShoppingListName(parsed.selectedShoppingListName);
-        }
-      })
-      .catch(console.error)
-      .finally(() => setHydrated(true));
-  }, []);
-
-  const setSelectedShoppingList = useCallback(
-    (shoppingListId: number, shoppingListName: string) => {
-      const hasChanged = selectedShoppingListId !== shoppingListId;
-      setSelectedShoppingListId(shoppingListId);
-      setSelectedShoppingListName(shoppingListName);
-      persist({
-        selectedGroupId,
-        selectedGroupName,
-        selectedShoppingListId: shoppingListId,
-        selectedShoppingListName: shoppingListName,
-      });
-      if (hasChanged) {
-        updateLastUsed.mutate({
-          groupId: selectedGroupId,
-          shoppingListId,
-        });
-      }
-    },
-    [
-      selectedGroupId,
-      selectedGroupName,
-      selectedShoppingListId,
-      updateLastUsed,
-      persist,
-    ],
-  );
-
-  const clearSelectedShoppingList = useCallback(() => {
-    setSelectedShoppingListId(null);
-    setSelectedShoppingListName(null);
-    persist({
-      selectedGroupId,
-      selectedGroupName,
+  const clearSelectedShoppingList = () =>
+    selection.save({
+      ...current(),
       selectedShoppingListId: null,
       selectedShoppingListName: null,
     });
-  }, [selectedGroupId, selectedGroupName, persist]);
 
-  const setSelectedGroup = useCallback(
-    (
-      groupId: number,
-      groupName: string,
-      list?: { id: number; name: string },
-    ) => {
-      const hasChanged =
-        selectedGroupId !== groupId ||
-        (list !== undefined && selectedShoppingListId !== list.id);
-      setSelectedGroupId(groupId);
-      setSelectedGroupName(groupName);
-      setSelectedShoppingListId(list?.id ?? null);
-      setSelectedShoppingListName(list?.name ?? null);
-      persist({
-        selectedGroupId: groupId,
-        selectedGroupName: groupName,
-        selectedShoppingListId: list?.id ?? null,
-        selectedShoppingListName: list?.name ?? null,
-      });
-      if (hasChanged) {
-        updateLastUsed.mutate({
-          groupId,
-          shoppingListId: list?.id ?? null,
-        });
-      }
-    },
-    [selectedGroupId, selectedShoppingListId, updateLastUsed, persist],
-  );
-
-  const clearSelectedGroup = useCallback(() => {
-    setSelectedGroupId(null);
-    setSelectedGroupName(null);
-    setSelectedShoppingListId(null);
-    setSelectedShoppingListName(null);
-    persist({
-      selectedGroupId: null,
-      selectedGroupName: null,
-      selectedShoppingListId: null,
-      selectedShoppingListName: null,
+  const setSelectedGroup = (
+    groupId: number,
+    groupName: string,
+    list?: { id: number; name: string },
+  ) => {
+    const { selectedGroupId, selectedShoppingListId } = current();
+    const hasChanged =
+      selectedGroupId !== groupId ||
+      (list !== undefined && selectedShoppingListId !== list.id);
+    selection.save({
+      selectedGroupId: groupId,
+      selectedGroupName: groupName,
+      selectedShoppingListId: list?.id ?? null,
+      selectedShoppingListName: list?.name ?? null,
     });
-  }, [persist]);
+    if (hasChanged) {
+      updateLastUsed.mutate({ groupId, shoppingListId: list?.id ?? null });
+    }
+  };
 
   return (
     <ShoppingStoreContext.Provider
       value={{
-        hydrated,
-        selectedGroupId,
-        selectedGroupName,
-        selectedShoppingListId,
-        selectedShoppingListName,
+        ...(stored ?? emptyState),
+        hydrated: stored !== null,
         setSelectedGroup,
         setSelectedShoppingList,
-        clearSelectedGroup,
+        clearSelectedGroup: () => selection.save(emptyState),
         clearSelectedShoppingList,
       }}
     >

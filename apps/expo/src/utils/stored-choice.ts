@@ -1,9 +1,10 @@
 import { useSyncExternalStore } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export function storedChoice<T extends string>(
+export function storedValue<T>(
   key: string,
   parse: (saved: string | null) => T,
+  serialize: (value: T) => string = String,
 ) {
   let value: T | null = null;
   const listeners = new Set<() => void>();
@@ -25,16 +26,27 @@ export function storedChoice<T extends string>(
     listeners.add(listener);
     return () => listeners.delete(listener);
   };
+  const get = () => value;
 
   return {
-    useValue: () => useSyncExternalStore(subscribe, () => value),
+    subscribe,
+    get,
+    useValue: () => useSyncExternalStore(subscribe, get),
     read: async () => {
       const initial = await loaded;
       return value ?? initial;
     },
     save: (next: T) => {
       set(next);
-      AsyncStorage.setItem(key, next).catch(console.error);
+      AsyncStorage.setItem(key, serialize(next)).catch(console.error);
     },
   };
 }
+
+export const storedChoice = <T extends string>(
+  key: string,
+  parse: (saved: string | null) => T,
+) => storedValue(key, parse);
+
+export const storedFlag = (key: string) =>
+  storedValue(key, (saved) => saved !== null);

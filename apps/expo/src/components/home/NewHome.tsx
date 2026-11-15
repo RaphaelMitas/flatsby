@@ -1,5 +1,5 @@
 import type { GroupWithAccess, ShoppingListSummary } from "@flatsby/api";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { useIsFocused, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -102,7 +102,6 @@ const greetingFor = (hour: number) =>
 function useSpeech() {
   const [speech, setSpeech] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(timer.current), []);
   const say = (text: string) => {
     clearTimeout(timer.current);
     setSpeech(text);

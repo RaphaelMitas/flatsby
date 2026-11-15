@@ -2,6 +2,8 @@ import * as React from "react";
 import { Image, Text, View } from "react-native";
 import { tv } from "tailwind-variants";
 
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
+
 import { cn } from "../utils";
 
 const avatarVariants = tv({
@@ -19,8 +21,6 @@ const avatarFallbackVariants = tv({
 interface AvatarContextType {
   imageLoaded: boolean;
   setImageLoaded: (loaded: boolean) => void;
-  imageError: boolean;
-  setImageError: (error: boolean) => void;
 }
 
 const AvatarContext = React.createContext<AvatarContextType | null>(null);
@@ -32,16 +32,10 @@ interface AvatarProps {
 
 const Avatar = ({ className, children, ...props }: AvatarProps) => {
   const [imageLoaded, setImageLoaded] = React.useState(false);
-  const [imageError, setImageError] = React.useState(false);
 
   const contextValue = React.useMemo(
-    () => ({
-      imageLoaded,
-      setImageLoaded,
-      imageError,
-      setImageError,
-    }),
-    [imageLoaded, imageError],
+    () => ({ imageLoaded, setImageLoaded }),
+    [imageLoaded],
   );
 
   return (
@@ -59,49 +53,42 @@ interface AvatarImageProps {
   alt?: string;
 }
 
-const AvatarImage = ({ className, src, alt, ...props }: AvatarImageProps) => {
+const AvatarImage = ({ src, ...props }: AvatarImageProps) => {
   const context = React.useContext(AvatarContext);
 
   if (!context) {
     throw new Error("AvatarImage must be used within Avatar");
   }
 
-  const { setImageLoaded, setImageError } = context;
-
-  React.useEffect(() => {
-    setImageLoaded(false);
-    setImageError(false);
-  }, [src, setImageLoaded, setImageError]);
-
-  const handleLoad = () => {
-    setImageLoaded(true);
-    setImageError(false);
-  };
-
-  const handleError = () => {
-    setImageLoaded(false);
-    setImageError(true);
-  };
-
-  React.useEffect(() => {
-    if (!src) {
-      setImageError(true);
-      setImageLoaded(false);
-    }
-  }, [src, setImageError, setImageLoaded]);
-
   if (!src) {
     return null;
   }
+
+  return (
+    <LoadingImage
+      key={src}
+      src={src}
+      setImageLoaded={context.setImageLoaded}
+      {...props}
+    />
+  );
+};
+
+const LoadingImage = ({
+  className,
+  src,
+  alt,
+  setImageLoaded,
+}: AvatarImageProps & Pick<AvatarContextType, "setImageLoaded">) => {
+  useMountEffect(() => () => setImageLoaded(false));
 
   return (
     <Image
       source={{ uri: src }}
       className={avatarImageVariants({ className })}
       accessibilityLabel={alt}
-      onLoad={handleLoad}
-      onError={handleError}
-      {...props}
+      onLoad={() => setImageLoaded(true)}
+      onError={() => setImageLoaded(false)}
     />
   );
 };
@@ -124,9 +111,7 @@ const AvatarFallback = ({
     throw new Error("AvatarFallback must be used within Avatar");
   }
 
-  const { imageLoaded, imageError } = context;
-
-  if (imageLoaded && !imageError) {
+  if (context.imageLoaded) {
     return null;
   }
 

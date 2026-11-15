@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheckBig } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@flatsby/ui/button";
 import PasskeyIcon from "@flatsby/ui/custom/icons/PasskeyIcon";
 import LoadingSpinner from "@flatsby/ui/custom/loadingSpinner";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import { savePasskeyDevice, useAddPasskey } from "~/auth/passkey-device";
 
@@ -18,7 +19,7 @@ export default function PasskeyOffer({ next }: { next: string }) {
     "checking",
   );
 
-  useEffect(() => {
+  useMountEffect(() => {
     void Promise.resolve()
       .then(() =>
         PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
@@ -28,7 +29,7 @@ export default function PasskeyOffer({ next }: { next: string }) {
         if (available) setStep("offer");
         else router.replace(next);
       });
-  }, [router, next]);
+  });
 
   const passkey = useAddPasskey("offer", () => setStep("created"));
 

@@ -1,6 +1,6 @@
 import type { Query } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActivityIndicator, Text } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -20,6 +20,7 @@ import {
 import { useTranslations } from "use-intl";
 
 import { inShoppingListQueue } from "@flatsby/api/shoppingListQueue";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
@@ -56,6 +57,7 @@ export function CacheRefreshPill() {
     setWasOnline(online);
     setDismissed(false);
     setReplaying(online && queued > 0);
+    setShowUpToDate(false);
   }
   if (replaying && queued === 0 && !listFetching) setReplaying(false);
 
@@ -67,12 +69,6 @@ export function CacheRefreshPill() {
       );
     }
   }
-
-  useEffect(() => {
-    if (!showUpToDate) return;
-    const timeout = setTimeout(() => setShowUpToDate(false), 1000);
-    return () => clearTimeout(timeout);
-  }, [showUpToDate]);
 
   if (!online) {
     if (dismissed) return null;
@@ -93,13 +89,21 @@ export function CacheRefreshPill() {
       {refreshing ? (
         <ActivityIndicator size="small" />
       ) : (
-        <Icon name="check" size={14} color="success" />
+        <UpToDateCheck onDone={() => setShowUpToDate(false)} />
       )}
       <Text className="text-foreground text-sm font-semibold">
         {refreshing ? t("updating") : t("upToDate")}
       </Text>
     </Pill>
   );
+}
+
+function UpToDateCheck({ onDone }: { onDone: () => void }) {
+  useMountEffect(() => {
+    const timeout = setTimeout(onDone, 1000);
+    return () => clearTimeout(timeout);
+  });
+  return <Icon name="check" size={14} color="success" />;
 }
 
 function Pill({

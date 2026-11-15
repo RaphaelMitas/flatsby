@@ -1,7 +1,6 @@
 "use client";
 
 import type { InvitePlaceholder } from "@flatsby/validators/group";
-import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Share, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -27,6 +26,7 @@ import {
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { platformForUserAgent } from "~/app/_components/landing/platform";
 import { useTRPC } from "~/trpc/react";
+import { useStoredFlag } from "~/utils/stored-flag";
 
 const dismissedKey = (groupId: number) => `invite_card_dismissed_${groupId}`;
 
@@ -37,10 +37,6 @@ export function InviteFlatmatesCard() {
   const t = useTranslations();
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
-  const [dismissal, setDismissal] = useState<{
-    groupId: number;
-    dismissed: boolean;
-  }>();
   const once = useOnce();
   const groupId = currentGroup?.id ?? 0;
   const hasGroup = currentGroup != null;
@@ -52,8 +48,10 @@ export function InviteFlatmatesCard() {
     groupId,
     group?.success ? group.data.groupMembers : undefined,
   );
-  const visible =
-    waiting && dismissal?.groupId === groupId && !dismissal.dismissed;
+  const { isSet: dismissed, set: dismiss } = useStoredFlag(
+    dismissedKey(groupId),
+  );
+  const visible = waiting && hasGroup && !dismissed;
 
   const invite = useQuery({
     ...trpc.invite.get.queryOptions({ groupId }),
@@ -61,20 +59,7 @@ export function InviteFlatmatesCard() {
   });
   const sharePressed = useMutation(trpc.invite.sharePressed.mutationOptions());
 
-  useEffect(() => {
-    if (!hasGroup) return;
-    setDismissal({
-      groupId,
-      dismissed: localStorage.getItem(dismissedKey(groupId)) !== null,
-    });
-  }, [hasGroup, groupId]);
-
   if (!visible || !group?.success) return null;
-
-  const dismiss = () => {
-    setDismissal({ groupId, dismissed: true });
-    localStorage.setItem(dismissedKey(groupId), "true");
-  };
 
   const placeholders = openPlaceholders(group.data.groupMembers);
   const code = invite.data?.success ? invite.data.data : undefined;

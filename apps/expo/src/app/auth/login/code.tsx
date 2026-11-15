@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useEffectEvent, useRef } from "react";
 import { Platform, Text, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
@@ -9,6 +9,7 @@ import {
   SIGN_IN_CODE_LENGTH,
   SIGN_IN_CODE_TTL_MINUTES,
 } from "@flatsby/validators/login";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 import { asksForName } from "@flatsby/validators/user";
 import { useSignInCode } from "@flatsby/validators/useSignInCode";
 
@@ -61,7 +62,7 @@ export default function CodeScreen() {
       posthog.capture("login_cancelled", { ...attempt, stage: "code" });
     }
   });
-  useEffect(() => () => leave(), []);
+  useMountEffect(() => leave);
 
   return (
     <View testID="code-screen" className="bg-background flex-1">

@@ -3,7 +3,7 @@ import type {
   AgendaEntry,
   CalendarPosition,
 } from "@flatsby/validators/calendar";
-import { useEffect, useEffectEvent, useState } from "react";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { usePrefetchQuery, useQuery } from "@tanstack/react-query";
@@ -28,6 +28,7 @@ import {
   todayPosition,
   weekDays,
 } from "@flatsby/validators/calendar";
+import { OnMount } from "@flatsby/validators/OnMount";
 
 import type { CalendarPeople } from "./CalendarPeople";
 import { Button } from "~/lib/ui/button";
@@ -72,14 +73,11 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
   const asking = useReminderChoice() === "undecided" && !isE2ETestingEnabled();
   const { view } = position;
 
-  const onLinked = useEffectEvent((date: string) => {
+  const reveal = (date: string) => {
     if (calendarDateSchema.safeParse(date).success)
       setCalendarPosition(revealDate(position, date, today));
     router.setParams({ date: undefined });
-  });
-  useEffect(() => {
-    if (linked) onLinked(linked);
-  }, [linked]);
+  };
 
   const openForm = () =>
     router.push({
@@ -89,6 +87,7 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
 
   return (
     <View className="flex-1">
+      {linked && <OnMount key={linked} run={() => reveal(linked)} />}
       <View className="mb-2 flex-row items-center justify-between gap-2 px-4">
         <Text
           testID="calendar-heading"

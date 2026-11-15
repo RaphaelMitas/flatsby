@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import {
   useMutation,
@@ -14,6 +13,7 @@ import {
   inviteDaysLeft,
   inviteLink,
 } from "@flatsby/validators/invite";
+import { OnMount } from "@flatsby/validators/OnMount";
 
 import { PlaceholderMembers } from "~/components/members/PlaceholderMembers";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
@@ -41,14 +41,6 @@ export function InviteScreen({
   const { data: invite } = useSuspenseQuery(
     trpc.invite.get.queryOptions({ groupId }),
   );
-
-  const hasCapturedShown = useRef(false);
-
-  useEffect(() => {
-    if (!invite.success || hasCapturedShown.current) return;
-    hasCapturedShown.current = true;
-    getPostHog().capture("invite_shown", { groupId });
-  }, [invite.success, groupId]);
 
   const resetMutation = useMutation(
     trpc.invite.reset.mutationOptions({
@@ -82,6 +74,7 @@ export function InviteScreen({
       className="bg-background"
       contentContainerClassName="items-center gap-4 p-6"
     >
+      <OnMount run={() => getPostHog().capture("invite_shown", { groupId })} />
       <Text className="text-foreground text-center text-lg font-bold">
         {t("invite.title", { group: selectedGroupName ?? "" })}
       </Text>

@@ -29,7 +29,7 @@ import { AnalyticsSync } from "~/components/analytics/AnalyticsSync";
 import { CacheRefreshPill } from "~/components/CacheRefreshPill";
 import { InstallReferrer } from "~/components/InstallReferrer";
 import { UpdateNudge } from "~/components/UpdateNudge";
-import { ThemeProvider } from "~/lib/ui/theme";
+import { restoreTheme } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { IntlProvider } from "~/utils/intl-provider";
@@ -37,6 +37,8 @@ import {
   ShoppingStoreProvider,
   useShoppingStore,
 } from "~/utils/shopping-store";
+
+void restoreTheme();
 
 export default function RootLayout() {
   const posthog = usePostHogClient();
@@ -50,20 +52,18 @@ export default function RootLayout() {
         >
           <KeyboardProvider>
             <SafeAreaProvider>
-              <ThemeProvider>
-                <PersistQueryClientProvider
-                  client={queryClient}
-                  persistOptions={persistOptions}
-                  onSuccess={() => {
-                    void queryClient.resumePausedMutations();
-                  }}
-                >
-                  <ShoppingStoreProvider>
-                    <StackLayout />
-                    <StatusBar />
-                  </ShoppingStoreProvider>
-                </PersistQueryClientProvider>
-              </ThemeProvider>
+              <PersistQueryClientProvider
+                client={queryClient}
+                persistOptions={persistOptions}
+                onSuccess={() => {
+                  void queryClient.resumePausedMutations();
+                }}
+              >
+                <ShoppingStoreProvider>
+                  <StackLayout />
+                  <StatusBar />
+                </ShoppingStoreProvider>
+              </PersistQueryClientProvider>
             </SafeAreaProvider>
           </KeyboardProvider>
         </PostHogProvider>

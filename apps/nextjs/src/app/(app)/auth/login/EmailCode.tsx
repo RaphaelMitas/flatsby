@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useEffectEvent, useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
@@ -14,6 +14,7 @@ import {
   SIGN_IN_CODE_LENGTH,
   SIGN_IN_CODE_TTL_MINUTES,
 } from "@flatsby/validators/login";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 import { asksForName } from "@flatsby/validators/user";
 import { useSignInCode } from "@flatsby/validators/useSignInCode";
 
@@ -74,10 +75,10 @@ export default function EmailCode({
   const leave = useEffectEvent((event: PageTransitionEvent) => {
     if (!event.persisted && !signedIn.current) cancel();
   });
-  useEffect(() => {
+  useMountEffect(() => {
     window.addEventListener("pagehide", leave);
     return () => window.removeEventListener("pagehide", leave);
-  }, []);
+  });
 
   return (
     <div className="flex flex-col gap-4" data-testid="auth-code-step">

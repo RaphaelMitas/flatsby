@@ -1,7 +1,7 @@
 "use client";
 
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
-import { useEffect, useRef, useState } from "react";
+import { useEffectEvent, useRef, useState } from "react";
 import { Camera, FlaskConical } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -15,6 +15,7 @@ import {
   RECEIPT_IMAGE_MAX_EDGE,
   RECEIPT_IMAGE_QUALITY,
 } from "@flatsby/validators/expenses/receipt-scan";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import { ReceiptReadingStage } from "./ReceiptReadingStage";
 
@@ -60,25 +61,25 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   const [isDragging, setIsDragging] = useState(false);
   const { state } = receiptScan;
 
-  useEffect(
-    () => () => {
-      if (photoUrl) URL.revokeObjectURL(photoUrl);
-    },
-    [photoUrl],
-  );
+  const revokePhoto = () => {
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+  };
+  const revokeOnUnmount = useEffectEvent(revokePhoto);
 
-  useEffect(() => {
+  useMountEffect(() => {
     const keep = (event: DragEvent) => event.preventDefault();
     window.addEventListener("dragover", keep);
     window.addEventListener("drop", keep);
     return () => {
       window.removeEventListener("dragover", keep);
       window.removeEventListener("drop", keep);
+      revokeOnUnmount();
     };
-  }, []);
+  });
 
   const read = (file: File | undefined) => {
     if (!file) return;
+    revokePhoto();
     if (file.type === "application/pdf") {
       setPhotoUrl(DOCUMENT_URL);
       void receiptScan.scan(

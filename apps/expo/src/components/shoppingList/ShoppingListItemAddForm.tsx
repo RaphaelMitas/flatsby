@@ -5,12 +5,13 @@ import type {
 import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
 import type { ComponentRef } from "react";
 import type { TextInput } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslations } from "use-intl";
 
 import { useShoppingListSuggestions } from "@flatsby/api/hooks/useShoppingListSuggestions";
+import { OnMount } from "@flatsby/validators/OnMount";
 import { createShoppingListItemFormSchema } from "@flatsby/validators/shopping-list";
 
 import { Badge } from "~/lib/ui/badge";
@@ -36,12 +37,6 @@ export const ShoppingListItemAddForm = ({
   const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const router = useRouter();
   const { focus } = useLocalSearchParams<{ focus?: string }>();
-
-  useEffect(() => {
-    if (!focus) return;
-    inputRef.current?.focus();
-    router.setParams({ focus: undefined });
-  }, [focus, router]);
 
   const { suggestionItems, showSuggestions } = useShoppingListSuggestions(
     (input) => trpc.shoppingList.suggestItems.queryOptions(input),
@@ -78,6 +73,15 @@ export const ShoppingListItemAddForm = ({
 
   return (
     <View className="bg-background gap-4 p-4">
+      {focus && (
+        <OnMount
+          key={focus}
+          run={() => {
+            inputRef.current?.focus();
+            router.setParams({ focus: undefined });
+          }}
+        />
+      )}
       {showSuggestions && (
         <ScrollView
           horizontal

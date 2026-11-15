@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import type {
   Filled,
@@ -79,13 +79,6 @@ export function useReceiptScan({
     for (const timer of timers.current) clearTimeout(timer);
     timers.current = [];
   };
-  useEffect(
-    () => () => {
-      for (const timer of timers.current) clearTimeout(timer);
-      clearTimeout(highlight.current);
-    },
-    [],
-  );
 
   const playStage = (events: StageEvent[]) => {
     clearTimers();

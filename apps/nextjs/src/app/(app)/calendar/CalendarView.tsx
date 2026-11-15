@@ -8,7 +8,6 @@ import type {
   CreateCalendarItemInput,
 } from "@flatsby/validators/calendar";
 import {
-  useEffect,
   useEffectEvent,
   useMemo,
   useRef,
@@ -60,6 +59,7 @@ import {
   todayPosition,
   weekDays,
 } from "@flatsby/validators/calendar";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
@@ -167,7 +167,7 @@ function CalendarScreen({
   const onArrow = useEffectEvent((delta: number) => {
     if (!panel) step(delta);
   });
-  useEffect(() => {
+  useMountEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (
         event.defaultPrevented ||
@@ -185,7 +185,7 @@ function CalendarScreen({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  });
 
   if (data?.success === false)
     return <p className="text-destructive p-4 text-sm">{data.error.message}</p>;

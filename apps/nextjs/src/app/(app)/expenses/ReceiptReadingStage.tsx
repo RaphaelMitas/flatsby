@@ -5,7 +5,6 @@ import type {
   StageTag,
 } from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
-import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
@@ -16,6 +15,9 @@ import { Dialog, DialogContent, DialogTitle } from "@flatsby/ui/dialog";
 import "./receipt-stage.css";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
+
+const focusQuietly = (element: HTMLButtonElement | null) =>
+  element?.focus({ preventScroll: true });
 
 export function ReceiptReadingStage({
   receiptScan,
@@ -33,11 +35,6 @@ export function ReceiptReadingStage({
   const lensOut = phase === "reading" || phase === "revealing" || failing;
   const caption = t(receiptScan.stage.caption);
   const previewing = phase === "preview";
-  const apply = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (previewing) apply.current?.focus({ preventScroll: true });
-  }, [previewing]);
 
   return (
     <Dialog
@@ -163,7 +160,7 @@ export function ReceiptReadingStage({
                   {t("discard")}
                 </Button>
                 <Button
-                  ref={apply}
+                  ref={previewing ? focusQuietly : undefined}
                   type="button"
                   className="flex-1"
                   data-testid="receipt-scan-apply"

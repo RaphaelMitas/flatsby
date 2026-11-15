@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
@@ -10,25 +9,17 @@ import { Button } from "@flatsby/ui/button";
 import { Card, CardContent } from "@flatsby/ui/card";
 
 import { useTRPC } from "~/trpc/react";
+import { useStoredFlag } from "~/utils/stored-flag";
 
 const dismissedKey = "paypal_nudge_dismissed";
 
 export function PaypalNudgeCard() {
   const trpc = useTRPC();
   const t = useTranslations("debts.pay");
-  const [dismissed, setDismissed] = useState(true);
+  const { isSet: dismissed, set: dismiss } = useStoredFlag(dismissedKey);
   const { data: user } = useQuery(trpc.user.getCurrentUser.queryOptions());
 
-  useEffect(() => {
-    setDismissed(localStorage.getItem(dismissedKey) !== null);
-  }, []);
-
   if (dismissed || !user || user.paypalHandle) return null;
-
-  const dismiss = () => {
-    setDismissed(true);
-    localStorage.setItem(dismissedKey, "true");
-  };
 
   return (
     <Card data-testid="paypal-nudge-card">
