@@ -33,10 +33,7 @@ import { restoreTheme } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { IntlProvider } from "~/utils/intl-provider";
-import {
-  ShoppingStoreProvider,
-  useShoppingStore,
-} from "~/utils/shopping-store";
+import { useShoppingStore } from "~/utils/shopping-store";
 
 void restoreTheme();
 
@@ -59,10 +56,8 @@ export default function RootLayout() {
                   void queryClient.resumePausedMutations();
                 }}
               >
-                <ShoppingStoreProvider>
-                  <StackLayout />
-                  <StatusBar />
-                </ShoppingStoreProvider>
+                <StackLayout />
+                <StatusBar />
               </PersistQueryClientProvider>
             </SafeAreaProvider>
           </KeyboardProvider>

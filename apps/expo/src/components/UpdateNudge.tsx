@@ -1,12 +1,12 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { useRef, useState } from "react";
-import { Platform, Text, View } from "react-native";
+import { AppState, Platform, Text, View } from "react-native";
 import * as ExpoInAppUpdates from "expo-in-app-updates";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { OnMount } from "@flatsby/validators/OnMount";
+import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import type { UpdateNudgeFrequency } from "~/utils/update-nudge-frequency";
 import { ChoiceButtons } from "~/components/settings/ChoiceButtons";
@@ -61,15 +61,18 @@ export function UpdateNudge() {
   const frequency = updateNudgeFrequency.useValue();
   const { choices } = useUpdateNudgeChoices();
 
-  const found = useQuery({
-    queryKey: ["update-nudge-version"],
-    queryFn: nudgeVersion,
-    enabled: forced || !(__DEV__ || isE2ETestingEnabled()),
-    gcTime: 0,
-    retry: false,
-    refetchOnReconnect: false,
-  }).data;
-  if (found && found !== storeVersion) setStoreVersion(found);
+  useMountEffect(() => {
+    if (!forced && (__DEV__ || isE2ETestingEnabled())) return;
+    const check = async () => {
+      const version = await nudgeVersion();
+      if (version) setStoreVersion(version);
+    };
+    void check();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") void check();
+    });
+    return () => subscription.remove();
+  });
 
   const update = () => {
     getPostHog().capture("update_nudge_update", { storeVersion });

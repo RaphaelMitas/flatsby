@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-import { createContext, useContext } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod/v4";
 
@@ -36,24 +34,7 @@ const selection = storedValue(
   JSON.stringify,
 );
 
-interface ShoppingStoreState extends PersistedState {
-  hydrated: boolean;
-  setSelectedGroup: (
-    groupId: number,
-    groupName: string,
-    list?: { id: number; name: string },
-  ) => void;
-  setSelectedShoppingList: (
-    shoppingListId: number,
-    shoppingListName: string,
-  ) => void;
-  clearSelectedGroup: () => void;
-  clearSelectedShoppingList: () => void;
-}
-
-const ShoppingStoreContext = createContext<ShoppingStoreState | null>(null);
-
-export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
+export function useShoppingStore() {
   const stored = selection.useValue();
   const current = () => selection.get() ?? emptyState;
 
@@ -103,28 +84,12 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  return (
-    <ShoppingStoreContext.Provider
-      value={{
-        ...(stored ?? emptyState),
-        hydrated: stored !== null,
-        setSelectedGroup,
-        setSelectedShoppingList,
-        clearSelectedGroup: () => selection.save(emptyState),
-        clearSelectedShoppingList,
-      }}
-    >
-      {children}
-    </ShoppingStoreContext.Provider>
-  );
-}
-
-export function useShoppingStore() {
-  const context = useContext(ShoppingStoreContext);
-  if (!context) {
-    throw new Error(
-      "useShoppingStore must be used within a ShoppingStoreProvider",
-    );
-  }
-  return context;
+  return {
+    ...(stored ?? emptyState),
+    hydrated: stored !== null,
+    setSelectedGroup,
+    setSelectedShoppingList,
+    clearSelectedGroup: () => selection.save(emptyState),
+    clearSelectedShoppingList,
+  };
 }
