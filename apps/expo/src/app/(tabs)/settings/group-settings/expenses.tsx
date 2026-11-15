@@ -43,7 +43,6 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
   const updateGroupMutation = useUpdateGroup(group.id);
   const [result, setResult] = useState<"saved" | { error: string }>();
 
-  // Saving diffs against what this admin opened, so another admin's change in between isn't sent back
   const [opened, setOpened] = useState({
     currency: group.currency,
     convertAutomatically: group.convertAutomatically === true,

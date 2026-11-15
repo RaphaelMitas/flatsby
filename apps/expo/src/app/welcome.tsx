@@ -69,7 +69,6 @@ function WelcomeForm({
     }),
   );
 
-  // Home should open with the invite card complete, so stay busy until the group and its invite are cached
   const createGroup = useCreateGroup((groupId) => {
     void Promise.allSettled([
       queryClient.ensureQueryData(
@@ -88,12 +87,10 @@ function WelcomeForm({
     openJoin: () => router.push("/join"),
   });
 
-  // Success stays busy too: the group exists and Home is still loading
   const busy =
     updateName.isPending ||
     createGroup.isPending ||
     createGroup.data?.success === true;
-  // A stale cached empty list or a deep link can land someone who already has a group here
   if (!busy && groups?.success && groups.data.length > 0) {
     return <Redirect href="/(tabs)/home" />;
   }
@@ -234,7 +231,6 @@ function WelcomeForm({
             disabled={busy}
             onPress={form.joinWithCode}
           />
-          {/* Without a group there are no tabs, so this is the only way to a different account */}
           <Button
             testID="onboarding-sign-out"
             variant="link"

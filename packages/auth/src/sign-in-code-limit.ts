@@ -12,7 +12,6 @@ const windowExpired = sql`${signInCodeRequests.windowStart} < now() - interval '
 const inboxHash = (email: string) =>
   createHash("sha256").update(inboxOf(email)).digest("hex");
 
-// Expired rows go first, so one atomic upsert counts without a window reset
 export async function allowSignInCode(email: string) {
   await db.delete(signInCodeRequests).where(windowExpired);
   const [row] = await db

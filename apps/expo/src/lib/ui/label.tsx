@@ -10,7 +10,7 @@ const labelVariants = tv({
 interface LabelProps extends VariantProps<typeof labelVariants> {
   className?: string;
   children: React.ReactNode;
-  htmlFor?: string; // Keep for compatibility but not used in React Native
+  htmlFor?: string;
 }
 
 const Label = ({

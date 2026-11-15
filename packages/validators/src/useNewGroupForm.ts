@@ -52,19 +52,16 @@ export function useNewGroupForm({
     const parsed = newGroupFormSchema.safeParse({
       name: name.trim(),
       groupName: groupName.trim(),
-      // A name typed but not added yet still counts
       placeholders: uniqueNames([...names, draft.trim()].filter(Boolean)),
     });
     setIssues(parsed.error?.issues ?? []);
     if (!parsed.success || !(await keepName(parsed.data.name))) return;
-    // The mutation shows its own failure
     await create({
       name: parsed.data.groupName,
       placeholders: parsed.data.placeholders ?? [],
     }).catch(() => undefined);
   });
 
-  // Someone who lost their invite link joins from here, so this is their name step too
   const joinWithCode = once(async () => {
     const parsed = nameSchema.safeParse({ name: name.trim() });
     setIssues(parsed.error?.issues ?? []);

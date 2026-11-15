@@ -3,12 +3,10 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const jiti = createJiti(import.meta.url);
 
-// Import env files to validate at build time. Use jiti so we can load .ts files in here.
 await jiti.import("./src/env");
 
 /** @type {import("next").NextConfig} */
 const config = {
-  /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
     "@flatsby/api",
     "@flatsby/auth",
@@ -33,7 +31,6 @@ const config = {
       ),
     ],
   },
-  // Markdown twins of the marketing pages, for AI agents.
   async rewrites() {
     return [
       { source: "/index.md", destination: "/md" },
@@ -41,7 +38,6 @@ const config = {
     ];
   },
 
-  /** We already do linting and typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: true },
 };
 

@@ -1,8 +1,3 @@
-// ============================================================================
-// Shared category color maps (Tailwind class strings)
-// Used by both web (Next.js) and mobile (Expo/NativeWind)
-// ============================================================================
-
 export const categoryColorKeys = [
   "primary",
   "orange",
@@ -25,8 +20,6 @@ const categoryColorKeySet = new Set<string>(categoryColorKeys);
 export function isCategoryColorKey(value: string): value is CategoryColorKey {
   return categoryColorKeySet.has(value);
 }
-
-// ---- Text colors (with variant support for inverted backgrounds) -----------
 
 export const categoryTextColorMap: Record<
   CategoryColorKey,
@@ -85,8 +78,6 @@ export function getCategoryTextColor(
   return categoryTextColorMap[colorKey][variant];
 }
 
-// ---- Background colors -----------------------------------------------------
-
 export const categoryBgColorMap: Record<CategoryColorKey, string> = {
   primary: "bg-primary/10",
   orange: "bg-orange-100 dark:bg-orange-900/30",
@@ -101,8 +92,6 @@ export const categoryBgColorMap: Record<CategoryColorKey, string> = {
   zinc: "bg-zinc-100 dark:bg-zinc-900/30",
 };
 
-// ---- Fill colors (dots and swatches) ---------------------------------------
-
 export const categoryFillColorMap: Record<CategoryColorKey, string> = {
   primary: "bg-primary",
   orange: "bg-orange-600 dark:bg-orange-300",
@@ -116,8 +105,6 @@ export const categoryFillColorMap: Record<CategoryColorKey, string> = {
   yellow: "bg-yellow-600 dark:bg-yellow-300",
   zinc: "bg-zinc-600 dark:bg-zinc-300",
 };
-
-// ---- Border colors ---------------------------------------------------------
 
 export const categoryBorderColorMap: Record<CategoryColorKey, string> = {
   primary: "border-primary/40",

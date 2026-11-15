@@ -29,8 +29,6 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       AppStoreID: "6747908544",
-      // The e2e suite talks to a plain-HTTP server on the runner, which App
-      // Transport Security blocks in a Release build.
       ...(isE2E && {
         NSAppTransportSecurity: {
           NSAllowsLocalNetworking: true,
@@ -119,8 +117,6 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
   },
   updates: {
     url: "https://u.expo.dev/f7e9d15f-497c-4f4e-ac97-f59a14638cdd",
-    // Bare prebuild + xcodebuild has no EAS channel headers, so every launch
-    // would hit the update server and 400.
     enabled: !isE2E,
   },
   runtimeVersion: {
@@ -149,7 +145,6 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
         android: {
           enableMinifyInReleaseBuilds: true,
           enableShrinkResourcesInReleaseBuilds: true,
-          // Same reason as the iOS ATS exception: the e2e server is HTTP.
           ...(isE2E && { usesCleartextTraffic: true }),
         },
       },
@@ -160,7 +155,6 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
       {
         cameraPermission:
           "Flatsby uses the camera to photograph receipts so it can fill in the expense for you.",
-        // The system photo picker needs no access to the whole library
         photosPermission: false,
         microphonePermission: false,
       },
@@ -169,15 +163,12 @@ const appConfig = ({ config }: ConfigContext): ExpoConfig => ({
       "expo-notifications",
       {
         icon: "./assets/adaptive-icon.png",
-        // Reminders are scheduled on the device, so no APNs entitlement
         enableRemoteNotifications: false,
       },
     ],
   ],
 });
 
-// Android's sampled heap checker segfaults walking Hermes frames on free,
-// killing about one e2e flow per Android run
 const withoutGwpAsan: ConfigPlugin = (config) =>
   withAndroidManifest(config, (manifest) => {
     const application = manifest.modResults.manifest.application?.[0];

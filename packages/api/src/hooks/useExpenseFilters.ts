@@ -25,7 +25,6 @@ const toFilter = (
   ...(search && { search }),
   ...(memberId !== undefined && { memberId, memberRole }),
   ...(category && { category }),
-  // A preset means "this month" whenever it runs, not the month it was picked in
   ...(range &&
     dayRangeFilter(
       range.preset ? presetRange(range.preset, localDate()) : range,
@@ -35,12 +34,10 @@ const toFilter = (
 export function useExpenseFilters(groupId: number) {
   const fresh = { groupId, search: "", choice: noChoice };
   const [state, setState] = useState(fresh);
-  // Another group's members and history make its filters meaningless here
   if (state.groupId !== groupId) setState(fresh);
   const current = state.groupId === groupId ? state : fresh;
   const typed = current.search.trim();
   const [debounced] = useDebouncedValue(typed, { wait: 200 });
-  // Clearing the field goes back to the cached list without waiting
   const sent = typed === "" ? "" : debounced;
   const live = toFilter(typed, current.choice);
   const query = toFilter(sent, current.choice);
@@ -78,13 +75,11 @@ const itemsOf = (query: ListQuery) =>
   query.data?.pages.flatMap((page) => (page.success ? page.data.items : [])) ??
   [];
 
-// Cached matches show instantly; the filtered query appends older ones as they arrive
 export function expenseSearchView(
   base: ListQuery,
   filtered: ListQuery,
   filters: ExpenseFilters,
 ) {
-  // A fetched filtered row is fresher than the cached copy the unfiltered list may hold
   const sources = !filters.isQueryActive
     ? [base]
     : filtered.isPlaceholderData

@@ -79,7 +79,6 @@ const Skeleton = ({
   );
 };
 
-// Predefined skeleton components for common use cases
 const SkeletonText = ({
   lines = 1,
   className,

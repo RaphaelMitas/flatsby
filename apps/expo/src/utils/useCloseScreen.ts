@@ -1,6 +1,5 @@
 import { useNavigation, useRoute } from "expo-router";
 
-// A save can resolve after the user left: never pop someone else's screen
 export function useCloseScreen() {
   const navigation = useNavigation();
   const route = useRoute();
@@ -8,7 +7,6 @@ export function useCloseScreen() {
   return () => {
     let nav = navigation;
     let key = route.key;
-    // The root of a nested stack closes by popping the route that owns it
     for (;;) {
       const state = nav.getState();
       const index = state?.routes.findIndex((r) => r.key === key) ?? -1;

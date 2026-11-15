@@ -1,28 +1,13 @@
-// ============================================================================
-// Conversion Utilities - Cents ↔ Decimal, and between currencies
-// ============================================================================
-
 import { addDays } from "../calendar";
 import { distributeShareAmounts } from "./distribution";
 
-// Until a day is over in UTC the server serves "latest", which can be an older day's rate
 export const isExchangeRateFinal = (day: string, fetchedAt: number) =>
   fetchedAt >= Date.parse(`${addDays(day, 1)}T00:00:00Z`);
 
-/**
- * Convert cents to decimal for display
- * @param cents - Amount in cents (integer)
- * @returns Decimal amount (e.g., 1050 -> 10.50)
- */
 export function centsToDecimal(cents: number): number {
   return cents / 100;
 }
 
-/**
- * Convert decimal to cents for storage
- * @param decimal - Decimal amount (e.g., 10.50)
- * @returns Amount in cents (integer, e.g., 1050)
- */
 export function decimalToCents(decimal: number): number {
   return Math.round(decimal * 100);
 }
@@ -52,7 +37,6 @@ export function inLedgerCurrency({
   if (convertedAmountInCents == null || convertedCurrency == null) {
     return { amountInCents, currency, expenseSplits };
   }
-  // Leftover cents go by position, so rounding in member order keeps every screen on the same cent
   const shares = distributeShareAmounts(
     expenseSplits
       .map((split) => ({

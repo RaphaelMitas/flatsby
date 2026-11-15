@@ -51,7 +51,6 @@ interface ShoppingListQueueOptions {
 
 const QUEUE_SCOPE = "shopping-list-items";
 
-// Lives in the query cache so it reaches disk in the same save that drops the synced create
 const TEMPORARY_IDS_KEY: QueryKey = ["shopping-list-temporary-ids"];
 
 export const inShoppingListQueue = (mutation: Mutation) =>
@@ -71,7 +70,6 @@ export const shoppingListQueue = ({
     retry: (_failureCount: number, error: unknown) => neverAnswered(error),
   } satisfies Pick<MutationOptions, "scope" | "networkMode" | "retry">;
 
-  // clear() on sign-out leaves a waiting retry running, and it would send with the next account's cookie
   const whileQueued =
     <TInput>(request: (input: TInput) => Promise<ApiResult<number>>) =>
     (input: TInput) =>
@@ -82,12 +80,10 @@ export const shoppingListQueue = ({
         ? request(input)
         : Promise.reject(new Error("Dropped from the shopping list queue"));
 
-  // The queue runs the create first, so its real id is mapped by the time a later change sends
   const realId = (id: number) =>
     queryClient.getQueryData<Record<number, number>>(TEMPORARY_IDS_KEY)?.[id] ??
     id;
 
-  // Still temporary at send time means the server refused the create, so there is nothing to change
   const serverId = (id: number) => {
     const resolved = realId(id);
     if (resolved < 0) throw new Error("The item was never created");
@@ -104,7 +100,6 @@ export const shoppingListQueue = ({
     queryClient.setQueriesData<ShoppingListInfiniteData>(filters, patch);
   };
 
-  // Refetching between queued changes would show the server without the rest of the queue
   const onSettled = () => {
     if (queryClient.isMutating({ predicate: inShoppingListQueue }) > 1) return;
     void queryClient.invalidateQueries(refetch);
@@ -116,7 +111,6 @@ export const shoppingListQueue = ({
     mutationFn: whileQueued(send.create),
     ...resultMutation({
       onMutate: async (input: CreateInput) => {
-        // Negative so it never collides with a real id
         const id = -Date.now();
         const item: ShoppingListItem = {
           id,
@@ -132,7 +126,6 @@ export const shoppingListQueue = ({
         const { shoppingListId, categoryId } = input;
         const add = (data: ShoppingListInfiniteData | undefined) =>
           addShoppingListItemToCache(data, item);
-        // An auto-selected category is only known once the server answers
         if (categoryId === "ai-auto-select")
           await patchItems(items({ shoppingListId }), add);
         else {
@@ -163,7 +156,6 @@ export const shoppingListQueue = ({
     mutationFn: whileQueued((input: UpdateInput) =>
       send.update({ ...input, id: serverId(input.id) }),
     ),
-    // An edit form opened before the create synced still holds the temporary id
     onMutate: (input: UpdateInput) =>
       patchItems(items(), (data) =>
         updateShoppingListItemInCache(data, { ...input, id: realId(input.id) }),

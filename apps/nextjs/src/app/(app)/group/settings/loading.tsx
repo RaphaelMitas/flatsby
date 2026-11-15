@@ -11,7 +11,6 @@ export default function GroupSettingsLoading() {
         </div>
         <div className="grid gap-6"></div>
 
-        {/* Group Details Card */}
         <div className="bg-muted space-y-4 rounded-lg p-6">
           <div className="space-y-1">
             <Skeleton className="h-6 w-32" />
@@ -35,7 +34,6 @@ export default function GroupSettingsLoading() {
           </div>
         </div>
 
-        {/* Manage Members Card */}
         <div className="bg-muted space-y-4 rounded-lg p-6">
           <div className="space-y-1">
             <Skeleton className="h-6 w-36" />
@@ -61,7 +59,6 @@ export default function GroupSettingsLoading() {
           </div>
         </div>
 
-        {/* Danger Zone Card */}
         <div className="bg-muted space-y-4 rounded-lg p-6">
           <div className="space-y-1">
             <Skeleton className="h-6 w-28" />

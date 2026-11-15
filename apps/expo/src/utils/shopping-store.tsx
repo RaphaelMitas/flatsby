@@ -60,7 +60,6 @@ export function ShoppingStoreProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  // Load persisted state on mount
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((value) => {

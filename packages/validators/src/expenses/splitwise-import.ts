@@ -15,52 +15,40 @@ import { MAX_EXPENSE_DESCRIPTION_LENGTH } from "./types";
 
 const splitwiseSubcategoryByCategory = new Map<string, ExpenseSubcategoryId>(
   Object.entries({
-    // Food & Drinks
     groceries: "groceries",
     "food and drink": "other-food-drinks",
     "dining out": "restaurant",
     liquor: "bar",
-    // Transport
     taxi: "taxi",
     parking: "parking",
     "gas/fuel": "gas",
     car: "other-transport",
     "bus/train": "public-transit",
-    // Shopping
     clothing: "clothes",
     electronics: "electronics",
     "household supplies": "home-goods",
-    // Entertainment
     movies: "movies",
     games: "games",
     sports: "sports",
     music: "music",
     "entertainment - other": "other-entertainment",
-    // Housing
     rent: "rent",
     mortgage: "rent",
     maintenance: "maintenance",
     furniture: "furniture",
     "home - other": "other-housing",
-    // Utilities
     electricity: "electric",
     "heat/gas": "other-utilities",
     water: "water",
     "tv/phone/internet": "internet",
     "utilities - other": "other-utilities",
-    // Health
     insurance: "other-health",
     "medical expenses": "doctor",
-    // Travel
     hotel: "hotel",
     plane: "flight",
-    // Subscriptions
     services: "other-subscriptions",
-    // Education
     education: "other-education",
-    // Gifts
     gifts: "gift",
-    // Pets
     pets: "other",
   }),
 );
@@ -178,9 +166,6 @@ export function parseSplitwiseCsv(csvText: string): ParsedSplitwiseResult {
 }
 
 function parseSplitwiseDate(dateStr: string): Date {
-  // Splitwise exports dates as YYYY-MM-DD. new Date("YYYY-MM-DD") parses as
-  // UTC midnight, which shifts to the previous day in negative-offset timezones.
-  // Appending T12:00:00 keeps the date stable regardless of timezone.
   return new Date(`${dateStr}T12:00:00`);
 }
 
@@ -201,7 +186,7 @@ export function transformSplitwiseRows(
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     if (!row) continue;
-    const rowNum = i + 2; // +2 for header row and 0-index
+    const rowNum = i + 2;
 
     if (row.Currency !== config.targetCurrency) {
       skipped.push({
@@ -316,7 +301,6 @@ export function transformSplitwiseRows(
       });
     }
 
-    // The payer's share = totalCost - sum(others' shares)
     const othersTotal = rawSplits.reduce((s, r) => s + r.amountInCents, 0);
     const payerShare = totalCents - othersTotal;
 
@@ -329,7 +313,6 @@ export function transformSplitwiseRows(
       });
     }
 
-    // Fix 1-cent rounding discrepancies
     const splitsTotal = splits.reduce((s, r) => s + r.amountInCents, 0);
     const diff = totalCents - splitsTotal;
     const firstSplit = splits[0];
@@ -362,7 +345,6 @@ export function transformSplitwiseRows(
 }
 
 const MAX_IMPORT_EXPENSES = 5000;
-// Vercel rejects request bodies over 4.5MB before the API ever sees them.
 const MAX_IMPORT_BYTES = 4_000_000;
 
 export function exceedsImportLimit(expenses: TransformedExpense[]): boolean {

@@ -37,7 +37,6 @@ export default function GroupSettingsIndex() {
     deleteGroupMutation.mutate({ id: Number(selectedGroupId) });
     router.dismissAll();
     router.navigate("/(tabs)/home");
-    // Home may still hold the deleted group's screens, and POP_TO_TOP on a stack at its root goes unhandled
     if (homeStack?.index) router.dismissAll();
   };
 

@@ -18,7 +18,6 @@ const MIN_INSTALL_AGE_MS = 3 * DAY_MS;
 
 export type ReviewMoment = "list_cleared" | "expense_created";
 
-// Play has no deep link to the review form
 export const writeReviewUrl =
   Platform.OS === "ios"
     ? `${APP_STORE_URL}?action=write-review`
@@ -35,7 +34,6 @@ export function useReviewNudge() {
     await AsyncStorage.setItem(ACTIONS_KEY, String(actions));
     if (!moment || actions < MIN_ACTIONS) return;
 
-    // Neither store promises to hide the prompt from someone who already rated, so ask once
     if (await AsyncStorage.getItem(ASKED_KEY)) return;
 
     const installedAt = await Application.getInstallationTimeAsync();
@@ -53,6 +51,5 @@ export function useReviewNudge() {
     posthog.capture("review_prompt_requested", { moment, actions });
   };
 
-  // A missed nudge is harmless, so no failure should reach error tracking
   return (moment?: ReviewMoment) => nudge(moment).catch(() => undefined);
 }

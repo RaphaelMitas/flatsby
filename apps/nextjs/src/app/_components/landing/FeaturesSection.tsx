@@ -25,7 +25,6 @@ export function FeaturesSection({
   const locale = useLocale();
   const { expenses, expenseCategories, shoppingCategories, debts, marketing } =
     useMessages();
-  // The demos reuse app components, which translate in the browser.
   const demoMessages = {
     expenses,
     expenseCategories,

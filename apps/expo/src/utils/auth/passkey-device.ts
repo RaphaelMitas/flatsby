@@ -15,7 +15,6 @@ export const passkeyDevice = storedChoice(
   parsePasskeyDevice,
 );
 
-// Android has Credential Manager passkeys from Android 9
 export const passkeysSupported =
   Platform.OS === "ios" ||
   (Platform.OS === "android" && Platform.Version >= 28);

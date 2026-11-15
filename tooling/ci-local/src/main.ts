@@ -60,7 +60,6 @@ const stackPortEnv = (web: number) => ({
   DB_WSPROXY_PORT: String(web + 2),
 });
 
-// Mirrors the jobs in .github/workflows/ci.yml.
 const CHECKS: [string, string[]][] = [
   ["pnpm", ["check"]],
   ["pnpm", ["lint:ws"]],
@@ -89,7 +88,6 @@ function javaHome(): string | undefined {
 function gatewayFromEnv(): Gateway | undefined {
   const url = process.env.SIMLOCK_URL?.replace(/\/$/, "");
   const token = process.env.SIMLOCK_TOKEN;
-  // Kept out of the environments the runner passes on, and so out of logs.
   delete process.env.SIMLOCK_TOKEN;
   if (!url && !token) return undefined;
   if (!url || !token)
@@ -110,7 +108,6 @@ function unsupportedReason(
 ): string | undefined {
   const mac = process.platform === "darwin";
   const needs: string[] = [];
-  // Without Docker, stack.sh only has Zonky's Apple-silicon Postgres.
   const zonky = mac && arch() === "arm64";
   if (target !== "checks" && !zonky && !works("docker", ["info"]))
     needs.push("Docker");
@@ -135,19 +132,15 @@ function unsupportedReason(
   return needs.length ? `needs ${needs.join(", ")}` : undefined;
 }
 
-// A run killed outright leaves its stack running; stop it before its ports
-// are handed out again.
 async function sweepDeadStacks(log: string): Promise<void> {
   const claims = join(cacheDir, "stack-ports");
   if (!existsSync(claims)) return;
   for (const web of readdirSync(claims)) {
     const claim = join(claims, web);
-    // Read before tryLock: taking over a dead claim deletes it.
     const dirFile = join(claim, "stack-dir");
     const stackDir = existsSync(dirFile) ? readFileSync(dirFile, "utf8") : "";
     const release = tryLock(claim);
     if (typeof release === "number") continue;
-    // Stop finds the processes by port, so it works without the run folder.
     await run("bash", [STACK, "stop"], {
       log,
       env: { ...stackPortEnv(Number(web)), STACK_DIR: stackDir || claim },
@@ -191,7 +184,6 @@ function cleanUp(): Promise<void> {
   return cleaning;
 }
 
-// A closed terminal or a dropped pipe must not stop a cleanup halfway.
 for (const stream of [process.stdout, process.stderr])
   stream.on("error", () => {});
 
@@ -252,7 +244,6 @@ async function main(): Promise<number> {
     ["SIGHUP", 129],
   ] as const) {
     process.on(signal, () => {
-      // Earlier ones wait for the cleanup to release devices; a third means it.
       if (++interrupts >= 3) process.exit(code);
       console.log(`\n${signal}: cleaning up`);
       stopRunning();
@@ -261,8 +252,6 @@ async function main(): Promise<number> {
   }
 
   const runs = join(repoRoot, ".ci-local");
-  // Emulator disks, app copies and databases are gigabytes, and a killed run
-  // leaves its own behind; logs, results and summary.json stay.
   const avdDir = join(runs, "avd");
   rmSync(avdDir, { recursive: true, force: true });
   const dropHeavy = (run: string) => {
@@ -270,7 +259,6 @@ async function main(): Promise<number> {
       if (/^(stack|(ios|android)-app(-tmp)?)$/.test(entry))
         rmSync(join(run, entry), { recursive: true, force: true });
   };
-  // Run folders are named by start time, so they sort oldest first.
   const earlier = readdirSync(runs)
     .filter((name) => /^\d{4}-/.test(name))
     .sort();
@@ -295,8 +283,6 @@ async function main(): Promise<number> {
   let apiUrl = "";
   let stack: Promise<void> | undefined;
   if (needsStack) {
-    // Derived from the worktree, so turbo's cache of the web build (which
-    // hashes the auth URL) hits on the next run in the same worktree.
     const seed = Number.parseInt(
       createHash("sha256").update(repoRoot).digest("hex").slice(0, 6),
       16,
@@ -328,7 +314,6 @@ async function main(): Promise<number> {
       env: stackEnv,
       log: logOf("stack"),
     });
-    // Every target that needs the stack reports its failure.
     stack.catch(() => {});
   }
   console.log(
@@ -347,10 +332,8 @@ async function main(): Promise<number> {
   const toolEnv: NodeJS.ProcessEnv = {
     ANDROID_HOME: androidHome,
     JAVA_HOME: javaHome(),
-    // The SDK's adb: another adb's first call would restart the shared server.
     PATH: [join(androidHome, "platform-tools"), process.env.PATH].join(":"),
   };
-  // One after the other: two native builds at once starve each other.
   let previousBuild: Promise<unknown> = Promise.resolve();
   const apps = new Map<Platform, Promise<string>>();
   for (const platform of platforms) {
@@ -371,7 +354,6 @@ async function main(): Promise<number> {
     const log = logOf(platform);
     const e2eDir = join(repoRoot, "apps/expo");
     await mustRun("node", ["e2e/validate-flows.mjs"], { cwd: e2eDir, log });
-    // Leased devices wait for nobody else's run while ours builds.
     if (gateway) await apps.get(platform);
     const devices = await acquireDevices(deviceCount, {
       platform,
@@ -414,8 +396,6 @@ async function main(): Promise<number> {
       },
     );
     await stack;
-    // Not through turbo: its strict env mode drops PLAYWRIGHT_WORKERS.
-    // Results into the run dir: a report left in apps/nextjs breaks its typecheck.
     const results = ["--output", join(runDir, "web-results")];
     await mustRun("pnpm", ["-F", "@flatsby/nextjs", "test:e2e", ...results], {
       log: logOf("web"),
@@ -449,11 +429,8 @@ async function main(): Promise<number> {
     return [];
   });
   results.push(...(await Promise.all(e2e)));
-  // A target that failed early can leave its native build running.
   await Promise.allSettled(apps.values());
   await cleanUp();
-  // Last, with devices and the stack gone: beside them it overloads the
-  // machine, and its turbo runs would race the stack's build.
   if (targets.includes("checks"))
     results.push(await timed("checks", logOf("checks"), checks));
   unlock();

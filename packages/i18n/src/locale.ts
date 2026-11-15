@@ -11,7 +11,6 @@ export const localeNames: Record<Locale, string> = {
 
 export const localeCookie = "locale";
 
-// English keeps the unprefixed URLs it had before German existed.
 export function localePath(locale: Locale, path: string) {
   if (locale === defaultLocale) return path;
   return path === "/" ? `/${locale}` : `/${locale}${path}`;
@@ -29,7 +28,6 @@ export function matchLocale(languageTags: readonly string[]): Locale {
   return defaultLocale;
 }
 
-// Browsers and the Expo client already list tags in preference order.
 export function resolveLocale(
   preference: string | undefined,
   acceptLanguage: string | null,

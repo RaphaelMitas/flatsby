@@ -212,8 +212,6 @@ const ShoppingListInner = ({
     listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // One flat keyed list, so ticking a row reorders it instead of remounting it
-  // under a different parent and killing the tick animation.
   const rows: (
     | { type: "header"; id: string; title: string; spaced?: boolean }
     | { type: "item"; id: string; item: ShoppingListItemType }
@@ -251,7 +249,6 @@ const ShoppingListInner = ({
 
   return (
     <div className="flex min-h-0 flex-1">
-      {/* Sidebar - hidden on mobile, shown on md+ */}
       <div className="hidden md:block">
         <CategoryFilterSidebar
           counts={categoryCounts}
@@ -263,7 +260,6 @@ const ShoppingListInner = ({
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {shoppingList && (
-          // A flex parent gives the bar a definite height, which the square settings button sizes from
           <div className="flex flex-col px-4 pb-3">
             <ListSwitcher
               groupId={groupId}
@@ -273,7 +269,6 @@ const ShoppingListInner = ({
           </div>
         )}
 
-        {/* Pills - shown on mobile, hidden on md+ */}
         <div className="md:hidden">
           <CategoryFilter
             counts={categoryCounts}

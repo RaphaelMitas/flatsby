@@ -1,16 +1,3 @@
-// Removes the email and name that app builds before analytics consent sent to PostHog person profiles.
-// Dry run by default; pass --apply to send the $unset events.
-//
-// POSTHOG_PERSONAL_API_KEY  personal API key with query:read
-// POSTHOG_PROJECT_ID        the EU project's numeric id
-// POSTHOG_API_KEY           the project token (phc_...), used to send the $unset events
-//
-// App builds from before analytics consent re-send email and name on every launch, so run it again
-// once most users have updated.
-//
-// PostHog has no API to delete events by name or date, so the pre-consent $screen events
-// can only be deleted with their whole person; otherwise they expire with the 12-month retention.
-
 const apply = process.argv.includes("--apply");
 const { POSTHOG_PERSONAL_API_KEY, POSTHOG_PROJECT_ID, POSTHOG_API_KEY } =
   process.env;
@@ -57,8 +44,6 @@ if (!apply) {
   process.exit(0);
 }
 
-// The delete_property endpoint writes a $delete_person_property event that ingestion ignores
-// (PostHog issue #35659); an event carrying $unset is processed.
 for (let start = 0; start < distinctIds.length; start += 500) {
   const batch = distinctIds.slice(start, start + 500).map((distinctId) => ({
     event: "$set",

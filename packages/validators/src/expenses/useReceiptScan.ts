@@ -30,7 +30,6 @@ type ReceiptScanState =
   | { status: "idle" }
   | { status: "reading" }
   | { status: "found" }
-  // Without a message the receipt was read but nothing on it was usable
   | { status: "failed"; message?: string };
 
 interface SetOptions {
@@ -38,7 +37,6 @@ interface SetOptions {
   shouldValidate: boolean;
 }
 
-// validators has no react-hook-form dependency; form.setValue satisfies this
 interface SetReceiptValue {
   (name: "amountInCents", value: number, options: SetOptions): void;
   (name: "currency", value: CurrencyCode, options: SetOptions): void;
@@ -67,7 +65,6 @@ export function useReceiptScan({
 }) {
   const [state, setState] = useState<ReceiptScanState>({ status: "idle" });
   const [applied, setApplied] = useState<Filled>();
-  // Outlives the found state so the preview keeps its rows while it animates closed
   const [lastScan, setLastScan] = useState<ReceiptScan>();
   const attempt = useRef(0);
   const [stage, setStage] = useState<{
@@ -108,7 +105,6 @@ export function useReceiptScan({
     }
   };
 
-  // A PDF is sent as it is, so its size rejects it before it's read into memory
   const scan = async (
     mediaType: ReceiptMediaType,
     encode: () => Promise<string>,
@@ -175,7 +171,6 @@ export function useReceiptScan({
     setState({ status: "idle" });
   };
 
-  // Closing a failed read keeps the error for the card to explain
   const dismiss = () => {
     if (stage.phase !== "failing") return reset();
     clearTimers();
@@ -239,7 +234,6 @@ export function useReceiptScan({
     reset,
     dismiss,
     apply,
-    // Tells us how often people correct what the scan filled in
     report: (values: ReceiptFormValues) =>
       applied ? receiptReport(applied, values) : undefined,
   };

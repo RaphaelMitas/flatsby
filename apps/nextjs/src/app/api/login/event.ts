@@ -14,7 +14,6 @@ const attempt = {
   attempt_id: z.uuid(),
 };
 
-// OAuth outcomes are captured on the callback; email codes and passkeys end in the page
 const pageAttempt = { ...attempt, provider: z.enum(["email", "passkey"]) };
 
 export const loginEventSchema = z.discriminatedUnion("event", [

@@ -4,18 +4,15 @@ export default function ShoppingListDetailLoading() {
   return (
     <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1 overflow-auto">
-        {/* Title skeleton */}
         <div className="flex justify-center py-2">
           <Skeleton className="h-7 w-48" />
         </div>
 
         <div className="space-y-2 px-4 pt-4">
-          {/* Section title */}
           <div className="flex justify-center">
             <Skeleton className="h-5 w-16" />
           </div>
 
-          {/* Shopping list items */}
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
@@ -27,7 +24,6 @@ export default function ShoppingListDetailLoading() {
             </div>
           ))}
 
-          {/* Purchased section */}
           <div className="flex justify-center pt-4">
             <Skeleton className="h-5 w-32" />
           </div>
@@ -45,7 +41,6 @@ export default function ShoppingListDetailLoading() {
         </div>
       </div>
 
-      {/* Add form skeleton */}
       <div className="bg-background sticky bottom-0 p-4">
         <div className="flex flex-col gap-2">
           <div className="flex flex-row gap-2">

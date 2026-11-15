@@ -21,7 +21,6 @@ import { CalendarEntryRow } from "./CalendarEntryRow";
 const MAX_DOTS = 4;
 
 interface CalendarListProps {
-  /** Undefined while loading */
   agenda: { days: AgendaDay[]; overdue: DueChore[] } | undefined;
   dates: string[];
   today: string;
@@ -76,7 +75,6 @@ export function CalendarList({
             entries={agenda?.days[index]?.entries ?? []}
             onPress={() =>
               scroller.current?.scrollTo({
-                // The first day goes to the very top, so the overdue chores above it show too
                 y: date === dates[0] ? 0 : (sections.current.get(date) ?? 0),
                 animated: true,
               })
@@ -214,7 +212,6 @@ function StripDay({
       <View
         className={cn(
           "h-8 w-8 items-center justify-center rounded-full",
-          // Android drops the radius when a background appears from none (react-native#52415)
           isToday ? "bg-primary" : "bg-background",
         )}
       >

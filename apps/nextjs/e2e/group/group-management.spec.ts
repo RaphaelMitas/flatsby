@@ -155,9 +155,7 @@ test.describe("Group Management", () => {
     await authPage.goto("/home");
     const send = authPage.getByTestId(/^invite-card-send-\d+$/);
     await waitForHydration(send);
-    // Send waits for the invite code
     await expect(authPage.getByTestId("invite-card-code")).toBeVisible();
-    // Desktop copies instead of opening the OS share dialog
     await send.click();
     await expect(authPage.getByText("Copied for Anna")).toBeVisible();
     const message = await authPage.evaluate(() =>
@@ -193,7 +191,6 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, uniqueGroupName());
     const listId = await createShoppingList(authPage);
     await addShoppingListItem(authPage, "Toilet paper");
-    // A real id means the item reached the server
     await expect(
       authPage.getByTestId(/^shopping-list-item-\d+$/),
     ).toBeVisible();
@@ -343,7 +340,6 @@ test.describe("Group Management", () => {
     const { pathname, search } = new URL(live.image ?? "");
     const image = await request.get(`${pathname}${search}`);
     expect(image.headers()["content-type"]).toBe("image/png");
-    // WhatsApp drops og:images over 600KB
     expect((await image.body()).length).toBeLessThan(600_000);
 
     await authPage.getByRole("button", { name: "Reset link" }).click();
@@ -393,10 +389,6 @@ test.describe("Group Management", () => {
     await expect(nameInput).toHaveValue(newName);
   });
 
-  // TODO: Requires multi-user fixture
-  // test("non-admin cannot change group name", () => {});
-  // test("non-admin cannot remove other members", () => {});
-
   test("delete group", async ({ authPage }) => {
     const groupName = uniqueGroupName();
     await createAndSelectGroup(authPage, groupName);
@@ -434,15 +426,6 @@ test.describe("Group Management", () => {
     ).toBeVisible();
     await expect(authPage.getByTestId(`group-card-${groupId}`)).toHaveCount(0);
   });
-
-  // TODO: Requires multi-user fixture
-  // test("promote member to admin", () => {});
-  // test("demote admin to member", () => {});
-  // test("prevent removing last admin", () => {});
-  // test("remove member", () => {});
-  // test("member self-remove", () => {});
-  // test("re-add previously removed member", () => {});
-  // test("member sees group", () => {});
 
   test("delete group clears user references", async ({ authPage }) => {
     const groupName = uniqueGroupName();

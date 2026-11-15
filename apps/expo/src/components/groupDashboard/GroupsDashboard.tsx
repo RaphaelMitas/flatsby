@@ -23,7 +23,6 @@ export function GroupsDashboard() {
     return <ErrorMessage message={groups.error.message} />;
   }
 
-  // TabLayout sends someone without a group to onboarding
   if (groups.data.length === 0) return null;
 
   return (

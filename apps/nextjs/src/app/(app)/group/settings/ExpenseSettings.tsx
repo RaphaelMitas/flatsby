@@ -46,7 +46,6 @@ function ExpenseSettingsForm({ group }: { group: GroupWithAccess }) {
   const highlightConvert =
     useSearchParams().get("highlight") === "convert" && isAdmin;
 
-  // Saving diffs against what this admin opened, so another admin's change in between isn't sent back
   const [opened, setOpened] = useState({
     currency: group.currency,
     convertAutomatically: group.convertAutomatically === true,

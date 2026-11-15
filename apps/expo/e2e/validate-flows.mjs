@@ -1,12 +1,4 @@
 #!/usr/bin/env node
-/**
- * Static validation for Maestro flows. Runs anywhere Node runs (no simulator
- * needed): parses every flow/subflow YAML, checks basic Maestro structure,
- * verifies runFlow references resolve, and cross-checks every `id:` selector
- * against testIDs that actually exist in the app source.
- *
- * Usage: node e2e/validate-flows.mjs
- */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
@@ -19,8 +11,6 @@ const e2eDir = dirname(fileURLToPath(import.meta.url));
 const appSrcDir = resolve(e2eDir, "../src");
 const flowsDir = join(e2eDir, "flows");
 const subflowsDir = join(e2eDir, "subflows");
-// Store-screenshot flows live outside flows/ so the e2e suite skips them,
-// but they follow the same rules.
 const screenshotsDir = join(e2eDir, "screenshots");
 
 const errors = [];
@@ -34,7 +24,6 @@ function walk(dir, out = []) {
   return out;
 }
 
-// --- Collect testIDs from app source ------------------------------------
 function collectTestIDs() {
   const ids = new Set();
   const dynamicPrefixes = new Set();
@@ -52,21 +41,16 @@ function collectTestIDs() {
     for (const m of src.matchAll(/testID=\{?["'`]([^"'`}]+)["'`]\}?/g)) {
       ids.add(m[1]);
     }
-    // testIDs passed via props (e.g. sheetTestID="list-switcher"), which the
-    // component may extend into children like list-switcher-item-1
     for (const m of src.matchAll(/\wTestID=\{?["'`]([^"'`}]+)["'`]\}?/g)) {
       ids.add(m[1]);
       dynamicPrefixes.add(`${m[1]}-`);
     }
-    // object-key testIDs, e.g. tabBarButtonTestID: "tab-home" or Segmented options
     for (const m of src.matchAll(/[tT]estID:\s*["'`]([^"'`]+)["'`]/g)) {
       ids.add(m[1]);
     }
-    // template-literal testIDs, e.g. testID={`foo-${bar}`}
     for (const m of src.matchAll(/testID=\{`([^`]*)\$\{[^}]+\}[^`]*`\}/g)) {
       dynamicPrefixes.add(m[1]);
     }
-    // testIDs passed via props (e.g. checkboxTestID={`...`})
     for (const m of src.matchAll(/TestID=\{`([^`]*)\$\{[^}]+\}[^`]*`\}/g)) {
       dynamicPrefixes.add(m[1]);
     }
@@ -84,7 +68,6 @@ function idExists(id) {
   return false;
 }
 
-// --- Validate flows ------------------------------------------------------
 const KNOWN_COMMANDS = new Set([
   "launchApp",
   "openLink",
@@ -198,7 +181,7 @@ function validateCommands(file, commands, { isSubflow }) {
     }
 
     for (const id of iterateSelectors(value)) {
-      if (id.includes("${")) continue; // env-templated, checked at runtime
+      if (id.includes("${")) continue;
       if (!idExists(id)) {
         errors.push(`${rel}: id "${id}" not found as a testID in app source`);
       }
@@ -230,8 +213,6 @@ for (const file of flowFiles) {
   if (!config || typeof config.appId !== "string") {
     errors.push(`${rel}: front matter missing appId`);
   } else if (config.appId !== "${APP_ID}") {
-    // Hardcoding a bundle id breaks the other platform; run-flows.mjs
-    // injects APP_ID per platform.
     errors.push(`${rel}: appId must be "\${APP_ID}", got "${config.appId}"`);
   }
   validateCommands(file, docs[1].toJS(), { isSubflow: false });
@@ -246,7 +227,6 @@ for (const file of subflowFiles) {
       for (const e of d.errors) errors.push(`${rel}: YAML error: ${e.message}`);
     continue;
   }
-  // Maestro requires a config section (appId + ---) in subflows too.
   if (docs.length !== 2) {
     errors.push(
       `${rel}: expected front matter + commands (2 documents), got ${docs.length}`,

@@ -29,7 +29,6 @@ import type { ApiResult } from "./errors";
 import type { QuerySnapshot } from "./resultMutation";
 import { restoreSnapshot, resultMutation } from "./resultMutation";
 
-// A tRPC query key is [path, { input, type }]
 const rangeKeySchema = z.tuple([
   z.unknown(),
   z.object({ input: calendarRangeSchema }),
@@ -54,7 +53,6 @@ interface CalendarFilters {
   details: QueryFilters;
 }
 
-/** Applies one change to every cached range and item detail of the group, so nothing on screen lags behind. */
 async function patchCalendar(
   queryClient: QueryClient,
   filters: CalendarFilters,
@@ -136,7 +134,6 @@ const asView = (
   memberIds: input.memberIds,
 });
 
-// Negative so it never collides with a real id before the refetch lands
 const temporaryId = () => -Date.now();
 
 const skipDays = (
@@ -151,7 +148,6 @@ const skipDays = (
     range,
   );
 
-/** The optimistic side of each calendar mutation, shared by both clients. */
 export const calendarPatches = {
   setDone: (
     input: { itemId: number; date: string; done: boolean; skip?: string[] },
@@ -216,7 +212,6 @@ export const calendarPatches = {
     input: CreateCalendarItemInput & { id: number; today: string },
     findCachedItem: FindCachedItem,
   ): CalendarPatch => {
-    // A range's cache may not hold the item, yet the edit can still reach into it
     const previous = findCachedItem(input.id);
     if (!previous) return { range: (range) => range };
     const edited = asView(

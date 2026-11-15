@@ -40,7 +40,6 @@ export default function JoinScreen() {
     ...trpc.invite.preview.queryOptions({ code }),
     enabled: parsed.success,
   });
-  // undefined until the joiner picks, so a personal link's spot stays the default
   const [picked, setPicked] = useState<{ id: number; name: string } | null>();
 
   const openGroup = (
@@ -53,7 +52,6 @@ export default function JoinScreen() {
       trpc.user.getCurrentUserWithGroups.queryFilter(),
     );
     setSelectedGroup(groupId, groupName, openList ?? undefined);
-    // The onboarding screen may sit below, and must not stay one swipe back from the group
     if (router.canDismiss()) router.dismissAll();
     router.replace(openList ? "/(tabs)/shoppingList" : "/(tabs)/home");
   };
@@ -61,7 +59,6 @@ export default function JoinScreen() {
   const invite = preview.data?.success ? preview.data.data : null;
   const choiceId = picked === undefined ? personalId : picked?.id;
   const claim = invite?.placeholders.find(({ id }) => id === choiceId);
-  // The picked spot left the preview, claimed or removed since
   const takenName = invite && picked && !claim ? picked.name : undefined;
 
   const join = useMutation(

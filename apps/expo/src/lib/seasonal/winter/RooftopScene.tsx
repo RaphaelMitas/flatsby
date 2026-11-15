@@ -21,11 +21,9 @@ import { isChristmas } from "./christmas";
 export const SKY = "#08142b";
 const GRADIENT = [SKY, "#12284d", "#2b4f84", "#5b82b8"] as const;
 const LOOP_MS = 12000;
-// Enough sky above the scene that an iOS overscroll never runs out of it
 const OVERSCROLL = 1000;
 
 const TILE_WIDTH = 340;
-// Squashed from the drawing so the roofs stay clear of the greeting
 const SQUASH = 80 / 96;
 
 const HOUSE = "#0b1628";
@@ -227,7 +225,6 @@ function Skyline({ clock }: { clock: Clock }) {
   );
 
   return (
-    // Anchored right so the gap behind the cat lines up
     <View className="absolute right-0 bottom-0 flex-row-reverse">
       {tiles.map((tile) => (
         <Svg
@@ -273,7 +270,6 @@ function Skyline({ clock }: { clock: Clock }) {
           ))}
           <Rect x={108} y={58} width={10} height={12} rx={1} fill={DARK} />
           <Circle cx={176} cy={34} r={5} fill={LIT} />
-          {/* Only the tile always on screen animates, the rest stay still to spare the UI thread */}
           {tile === 0 ? (
             <FlickerWindow clock={clock} />
           ) : (

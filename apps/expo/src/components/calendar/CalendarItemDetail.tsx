@@ -31,7 +31,6 @@ import { useCalendarMutations } from "./useCalendarMutations";
 interface CalendarItemDetailProps {
   group: GroupWithAccess;
   itemId: number;
-  /** The occurrence that was tapped, which skip acts on */
   date: string | undefined;
   missed: string[];
 }

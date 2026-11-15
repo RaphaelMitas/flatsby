@@ -28,7 +28,6 @@ export function CreateGroup() {
   const { switchGroup } = useGroupContext();
 
   const groupMutation = useCreateGroup(async (id, name) => {
-    // The group exists either way; failing here would invite a duplicate create
     await switchGroup(id).catch(() => undefined);
     setCreated({ id, name });
   });

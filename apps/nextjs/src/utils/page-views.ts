@@ -6,12 +6,10 @@ import { captureCookieless, captureEvent, posthog } from "@flatsby/api/posthog";
 function isVisitor(headers: Headers) {
   const userAgent = headers.get("user-agent");
   if (!userAgent || isbot(userAgent)) return false;
-  // Signed-in visits aren't counted; the account's actions are
   if (getSessionCookie(headers)) return false;
   return headers.get("sec-gpc") !== "1" && headers.get("dnt") !== "1";
 }
 
-// Weak hints stay filterable in PostHog rather than dropping real visitors on a guess
 function botSignal(headers: Headers) {
   if (!headers.get("accept-language")) return "no_accept_language";
   const userAgent = headers.get("user-agent") ?? "";
@@ -39,14 +37,12 @@ export async function captureVisit(
   });
 }
 
-// isVisitor drops any request with a session cookie, stale or another account's
 export function withoutCookie(headers: Headers) {
   const signedOut = new Headers(headers);
   signedOut.delete("cookie");
   return signedOut;
 }
 
-// The query and hash can carry free text
 export function pageWithoutQuery(url: string) {
   const { origin, pathname } = new URL(url);
   return { url: origin + pathname, referrer: null };

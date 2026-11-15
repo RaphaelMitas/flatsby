@@ -52,7 +52,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
     trpc.shoppingList.getShoppingList.queryOptions({ groupId, shoppingListId }),
   );
 
-  // A deleted list stays selected, and polling it would only collect errors
   const poll = useLivePolling(
     trpc.shoppingList.pathKey(),
     shoppingListData.success,
@@ -112,8 +111,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
       ? categoryCountsData.data.total
       : undefined;
 
-  // Item ids carry no checked/unchecked prefix, so ticking a row reorders it
-  // instead of remounting it and killing the tick animation.
   const flashListData = useMemo((): ListItem[] => {
     const data: ListItem[] = [];
 
@@ -242,7 +239,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
   return (
     <BottomSheetPickerProvider>
       <View className="flex-1 flex-col md:flex-row">
-        {/* Sidebar - hidden on mobile, shown on md+ */}
         <View className="hidden md:flex">
           <CategoryFilterSidebar
             counts={categoryCounts}
@@ -253,7 +249,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
         </View>
 
         <View className="flex-1">
-          {/* Pills - shown on mobile, hidden on md+ */}
           <View className="flex md:hidden">
             <CategoryFilterPills
               counts={categoryCounts}
@@ -266,7 +261,6 @@ const ShoppingList = ({ groupId, shoppingListId }: ShoppingListProps) => {
           <FlashList
             ref={listRef}
             refreshControl={refreshControl}
-            // Keeping the old top row in place would push a freshly added item above the viewport.
             maintainVisibleContentPosition={{ disabled: true }}
             className="flex-1"
             data={flashListData}

@@ -27,7 +27,6 @@ import { ErrorMessage } from "~/lib/ui/error-message";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 
-// Global state for communication between screens
 let memberActionCallback: {
   onUpdateRole?: ({ memberId, newRole }: UpdateMemberRoleInput) => void;
   onRemoveMember?: ({ memberId }: RemoveGroupMemberInput) => void;
@@ -59,7 +58,6 @@ export default function MemberActionsScreen() {
 
   const alertFailure = (message: string | undefined) =>
     Alert.alert(t("common.error"), message ?? t("errors.unexpected"));
-  // These embed member names, so they go stale when a member changes identity
   const memberNameQueries = [
     trpc.expense.pathFilter(),
     trpc.calendar.pathFilter(),
@@ -132,7 +130,6 @@ export default function MemberActionsScreen() {
     router.back();
   };
 
-  // A cached code can be dead after a removal or a reset elsewhere
   const handleInvite = async () => {
     const invite = await queryClient
       .fetchQuery(trpc.invite.get.queryOptions({ groupId: group.data.id }))

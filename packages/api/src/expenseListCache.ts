@@ -13,7 +13,6 @@ export type ExpenseListData = InfiniteData<
   unknown
 >;
 
-// One still on its first fetch has nothing to protect, and cancelling it would strand it pending
 export const cancelExpenseLists = (
   queryClient: QueryClient,
   listKey: QueryKey,
@@ -23,14 +22,12 @@ export const cancelExpenseLists = (
     predicate: (query) => query.state.data !== undefined,
   });
 
-// The unfiltered list's key partially matches every filtered one, so this patches them all
 export function patchExpenseLists(
   queryClient: QueryClient,
   listKey: QueryKey,
   patch: (old: ExpenseListData) => ExpenseListData,
 ): QuerySnapshot {
   const unfiltered = hashKey(listKey);
-  // A cached filter nobody watches would show a pending row twice once reused; refetching it is cheaper
   queryClient.removeQueries({
     queryKey: listKey,
     type: "inactive",

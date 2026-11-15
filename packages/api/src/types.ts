@@ -1,9 +1,3 @@
-/**
- * Database and Query Types
- * This file contains proper TypeScript types for database operations
- * to replace `any` types throughout the codebase
- */
-
 import type { db } from "@flatsby/db/client";
 import type {
   expenses,
@@ -23,11 +17,9 @@ import type { InfiniteData } from "@tanstack/react-query";
 
 import type { ApiResult } from "./errors";
 
-// Database types
 export type Database = typeof db;
 export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Table types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 
@@ -42,12 +34,10 @@ export type NewShoppingList = typeof shoppingLists.$inferInsert;
 
 export type NewShoppingListItem = typeof shoppingListItems.$inferInsert;
 
-// Query result types for common operations
 export interface MemberUser {
   name: string;
   email: string | null;
   image: string | null;
-  // Only the group's member list loads it; placeholders never have one
   paypalHandle?: string | null;
 }
 
@@ -90,7 +80,6 @@ export type GroupMemberDetails = GroupMemberWithUser & {
   currentUserGroupMember: GroupMember;
 };
 
-// Type for infinite query data - matches ShoppingListUtils pattern
 interface ShoppingListPage {
   items: ShoppingListItem[];
   nextCursor?: number;
@@ -115,7 +104,6 @@ export type ShoppingListSummary = Pick<
   uncheckedItemLength: number;
 };
 
-// Expense types
 export type Expense = typeof expenses.$inferSelect;
 export type NewExpense = typeof expenses.$inferInsert;
 
@@ -141,7 +129,6 @@ export type ExpenseWithSplitsAndMembers = Omit<
   expenseSplits: ExpenseSplitWithMember[];
 };
 
-// Type for expense infinite query data
 interface ExpensePage {
   items: ExpenseWithSplitsAndMembers[];
   nextCursor?: number;
@@ -152,17 +139,14 @@ export type ExpenseInfiniteData = InfiniteData<
   number | null
 >;
 
-// Re-export expense-related types from validators
 export type {
   DebtEntry,
   DebtSummary,
   GroupDebtSummary,
 } from "@flatsby/validators/expenses/types";
 
-// Role types
 export type Role = "admin" | "member";
 
-// Common query options
 export interface FindGroupOptions {
   groupId: number;
   userId: string;

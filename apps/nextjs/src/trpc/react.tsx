@@ -22,10 +22,8 @@ import { createQueryClient } from "./query-client";
 let clientQueryClientSingleton: QueryClient | undefined;
 const getQueryClient = () => {
   if (typeof window === "undefined") {
-    // Server: always make a new query client
     return createQueryClient();
   } else {
-    // Browser: use singleton pattern to keep the same query client
     // biome-ignore lint/suspicious/noAssignInExpressions: lazy singleton initialization
     return (clientQueryClientSingleton ??= createQueryClient(
       trpcFailureCaches(reportTRPCFailure),

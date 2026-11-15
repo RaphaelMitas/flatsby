@@ -51,7 +51,6 @@ export function useExpenseSelection(): ExpenseSelection {
       }
 
       const queryString = newParams.toString();
-      // Shallow: a server render would re-hydrate the list over optimistic rows
       window.history.pushState(
         null,
         "",

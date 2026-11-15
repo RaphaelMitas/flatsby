@@ -9,7 +9,6 @@ import { messages } from "@flatsby/i18n/messages";
 
 const PREFERENCE_KEY = "locale_preference";
 
-// Read synchronously so the first frame is already in the chosen language.
 let preference = readPreference();
 
 function readPreference() {
@@ -17,22 +16,16 @@ function readPreference() {
     const saved = SecureStore.getItem(PREFERENCE_KEY);
     return saved && isLocale(saved) ? saved : null;
   } catch {
-    // An unreadable entry must not stop the app from starting.
     return null;
   }
 }
 
-// Synchronous so a quick second choice can't be overtaken by an async write.
-// Outside the component: the React Compiler skips components containing try/catch.
 function writePreference(next: Locale | null) {
   try {
     SecureStore.setItem(PREFERENCE_KEY, next ?? "system");
-  } catch {
-    // Only persistence is lost; this session already switched.
-  }
+  } catch {}
 }
 
-// The API takes the first supported tag, so the app's choice goes first.
 export function languageTags() {
   const device = getLocales().map((l) => l.languageTag);
   return preference ? [preference, ...device] : device;
@@ -43,7 +36,6 @@ const LocalePreferenceContext = createContext<{
   setPreference: (next: Locale | null) => void;
 } | null>(null);
 
-// useLocales re-renders when Android switches language without restarting the app.
 export function IntlProvider(props: { children: React.ReactNode }) {
   const [current, setCurrent] = useState(preference);
   const deviceLocale = matchLocale(useLocales().map((l) => l.languageTag));

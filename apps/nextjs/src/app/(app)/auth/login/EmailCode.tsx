@@ -56,7 +56,6 @@ export default function EmailCode({
           readPasskeyDevice() === "unknown"
             ? `/auth/passkey?next=${encodeURIComponent(callbackURL)}`
             : callbackURL;
-        // Only joiners get the name step; creators name themselves on the onboarding screen
         const joining = callbackURL.startsWith(`${INVITE_PATH}/`);
         window.location.assign(
           asksForName(user) && joining
@@ -72,7 +71,6 @@ export default function EmailCode({
       event: "login_cancelled",
       stage: "code",
     });
-  // Closing the tab counts as giving up, like leaving the app's code screen; a page kept in the back cache may return
   const leave = useEffectEvent((event: PageTransitionEvent) => {
     if (!event.persisted && !signedIn.current) cancel();
   });
@@ -96,7 +94,6 @@ export default function EmailCode({
           })}
         </p>
       </div>
-      {/* input-otp splices a paste in at the cursor, so a whole code replaces what was typed instead */}
       <div
         onPasteCapture={(event) => {
           const pasted = event.clipboardData.getData("text");

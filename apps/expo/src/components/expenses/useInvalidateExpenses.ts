@@ -10,10 +10,6 @@ import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { trpc } from "~/utils/api";
 
-/**
- * Hook that provides invalidation functions for expense queries.
- * This reduces duplicate code across expense components.
- */
 export function useInvalidateExpenses(groupId: number) {
   const queryClient = useQueryClient();
 

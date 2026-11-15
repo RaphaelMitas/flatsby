@@ -10,7 +10,6 @@ export function SheetModal(props: BottomSheetProps) {
   return (
     <BottomSheetModal
       enablePanDownToClose
-      // A background on iOS would replace the system Liquid Glass sheet.
       backgroundStyle={
         Platform.OS === "android"
           ? { backgroundColor: getColor("background") }

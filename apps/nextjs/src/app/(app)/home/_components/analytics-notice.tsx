@@ -11,7 +11,6 @@ import { useTRPC } from "~/trpc/react";
 
 const seenKey = "analytics_notice_seen";
 
-// Art. 21(4) GDPR: the right to object, shown once and apart from other information
 export function AnalyticsNotice() {
   const t = useTranslations("settings.analytics");
   const trpc = useTRPC();

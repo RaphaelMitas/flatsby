@@ -274,7 +274,6 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
               nextEvent.occurrence.date,
             )
           : dayAndTime(nextEvent.occurrence.date, nextEvent.item.time?.start),
-      // An event already running opens on today, where the list keeps the overdue chores
       onPress: () =>
         openCalendar(
           nextEvent.occurrence.date < today
@@ -301,7 +300,6 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       <AppScrollView contentContainerClassName="px-5 pb-32" onRefresh={refresh}>
         <View>
           {home && (
-            // Runs down behind the cat to just past the top of the For You card
             <View
               className="absolute -inset-x-5 top-0"
               style={{ bottom: -CAT_SIZE - 6 }}

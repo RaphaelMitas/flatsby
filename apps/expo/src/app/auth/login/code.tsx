@@ -50,7 +50,6 @@ export default function CodeScreen() {
         signedIn.current = true;
         posthog.capture("login_succeeded", attempt);
         const steps: SignInStep[] = [];
-        // Only joiners get the name step; creators name themselves on the onboarding screen
         if (asksForName(user) && peekPostLoginPath()) steps.push("name");
         if (offersPasskey) steps.push("passkey");
         queueSignInSteps(steps);
@@ -62,7 +61,6 @@ export default function CodeScreen() {
       posthog.capture("login_cancelled", { ...attempt, stage: "code" });
     }
   });
-  // Back button, swipe and Android back all leave through here
   useEffect(() => () => leave(), []);
 
   return (

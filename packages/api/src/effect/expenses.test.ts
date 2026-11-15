@@ -9,7 +9,6 @@ import { Database } from "./services/Database";
 import { ErrorReporter } from "./services/ErrorReporter";
 import { toApiResult } from "./toApiResult";
 
-// The real client validates DATABASE_URL on import, which would fail a local run without env vars
 vi.mock("@flatsby/db/client", () => ({ db: {} }));
 
 type Report = Parameters<ErrorReporter["Service"]["capture"]>[0];

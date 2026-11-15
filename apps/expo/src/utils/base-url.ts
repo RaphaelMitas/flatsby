@@ -2,10 +2,6 @@ import Constants from "expo-constants";
 
 import { getE2EApiUrlOverride } from "./e2e";
 
-/**
- * Extend this function when going to production by
- * setting the baseUrl to your production API URL.
- */
 export const getBaseUrl = () => {
   const e2eApiUrl = getE2EApiUrlOverride();
   if (e2eApiUrl) {

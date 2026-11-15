@@ -1,7 +1,3 @@
-// ============================================================================
-// Split Editing - Pure split transitions for both clients and the server
-// ============================================================================
-
 import type { ExpenseSplit, SplitMethod } from "./types";
 import {
   distributeEqualAmounts,
@@ -47,7 +43,6 @@ export function splitsForTotal(
   }
 }
 
-// Blank percentage and custom members aren't part of the expense, so they're dropped instead of saved at 0
 export function finalizeSplits(
   method: SplitMethod,
   splits: ExpenseSplit[],

@@ -129,7 +129,6 @@ export function Switcher({
                   accessible={e2eAccessibilityOverride()}
                   onPress={() => {
                     setPicked(item.id);
-                    // iOS animates the sheet out for a while; let the new check paint first
                     requestAnimationFrame(closeThen(() => onSelect(item)));
                   }}
                   className="flex-1 flex-row items-center gap-3 p-2"

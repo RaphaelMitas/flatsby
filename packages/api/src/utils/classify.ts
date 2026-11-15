@@ -10,7 +10,6 @@ import { captureGeneration } from "./model-provider";
 const CLASSIFICATION_MODEL = "typesafe-ai/jev";
 
 const CLASSIFICATION_PROVIDER_OPTIONS = {
-  // The privacy policy names only Typesafe AI and says it keeps nothing; DigitalOcean also serves Jev.
   gateway: { only: ["typesafe-ai"], zeroDataRetention: true },
 };
 

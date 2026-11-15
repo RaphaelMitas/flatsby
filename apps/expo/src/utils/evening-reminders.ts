@@ -25,13 +25,11 @@ import { useShoppingStore } from "./shopping-store";
 import { storedChoice } from "./stored-choice";
 import { useNow } from "./useNow";
 
-// Stored with the user id, so someone else signing in on this phone is asked again
 const reminderChoice = storedChoice(
   "evening-reminders",
   (saved) => saved ?? "",
 );
 
-/** null until the stored choice and the session are read */
 export function useReminderChoice() {
   const stored = reminderChoice.useValue();
   const userId = useSession().data?.user.id;
@@ -42,7 +40,6 @@ export function useReminderChoice() {
 
 const REMINDER_HOUR = 19;
 
-/** Tonight's reminder is gone once it's past the hour */
 export const firstEvening = (today: string, now: Date) =>
   now.getHours() >= REMINDER_HOUR ? addDays(today, 1) : today;
 const CHANNEL_ID = "evening-reminders";
@@ -59,7 +56,6 @@ Notifications.setNotificationHandler({
     }),
 });
 
-// Android 13 only shows the permission prompt once a channel exists
 const ensureChannel = (name: string) =>
   Platform.OS === "android"
     ? Notifications.setNotificationChannelAsync(CHANNEL_ID, {
@@ -73,7 +69,6 @@ interface Reminder {
   request: NotificationRequestInput & { identifier: string };
 }
 
-// Scheduling an identifier again replaces it, so only stale ones are cancelled after
 let queue = Promise.resolve();
 const reschedule = (reminders: Reminder[], channel: string) => {
   queue = queue
@@ -86,7 +81,6 @@ const reschedule = (reminders: Reminder[], channel: string) => {
         await ensureChannel(channel);
         const now = new Date();
         for (const { at, request } of reminders) {
-          // Android may still deliver tonight's late; iOS throws on a time already past
           kept.add(request.identifier);
           if (at > now) await Notifications.scheduleNotificationAsync(request);
         }
@@ -209,7 +203,6 @@ export function useEveningReminders() {
     perGroup && !perGroup.includes(undefined)
       ? perGroup.flatMap((group) => group ?? [])
       : undefined;
-  // Stays put while anything loads, so a cold start offline keeps what's scheduled
   const target =
     signedIn === false || choice === "off" || choice === "undecided"
       ? "off"

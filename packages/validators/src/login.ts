@@ -22,9 +22,7 @@ export const SIGN_IN_CODE_TTL_SECONDS = SIGN_IN_CODE_TTL_MINUTES * 60;
 
 export const digitsOnly = (text: string) => text.replace(/\D/g, "");
 
-// A pasted email carries other digits, so a standalone six-digit run beats the last six digits
 export function codeFromText(text: string) {
-  // No lookbehind: Safari before 16.4 throws on it
   const standalone = new RegExp(
     `(?:^|\\D)(\\d{${SIGN_IN_CODE_LENGTH}})(?!\\d)`,
   );
@@ -58,11 +56,9 @@ export function signInCodeError(error: AuthError) {
     : msg("auth.code.failed");
 }
 
-// Expired or exhausted codes need a new one; a rate limit only needs a pause
 export const isRetryableCodeError = (error: AuthError) =>
   error.code === "INVALID_OTP" || error.status === 429;
 
-// Browsers report a dismissed passkey sheet as NotAllowedError, which reaches us as the passthrough code
 const PASSKEY_CANCEL_CODES = new Set([
   "ERROR_CEREMONY_ABORTED",
   "ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY",
@@ -73,7 +69,6 @@ export const passkeyCancelled = (error: AuthError) =>
 
 export const loginAttemptSchema = z.object({
   attemptId: z.uuid(),
-  // A bad id only loses the person, not the attempt
   distinctId: z
     .string()
     .regex(/^[\w-]{1,64}$/)
@@ -82,7 +77,6 @@ export const loginAttemptSchema = z.object({
 });
 export type LoginAttempt = z.input<typeof loginAttemptSchema>;
 
-// Anyone can open the callback with ?error=<text>, so only code-shaped values reach analytics
 export const loginErrorCode = (code: string | null | undefined) => {
   const lower = code?.toLowerCase();
   return lower && /^[a-z0-9_]{1,64}$/.test(lower) ? lower : "other";
@@ -91,7 +85,6 @@ export const loginErrorCode = (code: string | null | undefined) => {
 export const startFailureCode = (error: AuthError) =>
   loginErrorCode(error.code ?? `http_${error.status}`);
 
-// Chrome, Firefox, Safari, React Native's polyfill, then Expo's fetch
 const UNREACHABLE_SERVER_MESSAGE =
   /^(Failed to fetch|NetworkError when attempting to fetch|Load failed|Network request failed|fetch failed:)/;
 
@@ -100,7 +93,6 @@ export const thrownFailureCode = (thrown: unknown) =>
     ? "network"
     : "exception";
 
-// A lost connection is only a login_failed; anything else thrown still reaches error tracking
 export async function startSignIn(
   run: () => Promise<{ error: AuthError | null }>,
   onFailed: (code: string) => void,

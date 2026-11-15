@@ -1,10 +1,4 @@
 #!/usr/bin/env node
-/**
- * Prints the newest device type matching a regex on the newest runtime that
- * has one, as three lines: device type id, runtime id, device name.
- *
- *   node pick.mjs "^iPhone [0-9]+ Pro Max$"
- */
 import { execFileSync } from "node:child_process";
 
 const pattern = new RegExp(process.argv[2] ?? "");

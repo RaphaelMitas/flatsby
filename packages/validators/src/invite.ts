@@ -14,10 +14,8 @@ const INVITE_PLACEHOLDER_REFERRER_KEY = "invite_placeholder";
 const INVITE_PLACEHOLDER_PARAM = "p";
 const DAY_MS = 86_400_000;
 
-// Crockford base32: no I, L, O or U, so no look-alikes or accidental words
 export const INVITE_CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
-/** Also takes a pasted invite link. */
 export const normalizeInviteCode = (raw: string) =>
   (raw.split(`${INVITE_PATH}/`).pop() ?? "")
     .toUpperCase()
@@ -29,7 +27,6 @@ export const normalizeInviteCode = (raw: string) =>
 export const formatInviteCode = (code: string) =>
   `${code.slice(0, INVITE_CODE_GROUP)}-${code.slice(INVITE_CODE_GROUP)}`;
 
-// Read out one character at a time, not as "K7PQ minus 2M9X"
 export const spokenInviteCode = (code: string) => code.split("").join(" ");
 
 export const invitePath = (
@@ -46,7 +43,6 @@ export const inviteLink = (
   placeholderId?: number,
 ) => `${baseUrl}${invitePath(code, placeholderId)}`;
 
-/** The card's preview and the share both use this, so the creator sees exactly what goes out. */
 export const inviteMessage = (
   t: Translate,
   baseUrl: string,
@@ -91,7 +87,6 @@ export const readInviteReferrer = (
     : null;
 };
 
-// A live code is enough to join, so analytics only ever sees the route
 export const redactInvitePath = (url: string) =>
   url.replace(new RegExp(`${INVITE_PATH}/[^/?#]+`), `${INVITE_PATH}/[code]`);
 
@@ -106,7 +101,6 @@ export const inviteCodeSchema = z
 
 export const inviteCodeInputSchema = z.object({ code: inviteCodeSchema });
 
-// Without a placeholder the joiner becomes a new member, which is all released apps send
 export const joinInviteInputSchema = inviteCodeInputSchema.extend({
   placeholderId: z.number().optional(),
 });
@@ -125,7 +119,6 @@ export const outlivesAnyInvite = (since: Date) =>
 export const inviteDaysLeft = (expiresAt: Date) =>
   Math.max(1, Math.ceil((expiresAt.getTime() - Date.now()) / DAY_MS));
 
-// browsers drop tabs and newlines and read "\" as "/", so "/\t/host" and "/\host" both leave our origin
 export const safeRedirectPath = (path: string | undefined) =>
   path?.startsWith("/") &&
   !path.startsWith("//") &&

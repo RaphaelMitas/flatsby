@@ -4,15 +4,6 @@ import { z } from "zod/v4";
 
 import { env as authEnv } from "@flatsby/auth/env";
 
-/**
- * Compute base URL based on Vercel environment:
- * - Production: Use BETTER_AUTH_URL (custom domain)
- * - Preview: Use VERCEL_URL (auto-generated preview URL)
- * - Development: Use localhost
- *
- * Can be overridden by setting NEXT_PUBLIC_BETTER_AUTH_BASE_URL explicitly
- * (useful for preview deployments with custom domain aliases)
- */
 const baseUrl =
   process.env.VERCEL_ENV === "production"
     ? process.env.BETTER_AUTH_URL

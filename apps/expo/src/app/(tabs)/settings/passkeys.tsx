@@ -29,7 +29,6 @@ export default function PasskeysScreen() {
 
   if (isPending) return <SafeAreaView />;
 
-  // Settings keeps the list subscribed underneath, so coming back here doesn't refetch on its own
   if (!passkeys) {
     return (
       <SafeAreaView>

@@ -120,7 +120,6 @@ export default function MembersScreen() {
     }),
   );
 
-  // Set up callbacks for the modal screen
   useFocusEffect(
     useCallback(() => {
       setMemberActionCallbacks({
@@ -160,7 +159,6 @@ export default function MembersScreen() {
 
   return (
     <AppScrollView onRefresh={refetch}>
-      {/* Members List */}
       <View className="bg-background">
         <View className="flex-row items-center justify-between px-4 py-3">
           <Text
@@ -205,7 +203,6 @@ export default function MembersScreen() {
         />
       </View>
 
-      {/* Error Alerts for Member Actions */}
       {roleUpdateFailure !== undefined && (
         <View className="px-4 py-2">
           <TimedAlert
@@ -228,7 +225,6 @@ export default function MembersScreen() {
         </View>
       )}
 
-      {/* Success Alerts for Member Actions */}
       {updateMemberRoleMutation.isSuccess &&
         updateMemberRoleMutation.data.success === true && (
           <View className="px-4 py-2">

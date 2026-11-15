@@ -29,7 +29,6 @@ export function useDeleteGroup() {
         },
         onFailure: (message) =>
           Alert.alert(t("common.error"), message ?? t("group.delete.failed")),
-        // Doubles as the rollback: restoring snapshots breaks when deletes overlap
         onSettled: () => {
           void queryClient.invalidateQueries({ queryKey: groupsQueryKey });
         },

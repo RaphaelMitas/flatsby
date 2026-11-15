@@ -1,5 +1,3 @@
-// What the store-screenshot flows wait on and crop, per E2E_LOCALE: the
-// seeded content (create-session's STORE_COPY) and the app's own labels.
 const strings = {
   en: {
     group: "Sunset Villa",

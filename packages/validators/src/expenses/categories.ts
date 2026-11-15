@@ -5,10 +5,6 @@ import { msg } from "@flatsby/i18n/message-key";
 
 import type { CategoryColorKey } from "./category-colors";
 
-// ============================================================================
-// Category Groups (determines color)
-// ============================================================================
-
 export const expenseCategoryGroups = [
   "food-drinks",
   "transport",
@@ -26,10 +22,6 @@ export const expenseCategoryGroups = [
 
 export type ExpenseCategoryGroup = (typeof expenseCategoryGroups)[number];
 
-/**
- * Maps each group to a color key matching the existing CATEGORY_COLORS palette
- * (text-{color}-600 dark:text-{color}-300 pastels)
- */
 export const expenseCategoryGroupColorKeys: Record<
   ExpenseCategoryGroup,
   CategoryColorKey
@@ -48,12 +40,7 @@ export const expenseCategoryGroupColorKeys: Record<
   other: "zinc",
 };
 
-// ============================================================================
-// Subcategories (determines icon)
-// ============================================================================
-
 const subcategoryDefinitions = [
-  // food-drinks
   {
     id: "restaurant",
     group: "food-drinks",
@@ -76,7 +63,6 @@ const subcategoryDefinitions = [
     group: "food-drinks",
     icon: "circle-ellipsis",
   },
-  // transport
   {
     id: "ride-sharing",
     group: "transport",
@@ -103,7 +89,6 @@ const subcategoryDefinitions = [
     group: "transport",
     icon: "circle-ellipsis",
   },
-  // shopping
   { id: "clothes", group: "shopping", icon: "shirt" },
   {
     id: "electronics",
@@ -120,7 +105,6 @@ const subcategoryDefinitions = [
     group: "shopping",
     icon: "circle-ellipsis",
   },
-  // entertainment
   {
     id: "movies",
     group: "entertainment",
@@ -147,7 +131,6 @@ const subcategoryDefinitions = [
     group: "entertainment",
     icon: "circle-ellipsis",
   },
-  // housing
   { id: "rent", group: "housing", icon: "house" },
   {
     id: "maintenance",
@@ -164,7 +147,6 @@ const subcategoryDefinitions = [
     group: "housing",
     icon: "circle-ellipsis",
   },
-  // utilities
   { id: "electric", group: "utilities", icon: "zap" },
   { id: "water", group: "utilities", icon: "droplets" },
   { id: "internet", group: "utilities", icon: "wifi" },
@@ -174,7 +156,6 @@ const subcategoryDefinitions = [
     group: "utilities",
     icon: "circle-ellipsis",
   },
-  // health
   {
     id: "doctor",
     group: "health",
@@ -187,7 +168,6 @@ const subcategoryDefinitions = [
     group: "health",
     icon: "circle-ellipsis",
   },
-  // travel
   { id: "hotel", group: "travel", icon: "bed" },
   { id: "flight", group: "travel", icon: "plane" },
   {
@@ -200,7 +180,6 @@ const subcategoryDefinitions = [
     group: "travel",
     icon: "circle-ellipsis",
   },
-  // subscriptions
   {
     id: "streaming",
     group: "subscriptions",
@@ -221,7 +200,6 @@ const subcategoryDefinitions = [
     group: "subscriptions",
     icon: "circle-ellipsis",
   },
-  // education
   {
     id: "courses",
     group: "education",
@@ -233,7 +211,6 @@ const subcategoryDefinitions = [
     group: "education",
     icon: "circle-ellipsis",
   },
-  // gifts
   { id: "gift", group: "gifts", icon: "gift" },
   {
     id: "donation",
@@ -245,7 +222,6 @@ const subcategoryDefinitions = [
     group: "gifts",
     icon: "circle-ellipsis",
   },
-  // other
   { id: "other", group: "other", icon: "circle-help" },
 ] as const;
 
@@ -254,14 +230,9 @@ export type ExpenseSubcategoryId =
 
 export const expenseSubcategories = subcategoryDefinitions;
 
-// Build the enum tuple at the type level for z.enum
 const firstSubId = subcategoryDefinitions[0].id;
 const restSubIds = subcategoryDefinitions.slice(1).map((s) => s.id);
 export const expenseSubcategoryIdSchema = z.enum([firstSubId, ...restSubIds]);
-
-// ============================================================================
-// With AI Auto Detect (for picker UI, not stored in DB)
-// ============================================================================
 
 export const AI_AUTO_DETECT = "ai-auto-detect" as const;
 
@@ -272,10 +243,6 @@ export const expenseSubcategoryIdsWithAuto = [
 
 export type ExpenseSubcategoryIdWithAuto =
   (typeof expenseSubcategoryIdsWithAuto)[number];
-
-// ============================================================================
-// Helpers
-// ============================================================================
 
 const subcategoryRecord: Record<string, (typeof expenseSubcategories)[number]> =
   Object.fromEntries(expenseSubcategories.map((s) => [s.id, s]));

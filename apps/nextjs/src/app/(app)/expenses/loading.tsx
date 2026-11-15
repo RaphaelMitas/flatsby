@@ -3,7 +3,6 @@ import { Skeleton } from "@flatsby/ui/skeleton";
 export default function ExpensesLoading() {
   return (
     <div className="mx-auto flex w-full max-w-prose flex-col gap-4 p-4 md:p-6">
-      {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <Skeleton className="h-8 w-32" />
         <div className="flex items-center gap-2">
@@ -12,7 +11,6 @@ export default function ExpensesLoading() {
         </div>
       </div>
 
-      {/* Expense cards */}
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="bg-muted space-y-3 rounded-lg p-4">
           <div className="flex items-start justify-between gap-2">

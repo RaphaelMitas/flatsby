@@ -32,7 +32,6 @@ export function CategoryFilterPills({
       contentContainerClassName="gap-2 px-4 pb-2"
       keyboardShouldPersistTaps="handled"
     >
-      {/* All button - keep as custom since it's not a category */}
       <Badge
         testID="category-filter-all"
         variant={selectedCategory ? "outline" : "default"}
@@ -42,7 +41,6 @@ export function CategoryFilterPills({
         count={total && total > 0 ? total : undefined}
       />
 
-      {/* Category buttons using CategoryBadge */}
       {categoryIds.map((categoryId) => {
         const count = counts[categoryId] ?? 0;
         const isSelected = selectedCategory === categoryId;

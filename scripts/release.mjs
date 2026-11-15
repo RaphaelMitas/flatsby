@@ -1,19 +1,4 @@
 #!/usr/bin/env node
-/**
- * Cuts a release: bumps the app version in apps/expo/app.config.ts, pushes a
- * release/vX.Y.Z branch, and opens an auto-merging PR. Once the PR lands on
- * main, .github/workflows/release.yml tags the commit, builds + submits via
- * EAS, and captures store screenshots.
- *
- * Usage: pnpm release [patch|minor|major|<x.y.z>] [--direct] [--dry-run]
- *   --direct   commit the bump on main and push directly (skips the PR);
- *              requires push access to main.
- *   --dry-run  print what would happen without writing or pushing anything.
- *
- * Usage: pnpm release ota [message] [--dry-run]
- *   Publishes origin/main's JavaScript as an over-the-air update via
- *   .github/workflows/ota.yml; message defaults to main's latest commit subject.
- */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -73,8 +58,6 @@ if (bump === "ota") {
   process.exit(0);
 }
 
-// In --dry-run mode, guard failures are reported but don't abort, so the
-// plan prints from any branch/state.
 function guard(ok, message) {
   if (ok) return;
   if (dryRun) console.warn(`! would fail: ${message}`);

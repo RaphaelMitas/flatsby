@@ -52,7 +52,6 @@ export function ExpenseDetailContent({
 
   return (
     <div className="flex w-full flex-col gap-4">
-      {/* Action buttons */}
       {(onEdit ?? onDelete) && (
         <div className="flex justify-end gap-2">
           {onEdit && (
@@ -80,7 +79,6 @@ export function ExpenseDetailContent({
         </div>
       )}
 
-      {/* Main expense card */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
@@ -178,7 +176,6 @@ export function ExpenseDetailContent({
         </CardContent>
       </Card>
 
-      {/* Split details card */}
       {expense.splitMethod !== "settlement" && (
         <Card data-testid="expense-split-details">
           <CardHeader>

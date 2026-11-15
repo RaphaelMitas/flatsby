@@ -471,7 +471,6 @@ export const shoppingList = createTRPCRouter({
           const { item, member } = yield* getShoppingListItemWithAccess(
             input.id,
           );
-          // A tick on an item still showing its add-time auto-select would classify it a second time
           const isTick =
             input.categoryId === "ai-auto-select" &&
             name === item.name &&

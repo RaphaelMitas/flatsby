@@ -8,7 +8,6 @@ test.describe("Calendar", () => {
   }) => {
     const title = "Clean bathroom";
     await authPage.goto("/calendar");
-    // The web opens on the month; the list is where a day's progress shows
     const openList = () => openCalendarView(authPage, "list");
 
     const addButton = authPage.getByTestId("calendar-add");
@@ -28,10 +27,8 @@ test.describe("Calendar", () => {
     );
     await form.getByTestId("calendar-form-submit").click();
 
-    // A weekly task shows up once in the seven days, so everything is checked on today
     const todaySection = authPage.getByTestId("calendar-agenda-today");
     const progress = todaySection.getByTestId("calendar-day-progress");
-    // Saved rows carry their server id; the optimistic one has a negative id
     const row = todaySection
       .getByTestId(/^calendar-entry-\d+$/)
       .filter({ hasText: title });

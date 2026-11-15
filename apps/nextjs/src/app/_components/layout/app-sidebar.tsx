@@ -31,7 +31,6 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { hasCurrentGroup } = useGroupContext();
 
-  // Determine active pages based on pathname
   const isExpensesPage = pathname.startsWith("/expenses");
   const isDebtsPage = pathname === "/expenses/debts";
   const isCalendarPage = pathname.startsWith("/calendar");

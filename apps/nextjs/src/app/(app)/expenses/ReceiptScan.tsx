@@ -21,7 +21,6 @@ import { ReceiptReadingStage } from "./ReceiptReadingStage";
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
 
 async function receiptBase64(file: File) {
-  // Browsers that can't decode a format (HEIC outside Safari) reject here
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(
     1,
@@ -32,7 +31,6 @@ async function receiptBase64(file: File) {
   canvas.height = Math.round(bitmap.height * scale);
   const context = canvas.getContext("2d");
   if (!context) throw new Error("No canvas");
-  // JPEG has no alpha, so a transparent e-receipt would otherwise turn black
   context.fillStyle = "#fff";
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
@@ -69,7 +67,6 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
     [photoUrl],
   );
 
-  // A file dropped beside the card would otherwise open in the tab and lose the form
   useEffect(() => {
     const keep = (event: DragEvent) => event.preventDefault();
     window.addEventListener("dragover", keep);

@@ -66,14 +66,6 @@ function toPlaywrightCookies(cookies: TestCookie[]) {
   }));
 }
 
-/**
- * Authenticated test fixture.
- *
- * Creates a unique test user + group + session per test via the E2E API route
- * (which uses better-auth's testUtils plugin to create properly signed session
- * cookies). Because every test gets its own isolated user and group, tests
- * can run with any number of parallel workers without polluting each other.
- */
 export const test = base.extend<{ authPage: Page; testUser: TestUser }>({
   testUser: async ({ page, baseURL }, use) => {
     const session = await createAuthSession(page, baseURL);
@@ -85,7 +77,6 @@ export const test = base.extend<{ authPage: Page; testUser: TestUser }>({
     });
   },
   authPage: async ({ page, testUser: _testUser }, use) => {
-    // Depending on testUser guarantees the session cookies are set.
     await use(page);
   },
 });

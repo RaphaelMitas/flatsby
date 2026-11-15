@@ -18,7 +18,6 @@ export default function PasskeyOffer({ next }: { next: string }) {
     "checking",
   );
 
-  // Without a built-in authenticator the offer would only lead to a QR code for another device
   useEffect(() => {
     void Promise.resolve()
       .then(() =>

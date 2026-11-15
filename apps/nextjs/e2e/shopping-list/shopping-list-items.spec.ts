@@ -58,7 +58,6 @@ test.describe("Shopping List Items", () => {
 
     await purchasedItem.getByRole("checkbox").click();
 
-    // It was the only purchased item, so the whole section goes with it.
     await expect(authPage.getByText("Purchased Items")).not.toBeVisible({
       timeout: 10000,
     });

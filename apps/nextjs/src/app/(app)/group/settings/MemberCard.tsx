@@ -77,7 +77,6 @@ export const MemberCard = ({
     toast.error(t("common.error"), {
       description: message ?? t("errors.unexpected"),
     });
-  // These embed member names, so they go stale when a member changes identity
   const memberNameQueries = [
     trpc.expense.pathFilter(),
     trpc.calendar.pathFilter(),

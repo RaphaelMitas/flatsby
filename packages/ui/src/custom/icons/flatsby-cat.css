@@ -37,7 +37,6 @@
   }
   .fc-animated .fc-monocle {
     transform-box: view-box;
-    /* pivot on the hinge circle (cx 170, cy 92.5) */
     transform-origin: 170px 92.5px;
     animation: fc-swing 7s ease-in-out infinite;
   }

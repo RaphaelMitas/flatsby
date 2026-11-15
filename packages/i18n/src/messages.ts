@@ -1,4 +1,3 @@
-// The augmentation below can only find use-intl once this file imports it.
 import type {} from "use-intl";
 
 import type { Locale } from "./locale";

@@ -77,7 +77,6 @@ function eur(summary: GroupDebtSummary) {
   return currency;
 }
 
-// Brute-force reference: sum every split between payer and splitter, per pair
 function referenceDirect(expenses: Expense[]) {
   const nets = new Map<string, number>();
   for (const {
@@ -342,7 +341,6 @@ describe("direct debts (Actual)", () => {
   });
 
   it("keeps a debt that sits on a loop (regression: a flatmate you owe vanished)", () => {
-    // Pair nets from a real 4-person flat; you owe Jo, Jo owes Sam, Sam owes you
     const JO = 7;
     const SAM = 8;
     const KIM = 6;

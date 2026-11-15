@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-/** null until the stored one is read */
 export function storedChoice<T extends string>(
   key: string,
   parse: (saved: string | null) => T,

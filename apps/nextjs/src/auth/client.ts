@@ -28,8 +28,6 @@ export const signInCode: SignInCodeClient = {
 };
 
 export async function signOutAndRedirect(router: AppRouterInstance) {
-  // Redirect even if the sign-out request fails, e.g. when the session was
-  // already invalidated server-side (account deletion deletes all sessions).
   try {
     await signOut();
   } finally {

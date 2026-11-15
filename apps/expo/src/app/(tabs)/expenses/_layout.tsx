@@ -20,8 +20,6 @@ export default function ExpensesLayout() {
   const headerShown = usePaneHeaderShown();
   const insets = useSafeAreaInsets();
 
-  // The stack keeps its tree position across widths, so folding, unfolding or
-  // rotating never remounts it and an open expense or edit survives.
   return (
     <TabSafeArea>
       <View className="flex-1 flex-row">

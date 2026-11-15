@@ -38,8 +38,6 @@ import {
   useShoppingStore,
 } from "~/utils/shopping-store";
 
-// This is the main layout of the app
-// It wraps your pages with the providers they need
 export default function RootLayout() {
   const posthog = usePostHogClient();
 
@@ -48,8 +46,6 @@ export default function RootLayout() {
       <IntlProvider>
         <PostHogProvider
           client={posthog}
-          // expo-router never exposes a NavigationContainer, so PostHog's screen
-          // autocapture cannot read navigation state. ScreenTracker does it instead.
           autocapture={{ captureScreens: false }}
         >
           <KeyboardProvider>
@@ -58,7 +54,6 @@ export default function RootLayout() {
                 <PersistQueryClientProvider
                   client={queryClient}
                   persistOptions={persistOptions}
-                  // Returning the promise would keep the app blank until the whole queue has synced
                   onSuccess={() => {
                     void queryClient.resumePausedMutations();
                   }}
@@ -90,9 +85,6 @@ function ScreenTracker() {
   return null;
 }
 
-// Sign-in only stores the cookie and refetches; the index route is what leaves
-// login for home, a pending sign-in step, or a remembered invite. Mounted with the stack, so a cold
-// start's first session doesn't count as a sign-in.
 function SignInNavigator() {
   const userId = useSession().data?.user.id;
   const previousUserId = useRef(userId);
@@ -101,7 +93,6 @@ function SignInNavigator() {
     const arrived = userId !== undefined && userId !== previousUserId.current;
     previousUserId.current = userId;
     if (!arrived) return;
-    // The tabs wait for this before choosing Home or onboarding
     void queryClient.prefetchQuery(trpc.group.getUserGroups.queryOptions());
     if (router.canDismiss()) router.dismissAll();
     router.replace("/");
@@ -117,22 +108,13 @@ const StackLayout = () => {
   const [sessionResolved, setSessionResolved] = useState(!isPending);
   if (!isPending && !sessionResolved) setSessionResolved(true);
   const { hydrated } = useShoppingStore();
-  // Suspense queries mounted mid-restore would fetch instead of using the cache
   const isRestoring = useIsRestoring();
   const userId = data?.user.id;
 
-  // Cached errors from a revoked session would sign the next login out again.
-  // By now TabLayout's Redirect has unmounted the tabs; clearing under them
-  // re-suspends their queries and crashes SwiftUI. Waiting for restore and
-  // session keeps a late restore from undoing the clear and a pending session
-  // from wiping a signed-in cache.
   useEffect(() => {
     if (!isRestoring && sessionResolved && !userId) clearQueryCache();
   }, [isRestoring, sessionResolved, userId]);
 
-  // The Expo client restores a cached session into data while it revalidates.
-  // Later refetches (every app focus) set isPending again while signed out,
-  // and blanking then would unmount the screen the user is on.
   if ((!sessionResolved && !data) || !hydrated || isRestoring) {
     return <View className="bg-background flex-1" />;
   }

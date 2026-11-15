@@ -93,7 +93,6 @@ export function ReceiptReadingStage({
                   )
                 }
                 onLoad={(event) => {
-                  // The lens keyframes size and place the magnified copy from these
                   const { width, height } = event.currentTarget;
                   const frame = event.currentTarget.parentElement;
                   frame?.style.setProperty("--w", `${width}px`);

@@ -14,7 +14,6 @@ const prefix = `/${defaultLocale}`;
 const startsWithSegment = (pathname: string, segment: string) =>
   pathname === segment || pathname.startsWith(`${segment}/`);
 
-// Router fetches are NavBeacon's job; without fetch metadata only a page load asks for HTML
 function isPageLoad(request: NextRequest) {
   const dest = request.headers.get("sec-fetch-dest");
   const purpose =
@@ -27,7 +26,6 @@ function isPageLoad(request: NextRequest) {
   );
 }
 
-// English marketing pages keep their unprefixed URLs and render from the [locale] segment.
 export function proxy(request: NextRequest, event: NextFetchEvent) {
   const url = request.nextUrl.clone();
   const { pathname } = url;
@@ -49,7 +47,6 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
     return NextResponse.redirect(store.url, 302);
   }
 
-  // The assistant page is gone, but old links and search results still point there
   const retiredIn = locales.find(
     (locale) => pathname === localePath(locale, "/features/ai-assistant"),
   );
@@ -68,7 +65,6 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   const homeLocale = locales.find(
     (locale) => localePath(locale, "/") === pathname,
   );
-  // One prerendered variant per platform keeps the hero's store order without a server render
   if (homeLocale) {
     url.pathname = `/${homeLocale}/landing/${platformFor(request.headers)}`;
     return NextResponse.rewrite(url);

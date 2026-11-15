@@ -69,7 +69,6 @@ const AvatarImage = ({ className, src, alt, ...props }: AvatarImageProps) => {
   const { setImageLoaded, setImageError } = context;
 
   React.useEffect(() => {
-    // Reset states when src changes
     setImageLoaded(false);
     setImageError(false);
   }, [src, setImageLoaded, setImageError]);
@@ -84,7 +83,6 @@ const AvatarImage = ({ className, src, alt, ...props }: AvatarImageProps) => {
     setImageError(true);
   };
 
-  // Handle case when no src is provided
   React.useEffect(() => {
     if (!src) {
       setImageError(true);
@@ -92,7 +90,6 @@ const AvatarImage = ({ className, src, alt, ...props }: AvatarImageProps) => {
     }
   }, [src, setImageError, setImageLoaded]);
 
-  // Don't render image if no src provided
   if (!src) {
     return null;
   }
@@ -129,7 +126,6 @@ const AvatarFallback = ({
 
   const { imageLoaded, imageError } = context;
 
-  // Only show fallback if image failed to load or there was an error
   if (imageLoaded && !imageError) {
     return null;
   }

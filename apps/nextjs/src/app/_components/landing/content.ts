@@ -1,5 +1,3 @@
-// One source for every fact on the site, so the pages, JSON-LD and .md twins can't disagree.
-
 import type { InviteReferrer } from "@flatsby/validators/invite";
 
 import { inviteReferrer } from "@flatsby/validators/invite";
@@ -19,7 +17,6 @@ export const storeLinkProps = (href: string) =>
     ? ({ target: "_blank", rel: "noopener", prefetch: false } as const)
     : {};
 
-// Campaign tags make the website show up as an install source in App Store Connect and Play Console
 export function storeRedirect(pathname: string, invite: InviteReferrer | null) {
   if (pathname === APP_STORE_LINK) {
     return {

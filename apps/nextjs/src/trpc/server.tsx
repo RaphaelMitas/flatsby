@@ -17,10 +17,6 @@ import { posthog } from "@flatsby/api/posthog";
 import { auth, getSession } from "~/auth/server";
 import { createQueryClient } from "./query-client";
 
-/**
- * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
- * handling a tRPC call from a React Server Component.
- */
 const createContext = cache(async () => {
   const heads = new Headers(await headers());
   heads.set("x-trpc-source", "rsc");
@@ -68,7 +64,6 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
 
 export const caller = appRouter.createCaller(createContext);
 
-// Next renders a page in parallel with its layout, so the auth guard lives here
 export async function getCurrentUserWithGroups() {
   const session = await getSession();
   if (!session?.user) redirect("/auth/login");

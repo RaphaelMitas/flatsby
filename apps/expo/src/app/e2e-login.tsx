@@ -16,12 +16,6 @@ type E2ELoginState =
   | { status: "done"; email: string }
   | { status: "error"; message: string };
 
-/**
- * Test-only deep link target (`flatsby://e2e-login?apiUrl=...`).
- * Creates an isolated test user + session via the web app's e2e endpoint and
- * stores it for the next app launch. With `signedOut`, only the API URL is
- * stored, for flows that sign in through the UI. Inert outside e2e builds.
- */
 export default function E2ELoginScreen() {
   const params = useLocalSearchParams<{
     apiUrl?: string;

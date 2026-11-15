@@ -60,12 +60,10 @@ export function useCreateGroup(onCreated: (groupId: number) => void) {
           ];
         },
         rollback: restoreSnapshot(queryClient),
-        // What comes next needs the real group id, so navigation waits for it
         onSuccess: ({ groupId }, { name }) => {
           setSelectedGroup(groupId, name);
           onCreated(groupId);
         },
-        // Awaited: a lost response can hide a created group, so the form stays locked until the list shows it
         onSettled: () =>
           Promise.all([
             queryClient.invalidateQueries(

@@ -12,7 +12,6 @@ import { captureUserEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { scanReceipt } from "../utils/receipt-scan";
 
-// Reads no group data: the file is the person's own, and credits gate every scan
 export const receiptRouter = createTRPCRouter({
   scan: protectedProcedure
     .input(scanReceiptInputSchema)

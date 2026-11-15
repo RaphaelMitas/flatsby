@@ -12,7 +12,6 @@ import Icon from "./custom/icons/Icon";
 
 const ANIMATION_DURATION = 200;
 
-// Context for accordion state management
 interface AccordionContextValue {
   value: string | string[] | undefined;
   onValueChange: (itemValue: string) => void;
@@ -33,7 +32,6 @@ function useAccordionContext() {
   return context;
 }
 
-// Context for individual item
 interface AccordionItemContextValue {
   value: string;
   isOpen: boolean;
@@ -53,7 +51,6 @@ function useAccordionItemContext() {
   return context;
 }
 
-// Variants
 const accordionVariants = tv({
   base: "w-full",
 });
@@ -71,7 +68,6 @@ const accordionTriggerVariants = tv({
   },
 });
 
-// Types
 interface AccordionBaseProps {
   children: React.ReactNode;
   className?: string;
@@ -95,7 +91,6 @@ interface AccordionMultipleProps extends AccordionBaseProps {
 
 type AccordionProps = AccordionSingleProps | AccordionMultipleProps;
 
-// Accordion Root
 const Accordion = (props: AccordionProps) => {
   const {
     type,
@@ -163,7 +158,6 @@ const Accordion = (props: AccordionProps) => {
   );
 };
 
-// AccordionItem
 interface AccordionItemProps {
   value: string;
   children: React.ReactNode;
@@ -204,7 +198,6 @@ const AccordionItem = ({
   );
 };
 
-// AccordionTrigger
 interface AccordionTriggerProps {
   children: React.ReactNode;
   className?: string;
@@ -248,7 +241,6 @@ const AccordionTrigger = ({
   );
 };
 
-// AccordionContent with Reanimated
 interface AccordionContentProps {
   children: React.ReactNode;
   className?: string;

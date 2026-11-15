@@ -28,7 +28,6 @@ const grouping = (
         $exception_fingerprint: `${path}:${error._tag}:${error.messageKey}`,
         $issue_name: `${path} ${error._tag}`,
       };
-    // Stack grouping would merge these, they're built in a few shared catches
     case "DatabaseError":
     case "ExternalServiceError":
     case "InternalServerError":
@@ -72,7 +71,6 @@ const reportAs = (requester: Requester, error: ApiError) =>
     message_key: error.messageKey,
   });
 
-// A cause means a mapped database failure, like a foreign key violation
 const isAnswer = (path: string, error: ApiError) =>
   grouping(path, error).kind === "expected" && error.cause === undefined;
 
@@ -95,7 +93,6 @@ const reportAndMap = Effect.fnUntraced(function* (
   return yield* Effect.failCause(cause);
 });
 
-/** Takes the request explicitly so public procedures can report a signed-out visitor. */
 export const toApiResultAs = Effect.fnUntraced(function* <A, R>(
   requester: Requester,
   effect: Effect.Effect<A, ApiError, R>,

@@ -25,7 +25,6 @@ export default function CreateGroup() {
   const [currency, setCurrency] = useState(deviceCurrency);
 
   const createGroupMutation = useCreateGroup(() => {
-    // Cancelled while pending: the group still exists and is selected, but stay put
     if (navigation.isFocused())
       router.replace({
         pathname: "/(tabs)/home/invite",

@@ -21,16 +21,13 @@ interface ShoppingList {
 }
 
 interface GroupContextValue {
-  // Current state
   currentGroup: Group | null;
   currentShoppingList: ShoppingList | null;
   groups: (Group & { memberCount: number })[];
 
-  // Computed
   hasGroups: boolean;
   hasCurrentGroup: boolean;
 
-  // Actions
   switchGroup: (groupId: number) => Promise<void>;
   switchShoppingList: (shoppingListId: number | null) => Promise<void>;
 }
@@ -45,11 +42,9 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
     trpc.user.getCurrentUserWithGroups.queryOptions(),
   );
 
-  // Mutation for updating last used
   const updateLastUsed = useMutation(
     trpc.shoppingList.updateLastUsed.mutationOptions({
       onSuccess: () => {
-        // Invalidate user data to refresh lastGroupUsed/lastShoppingListUsed
         void queryClient.invalidateQueries({
           queryKey: trpc.user.getCurrentUserWithGroups.queryKey(),
         });
@@ -57,7 +52,6 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
     }),
   );
 
-  // Extract data
   const groups = useMemo(() => {
     if (!userWithGroups?.success) return [];
     return userWithGroups.data.groups;
@@ -73,17 +67,15 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
     return userWithGroups.data.user?.lastShoppingListUsed ?? null;
   }, [userWithGroups]);
 
-  // Switch group action
   const switchGroup = useCallback(
     async (groupId: number) => {
       if (currentGroup?.id === groupId) return;
 
       await updateLastUsed.mutateAsync({
         groupId,
-        shoppingListId: null, // Reset shopping list when switching groups
+        shoppingListId: null,
       });
 
-      // Invalidate group-specific queries
       void queryClient.invalidateQueries({
         queryKey: trpc.shoppingList.getShoppingLists.queryKey({ groupId }),
       });
@@ -94,7 +86,6 @@ export function GroupContextProvider({ children }: { children: ReactNode }) {
     [updateLastUsed, queryClient, trpc, currentGroup],
   );
 
-  // Switch shopping list action
   const switchShoppingList = useCallback(
     async (shoppingListId: number | null) => {
       if (!currentGroup) return;

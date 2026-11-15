@@ -1,20 +1,15 @@
 import os from "node:os";
 import { defineConfig, devices } from "@playwright/test";
 
-// Only used for the dev server this config starts when BASE_URL is unset; CI
-// runs its own server and passes BASE_URL.
 const PORT = 3100;
 const baseURL = process.env.BASE_URL ?? `http://localhost:${PORT}`;
 
-// Every test gets its own isolated user + group (see e2e/fixtures/auth.ts),
-// so any worker count is safe. Override with PLAYWRIGHT_WORKERS.
 const workers = process.env.PLAYWRIGHT_WORKERS
   ? Number.parseInt(process.env.PLAYWRIGHT_WORKERS, 10)
   : Math.min(os.cpus().length, 8);
 
 export default defineConfig({
   testDir: "./e2e",
-  // README screenshot capture has its own config (playwright.screenshots.config.ts)
   testIgnore: "**/e2e/screenshots/**",
   globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
@@ -34,7 +29,6 @@ export default defineConfig({
     navigationTimeout: 30_000,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  // Only start a local dev server when no BASE_URL is provided
   ...(!process.env.BASE_URL && {
     webServer: {
       command: `pnpm dev --port ${PORT}`,

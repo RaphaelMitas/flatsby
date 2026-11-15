@@ -1,7 +1,3 @@
-/**
- * Tailwind CSS breakpoints (in pixels)
- * Shared between web and mobile for consistent responsive behavior
- */
 export const BREAKPOINTS = {
   sm: 640,
   md: 768,

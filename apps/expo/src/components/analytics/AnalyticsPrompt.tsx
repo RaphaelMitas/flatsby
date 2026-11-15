@@ -9,7 +9,6 @@ import { trpc } from "~/utils/api";
 import { isE2ETestingEnabled } from "~/utils/e2e";
 import { useAnalyticsConsentSheet } from "./useAnalyticsConsentSheet";
 
-// The notice and the invitation never share a launch
 let noticeDismissedThisLaunch = false;
 
 export function AnalyticsPrompt({ className }: { className?: string }) {

@@ -10,7 +10,6 @@ export async function submitCreateGroupForm(page: Page, name: string) {
   const done = page.getByTestId("group-invite-done");
   await expect(async () => {
     if (new URL(page.url()).pathname === "/home") return;
-    // Once created, the invite step replaces the form, so a retry must not create again
     if (!(await done.isVisible())) {
       await page.getByTestId("group-create-name-input").fill(name);
       await page.getByTestId("group-create-submit").click();
@@ -61,7 +60,6 @@ export async function deleteCurrentGroup(page: Page) {
   await page.waitForURL("/group");
 }
 
-// The group refetches once a change to it settles; navigating earlier can beat the write
 export const groupRefetched = (page: Page) =>
   page.waitForResponse(
     (response) =>

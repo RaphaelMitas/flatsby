@@ -28,7 +28,6 @@ public class ReceiptTextModule: Module {
           return
         }
 
-        // Vision measures from the bottom left; the app draws from the top left
         let lines: [[String: Any]] = (request.results ?? []).compactMap { observation in
           guard let text = observation.topCandidates(1).first?.string else { return nil }
           let box = observation.boundingBox

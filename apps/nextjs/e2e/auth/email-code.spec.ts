@@ -35,7 +35,6 @@ test.describe("Email code sign-in", () => {
     await page.getByTestId("onboarding-flatmate-Max").click();
     await expect(page.getByTestId("onboarding-flatmate-Max")).toHaveCount(0);
     await expect(page.getByTestId("onboarding-flatmate-Lena")).toBeVisible();
-    // Typed but not added still counts
     await flatmates.fill("Tim");
     await expect(page).toHaveURL(/\/welcome/);
     await page.getByTestId("onboarding-create").click();
@@ -51,7 +50,6 @@ test.describe("Email code sign-in", () => {
       /^[0-9A-Z]{4}-[0-9A-Z]{4}$/,
     );
 
-    // Back to onboarding would offer a second group
     await page.goto("/welcome");
     await expect(page).toHaveURL(/\/home/);
   });
@@ -64,7 +62,6 @@ test.describe("Email code sign-in", () => {
     await page.context().clearCookies();
 
     const code = await requestCode(page, existing.email);
-    // A code pasted over half-typed digits replaces them
     const input = page.getByTestId("auth-code-input");
     await input.pressSequentially("12");
     await input.evaluate((element, text) => {

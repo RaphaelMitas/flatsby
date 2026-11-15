@@ -90,7 +90,6 @@ export const shoppingListItemsOptions = (
       getNextPageParam: (lastPage) =>
         lastPage.success === true ? lastPage.data.nextCursor : null,
       staleTime: holdWhileMutating(trpc.shoppingList.pathKey()),
-      // Item dates defeat the default sharing, so every unchanged poll would re-render every row
       structuralSharing: (previous, next) =>
         superjson.stringify(previous) === superjson.stringify(next)
           ? previous

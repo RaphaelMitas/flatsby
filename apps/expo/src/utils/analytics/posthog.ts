@@ -13,11 +13,9 @@ const posthogApiKey = String(process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "");
 if (!posthogApiKey && !posthogDisabled)
   throw new Error("EXPO_PUBLIC_POSTHOG_API_KEY is not set");
 
-// Where posthog-react-native's file persistence keeps the device ID, the queue and the opt-out
 const POSTHOG_FILE = ".posthog-rn.json";
 const POSTHOG_FILES = [POSTHOG_FILE, ".posthog-rn-logs.json"];
 
-// The latest choice, so before_send stops at once even while a client swap is still queued
 let consent = false;
 
 interface Client {
@@ -25,7 +23,6 @@ interface Client {
   lease: { active: boolean };
 }
 
-// The SDK's own file storage, except a retired client can't write: it never drops its AppState listener
 function fileStorage(lease: Client["lease"]): PostHogCustomStorage {
   return {
     getItem: (key) => {
@@ -46,11 +43,9 @@ function createClient(persistent: boolean): Client {
     persistence: persistent ? "file" : "memory",
     customStorage: fileStorage(lease),
     captureAppLifecycleEvents: persistent,
-    // The app reads no flags, and a flags request carries the device ID
     disableRemoteFeatureFlags: true,
     before_send: [
       (event) => (consent || event.event === "$exception" ? event : null),
-      // The query and mutation caches report tRPC errors, so error boundaries and rejected mutateAsync calls would report them twice
       (event) =>
         event.event === "$exception" &&
         !event.properties?.trpc_path &&
@@ -58,7 +53,6 @@ function createClient(persistent: boolean): Client {
           "TRPCClientError"
           ? null
           : event,
-      // Deep links reach PostHog as screen paths and the "Application Opened" url
       (event) => ({
         ...event,
         properties:
@@ -81,7 +75,6 @@ function createClient(persistent: boolean): Client {
   return { posthog, lease };
 }
 
-// The consent apply() last acted on; the queue runs swaps one at a time
 let applied = false;
 let current = createClient(applied);
 let queue = Promise.resolve();
@@ -97,7 +90,6 @@ export const getAnalyticsConsent = () => applied;
 export const usePostHogClient = () =>
   useSyncExternalStore(subscribe, getPostHog);
 
-// The latest choice gates too, so withdrawing stops the header before the client swap finishes
 export const consentedSessionId = () =>
   consent && applied ? current.posthog.getSessionId() || null : null;
 
@@ -106,14 +98,12 @@ export function applyConsent(next: boolean) {
   queue = queue.then(() => apply(consent)).catch(console.error);
 }
 
-// Persistence is fixed when a client is created, so giving or withdrawing consent swaps the client
 async function apply(persistent: boolean) {
   if (persistent !== applied) {
     const previous = current;
     applied = persistent;
     current = createClient(persistent);
     for (const listener of listeners) listener();
-    // shutdown() only flushes; opting out is what stops the old client's listeners
     previous.lease.active = false;
     if (!persistent) previous.posthog.reset();
     void previous.posthog.optOut();
@@ -133,7 +123,6 @@ const legacyFileSchema = z.object({
   content: z.object({ opted_out: z.boolean().optional() }),
 });
 
-// Drops the old IDs while the objection waits to be saved to an account
 export async function keepOnlyLegacyOptOut() {
   await new File(Paths.document, POSTHOG_FILE).write(
     JSON.stringify({ version: "v1", content: { opted_out: true } }),

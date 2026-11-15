@@ -87,7 +87,6 @@ const loadItems = async (db: DbClient, where: SQL | undefined) =>
       startTime && endTime
         ? { start: startTime.slice(0, 5), end: endTime.slice(0, 5) }
         : null,
-    // People who left drop out and the rotation re-flows over whoever is still here
     memberIds: members
       .filter((member) => member.groupMember.isActive)
       .map((member) => member.groupMemberId),
@@ -201,7 +200,6 @@ const itemValues = ({
   endTime: time?.end ?? null,
   recurrence,
   days,
-  // Absent on edits, so the zone the item was made in stays
   ...(timeZone && { timeZone }),
 });
 
@@ -236,7 +234,6 @@ const upsertOccurrences = (
       setWhere,
     });
 
-// The days come from the client's cache: a day someone ticked since stays done
 const skipOpenDays = async (
   db: DbClient | DbTransaction,
   itemId: number,
@@ -251,7 +248,6 @@ const skipOpenDays = async (
   );
 };
 
-// A row that is neither done nor skipped says nothing the rule doesn't
 const pruneOccurrence = (
   db: DbClient | DbTransaction,
   itemId: number,
@@ -267,7 +263,6 @@ const pruneOccurrence = (
       ),
     );
 
-/** A changed schedule keeps the ticks and skips on days it still has; the rest belonged to the old one. */
 const carryOccurrences = async (
   tx: DbTransaction,
   fromItemId: number,
@@ -438,7 +433,6 @@ export const calendarRouter = createTRPCRouter({
           const member = yield* requireMember(input.groupId);
           const previous = yield* findItem(input.groupId, input.id);
           yield* requireActiveMembers(input.groupId, input.memberIds);
-          // Tasks and events are different things, so an item can't switch
           if (input.kind !== previous.kind) {
             return yield* Errors.validation("errors.unexpected");
           }
@@ -450,7 +444,6 @@ export const calendarRouter = createTRPCRouter({
           if (rewritesPast(previous, edited, input.today)) {
             return yield* Errors.conflict("errors.calendarSeriesEnded");
           }
-          // An edit without endsOn keeps the stored end, which the new start can pass
           if (endsBeforeStart(edited)) {
             return yield* Errors.conflict("errors.calendarSeriesReplaced");
           }

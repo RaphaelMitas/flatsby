@@ -26,7 +26,6 @@ function SwipeActionPanel({
   progress: SharedValue<number>;
   align: "start" | "end";
 }) {
-  // Gesture Handler 3 keeps both panels visible and paints the right one over the left
   const style = useAnimatedStyle(() => ({
     opacity: progress.get() === 0 ? 0 : 1,
   }));
@@ -52,7 +51,6 @@ export const useSwipeActions = ({
   leftAction,
   rightAction,
 }: SwipeActionsProps) => {
-  // Gesture Handler 3 fires presses inside the row as a swipe ends, so ignore them until the row closes
   const swiping = useRef(false);
 
   const renderPanel = (

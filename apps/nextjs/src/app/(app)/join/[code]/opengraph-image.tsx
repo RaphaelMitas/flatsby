@@ -80,7 +80,6 @@ export default async function Image({
             {initials(member.name)}
           </div>
         ))}
-        {/* Satori throws on a bare number child */}
         <div style={{ marginLeft: 24, fontSize: 41, color: "#52525b" }}>
           {String(preview.memberCount)}
         </div>

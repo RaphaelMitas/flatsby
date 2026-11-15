@@ -1,5 +1,3 @@
-//Theme Provider nativewind
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Appearance } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";

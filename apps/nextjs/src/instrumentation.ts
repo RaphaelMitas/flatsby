@@ -15,6 +15,5 @@ export const onRequestError: Instrumentation.onRequestError = (
       render_source: context.renderSource,
     },
   });
-  // Next holds a failing route's response until this returns, so send without waiting
   void posthog?.flush();
 };

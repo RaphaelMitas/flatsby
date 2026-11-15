@@ -1,19 +1,8 @@
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 
-/**
- * E2E testing support. Only active in builds created with the `e2e` EAS
- * profile (E2E_TESTING=true baked into `extra.e2eTesting` via app.config.ts).
- *
- * The Maestro test runner opens the `flatsby://e2e-login` deep link with the
- * URL of the server under test. That route stores it here and injects a
- * signed session cookie, then the app is relaunched so that module-init
- * consumers (auth client, tRPC links) pick up the override.
- */
-
 const API_URL_KEY = "e2e_api_url";
 
-/** Matches the @better-auth/expo client: `${storagePrefix}_cookie`. */
 const AUTH_COOKIE_STORAGE_KEY = "flatsby_cookie";
 
 export function isE2ETestingEnabled(): boolean {
@@ -28,11 +17,6 @@ export function getE2EApiUrlOverride(): string | null {
   return SecureStore.getItem(API_URL_KEY);
 }
 
-/**
- * In e2e builds, list-row containers set accessible={false} so Maestro can
- * reach their child elements (checkboxes, texts). Outside e2e builds this
- * returns undefined, keeping the default grouped VoiceOver behavior.
- */
 export function e2eAccessibilityOverride(): false | undefined {
   return isE2ETestingEnabled() ? false : undefined;
 }
@@ -87,11 +71,6 @@ export function storeE2EApiUrl(apiUrl: string) {
   return url;
 }
 
-/**
- * Calls the web app's e2e create-session endpoint and stores the returned
- * session cookies in the exact format the @better-auth/expo client reads,
- * plus the API URL for subsequent requests.
- */
 export async function setupE2ESession(options: {
   apiUrl: string;
   name?: string;
@@ -108,9 +87,6 @@ export async function setupE2ESession(options: {
   if (options.locale) query.set("locale", options.locale);
   const suffix = query.size > 0 ? `?${query.toString()}` : "";
 
-  // The first request out of a freshly booted simulator or emulator can fail
-  // or stall transiently, which would otherwise park the e2e-login screen in
-  // its error state for the whole test run.
   let response: Response | undefined;
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt++) {

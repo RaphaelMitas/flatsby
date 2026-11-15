@@ -63,7 +63,6 @@ export function useSendSignInCode({
   const [email, setEmail] = useState("");
   const [error, setError] = useState<MessageKey | null>(null);
   const [sending, setSending] = useState(false);
-  // A return key and a tap can land in the same tick, before state catches up
   const inFlight = useRef(false);
 
   const send = async () => {
@@ -108,12 +107,10 @@ export function useSignInCode({
   const [expired, setExpired] = useState(false);
   const [resent, setResent] = useState(false);
   const [busy, setBusy] = useState(false);
-  // State lags a second change event in the same tick, and iOS autofill can send two
   const locked = useRef(false);
   const [sentAt, setSentAt] = useState(() => Date.now());
   const [now, setNow] = useState(() => Date.now());
   const resendAt = sentAt + SIGN_IN_CODE_RESEND_SECONDS * 1000;
-  // A spent code can be replaced right away
   const waitSeconds = expired
     ? 0
     : Math.max(0, Math.ceil((resendAt - now) / 1000));
@@ -124,7 +121,6 @@ export function useSignInCode({
     return () => clearInterval(timer);
   }, [waitSeconds]);
 
-  // Stays locked after a sign-in until the screen leaves, since the spent code would only fail again
   const run = async (request: () => Promise<boolean | void>) => {
     locked.current = true;
     setBusy(true);
@@ -148,7 +144,6 @@ export function useSignInCode({
         }
         onFailed("code", startFailureCode(signInError));
         setCode("");
-        // Better Auth sweeps expired codes, so one past its lifetime can come back as wrong instead of expired
         const pastLifetime =
           Date.now() > sentAt + SIGN_IN_CODE_TTL_SECONDS * 1000;
         if (pastLifetime && signInError.code === "INVALID_OTP") {

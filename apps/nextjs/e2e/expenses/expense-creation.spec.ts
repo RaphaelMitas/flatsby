@@ -127,7 +127,6 @@ test.describe("Expense Creation", () => {
     await expect(authPage.getByTestId("expense-form-title")).not.toBeVisible({
       timeout: 15000,
     });
-    // Reload so the detail view reads the saved expense, not the optimistic cache
     await authPage.reload();
     await openExpenseDetail(authPage, "Groceries split by shares");
     await expect(authPage.getByTestId("expense-split-details")).toContainText(
@@ -189,7 +188,6 @@ test.describe("Expense Creation", () => {
     await authPage.getByTestId("expense-form-currency").click();
     await authPage.getByRole("option", { name: "CHF" }).click();
     await authPage.getByTestId("expense-form-convert").click();
-    // Typed by hand so the test never depends on the rate fetch
     const convertedInput = authPage.getByTestId(
       "expense-form-converted-amount",
     );
@@ -267,7 +265,6 @@ test.describe("Expense Creation", () => {
   });
 
   test("fills an expense from a scanned receipt", async ({ authPage }) => {
-    // Skips the cat's minimum reading time
     await authPage.emulateMedia({ reducedMotion: "reduce" });
     await authPage.goto("/expenses");
     const addButton = authPage
@@ -276,7 +273,6 @@ test.describe("Expense Creation", () => {
     await waitForHydration(addButton);
     await addButton.click();
 
-    // E2E servers answer every scan with a fixed REWE receipt, so any image will do
     await authPage.getByTestId("receipt-scan-input").setInputFiles({
       name: "receipt.png",
       mimeType: "image/png",

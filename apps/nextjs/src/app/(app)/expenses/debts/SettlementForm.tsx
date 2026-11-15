@@ -84,7 +84,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
   const groupId = currentGroup?.id ?? 0;
   const isBlank = !prefill;
 
-  // Get group members for display
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
@@ -121,7 +120,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     invalidateDebtSummary,
   } = useExpenseInvalidation(groupId);
 
-  // Get group data early for optimistic updates
   const membersForOptimistic = groupData.success
     ? groupData.data.groupMembers
     : [];
@@ -154,7 +152,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
             queryClient.setQueryData(debtSummaryQueryKey, optimistic);
           }
 
-          // Get the paidBy and toMember for the optimistic settlement
           const paidByMember = membersForOptimistic.find(
             (m) => m.id === input.paidByGroupMemberId,
           );
@@ -162,7 +159,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
             (m) => m.id === input.splits[0]?.groupMemberId,
           );
 
-          // Optimistically add the new settlement
           const pendingId = Date.now();
           const listSnapshot = patchLists((old) => {
             const optimisticSettlement: ExpenseWithSplitsAndMembers & {
@@ -502,7 +498,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               />
             )}
 
-            {/* Error Display */}
             {failure && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -511,7 +506,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               </Alert>
             )}
 
-            {/* Submit Button */}
             <div className="flex gap-2 border-t pt-4">
               <Button
                 type="button"

@@ -24,17 +24,14 @@ export const cacheDir =
 export interface RunOptions {
   cwd?: string;
   env?: NodeJS.ProcessEnv;
-  /** Append output to this file instead of the terminal. */
   log?: string;
   input?: string;
-  /** Still runs after stopRunning: releasing devices, stopping the stack. */
   cleanup?: boolean;
 }
 
 const isCleanupByPid = new Map<number, boolean>();
 let stopping = false;
 
-/** False when the process is gone; a process we may not signal still exists. */
 export function signal(pid: number, sig: NodeJS.Signals | 0): boolean {
   try {
     process.kill(pid, sig);
@@ -57,7 +54,6 @@ export function run(
   args: string[],
   options: RunOptions = {},
 ): Promise<number> {
-  // Work started after a signal would outlive the runner.
   if (stopping && !options.cleanup)
     return Promise.reject(new Error("stopping"));
   const log = options.log
@@ -67,7 +63,6 @@ export function run(
   const child = spawn(cmd, args, {
     cwd: options.cwd ?? repoRoot,
     env: { ...process.env, ...options.env },
-    // Its own process group, so stopRunning reaches pnpm's and turbo's children.
     detached: true,
     stdio: [
       options.input === undefined ? "ignore" : "pipe",
@@ -112,7 +107,6 @@ export function capture(
     cwd: options.cwd ?? repoRoot,
     env: { ...process.env, ...options.env },
     encoding: "utf8",
-    // `ps` lists a few hundred processes per booted simulator.
     maxBuffer: 64 * 1024 * 1024,
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
@@ -132,10 +126,6 @@ export const isLoopback = (url: string) =>
 export const sleep = (ms: number) =>
   new Promise<void>((done) => setTimeout(done, ms));
 
-/**
- * A directory lock that outlives a crash: a lock whose owner process is gone
- * is taken over. Returns the release function, or the live holder's pid.
- */
 export function tryLock(path: string): (() => void) | number {
   mkdirSync(dirname(path), { recursive: true });
   for (;;) {
@@ -155,8 +145,6 @@ export function tryLock(path: string): (() => void) | number {
     try {
       holder = Number(readFileSync(join(path, "pid"), "utf8"));
     } catch {
-      // Taken a moment ago and the pid isn't written yet, unless its taker
-      // died in between.
       const taken = statSync(path, { throwIfNoEntry: false })?.mtimeMs ?? 0;
       if (Date.now() - taken < 10_000) return 0;
     }
@@ -182,7 +170,6 @@ export async function withLock<T>(
 }
 
 async function portFree(port: number): Promise<boolean> {
-  // Both: a listener on all interfaces doesn't stop a bind to 127.0.0.1.
   for (const host of ["127.0.0.1", "::"]) {
     const free = await new Promise<boolean>((done) => {
       const server = createServer();
@@ -194,10 +181,6 @@ async function portFree(port: number): Promise<boolean> {
   return true;
 }
 
-/**
- * The first of `starts` whose `width` ports are free, claimed so no other run
- * takes them while this one lives.
- */
 export async function claimPorts(
   kind: string,
   starts: Iterable<number>,

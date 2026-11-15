@@ -81,7 +81,6 @@ export default function ProfileScreen() {
 
   return (
     <AppScrollView contentContainerClassName="gap-4 p-4">
-      {/* Profile Picture Section */}
       <ProfileSection
         name={user.name}
         subtitle={user.email}
@@ -90,7 +89,6 @@ export default function ProfileScreen() {
         disabled={true}
       />
 
-      {/* Name Edit Section */}
       <Card className="gap-4">
         <CardHeader>
           <CardTitle>{t("settings.profile.displayName")}</CardTitle>
@@ -137,7 +135,6 @@ export default function ProfileScreen() {
             </View>
           </Form>
 
-          {/* Error Alert */}
           {form.formState.errors.name && (
             <TimedAlert
               variant="destructive"
@@ -149,7 +146,6 @@ export default function ProfileScreen() {
             />
           )}
 
-          {/* Success Alert */}
           {showSuccessMessage && (
             <TimedAlert
               variant="success"

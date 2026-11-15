@@ -28,7 +28,6 @@ const LINE_HEIGHT = 20;
 
 interface MonthGridProps {
   month: string;
-  /** Undefined while loading */
   days: AgendaDay[] | undefined;
   today: string;
   onSelect: (date: string) => void;

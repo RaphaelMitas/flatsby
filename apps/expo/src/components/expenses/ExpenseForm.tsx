@@ -201,13 +201,11 @@ export function ExpenseForm({
         onMutate: async (input) => {
           await cancelLists();
 
-          // Get the paidBy and createdBy members for the optimistic expense
           const paidByMember = group.groupMembers.find(
             (m) => m.id === input.paidByGroupMemberId,
           );
           const currentMember = group.thisGroupMember;
 
-          // Optimistically add the new expense
           const pendingId = Date.now();
           const listSnapshot = patchLists((old) => {
             const optimisticExpense = {
@@ -326,17 +324,14 @@ export function ExpenseForm({
       resultMutation({
         onMutate: async (input) => {
           if (!expense || !expenseQueryKey) return;
-          // Cancel any outgoing queries
           await queryClient.cancelQueries(
             trpcClient.expense.getExpense.queryOptions({
               expenseId: expense.id,
             }),
           );
 
-          // Snapshot the previous value
           const previousData = queryClient.getQueryData(expenseQueryKey);
 
-          // Optimistically update the expense in the list
           queryClient.setQueryData(expenseQueryKey, (old) => {
             if (!old || old.success === false) return old;
 
@@ -535,7 +530,6 @@ export function ExpenseForm({
           <AppScrollView
             className="flex-1"
             contentContainerClassName="p-4"
-            // The footer rides on the keyboard, so a focused field has to clear it too
             bottomOffset={96}
           >
             {currentStep === 1 && (

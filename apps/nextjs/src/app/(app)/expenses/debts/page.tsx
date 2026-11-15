@@ -9,7 +9,6 @@ import { DebtSummaryView } from "./DebtSummaryView";
 export default async function DebtsPage() {
   const groupId = await getCurrentGroupId();
 
-  // Prefetch debt summary and group data
   prefetch(trpc.expense.getDebtSummary.queryOptions({ groupId }));
   prefetch(trpc.group.getGroup.queryOptions({ id: groupId }));
 

@@ -69,7 +69,6 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
     setCalendarPosition(stepPosition(position, delta, today));
   };
   const { mutate: setDone } = useCalendarMutations(group).setDone;
-  // Store screenshots and e2e flows never see the ask
   const asking = useReminderChoice() === "undecided" && !isE2ETestingEnabled();
   const { view } = position;
 
@@ -197,7 +196,6 @@ export function CalendarScreen({ group }: { group: GroupWithAccess }) {
                   pathname: "/(tabs)/calendar/[itemId]",
                   params: {
                     itemId: String(entry.item.id),
-                    // Only an open occurrence can be skipped
                     ...(!entry.occurrence.completedAt && {
                       date: entry.occurrence.date,
                       ...(entry.missed?.length

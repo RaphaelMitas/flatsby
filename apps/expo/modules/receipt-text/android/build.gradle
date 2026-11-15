@@ -11,6 +11,5 @@ android {
 }
 
 dependencies {
-  // Play Services ships the model, so it doesn't add to the app's own size
   implementation "com.google.android.gms:play-services-mlkit-text-recognition:19.0.1"
 }

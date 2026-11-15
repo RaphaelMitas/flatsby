@@ -11,7 +11,6 @@ export function openLegalPage(
   section?: string,
 ) {
   const hash = section ? `#${section}` : "";
-  // Rejects in Apple's review sandbox and on rapid repeat taps; nothing to tell the user.
   WebBrowser.openBrowserAsync(
     `${getBaseUrl()}${localePath(locale, `/legal/${page}`)}${hash}`,
   ).catch(() => undefined);

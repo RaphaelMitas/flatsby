@@ -74,7 +74,6 @@ export function UpdateNudge() {
 
   const update = () => {
     getPostHog().capture("update_nudge_update", { storeVersion });
-    // iOS can't present the App Store sheet while ours is still presented.
     if (Platform.OS === "ios") {
       updatePressed.current = true;
       sheetRef.current?.dismiss();

@@ -40,10 +40,8 @@ function ListTab({ groupId }: { groupId: number }) {
   );
   const lists = data.success ? data.data : [];
   const selected = lists.find(({ id }) => id === selectedShoppingListId);
-  // Only a list the user picked becomes the last used one
   const current = selected ?? lists[0];
 
-  // Keeps the tab label in step when the picked list is renamed or deleted elsewhere
   useEffect(() => {
     if (!data.success || selectedShoppingListId === null) return;
     if (!selected) clearSelectedShoppingList();

@@ -1,7 +1,3 @@
-// ============================================================================
-// Zod Schemas - Shared between API and Client
-// ============================================================================
-
 import { z } from "zod/v4";
 
 import { msg } from "@flatsby/i18n/message-key";
@@ -16,10 +12,6 @@ import {
 } from "./types";
 import { validateSplits } from "./validation";
 
-/**
- * Shared split schema - used by both client forms and API
- * percentage is in basis points (0-10000 = 0-100%)
- */
 export const expenseSplitSchema = z.object({
   groupMemberId: z.number(),
   amountInCents: z.number().int(),
@@ -170,7 +162,6 @@ export const pairActivityItemSchema = z.object({
   currency: z.string(),
   paidByGroupMemberId: z.number(),
   amountInCents: z.number().int(),
-  /** The non-payer's split: what this expense moved between the two */
   pairAmountInCents: z.number().int(),
   isSettlement: z.boolean(),
 });

@@ -36,7 +36,6 @@ type Source = "camera" | "library" | "pdf";
 const PICKER_OPTIONS: ImagePickerOptions = { mediaTypes: ["images"] };
 
 async function receiptBase64(uri: string) {
-  // Decoding downsampled also turns HEIC into the JPEG the model reads
   const image = await ImageManipulator.manipulate(uri, {
     maxWidth: RECEIPT_IMAGE_MAX_EDGE,
     maxHeight: RECEIPT_IMAGE_MAX_EDGE,
@@ -85,7 +84,6 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
       });
       const asset = result.assets?.[0];
       if (result.canceled || !asset) return;
-      // The picker leaves a PDF's size out for some providers; the cached copy always has one
       const file = new File(asset.uri);
       open("document");
       void receiptScan.scan("application/pdf", () => file.base64(), file.size);
@@ -110,7 +108,6 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   };
 
   const choose = (source: Source) => {
-    // iOS drops the picker if it presents while our sheet is still up
     chosenSource.current = source;
     sourceSheet.current?.dismiss();
   };

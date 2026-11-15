@@ -29,7 +29,6 @@ export function PeekingCat({
 
   return (
     <div className={cn("relative", className)}>
-      {/* Clips the cat below the edge, with headroom above for a hat */}
       <div
         className="absolute inset-x-0 -top-2 bottom-0 cursor-pointer overflow-hidden select-none"
         onPointerEnter={() => {

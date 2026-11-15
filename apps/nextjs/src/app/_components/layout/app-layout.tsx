@@ -17,11 +17,9 @@ interface AppLayoutProps {
 }
 
 export async function AppLayout({ children }: AppLayoutProps) {
-  // Hydrate above GroupContextProvider so its first render already has the current group.
   await getCurrentUserWithGroups();
 
   return (
-    // Pending page prefetches would hydrate into the sidebar's useQuery readers as data SSR never rendered
     <HydrateClient settledOnly>
       <SidebarProvider>
         <GroupContextProvider>

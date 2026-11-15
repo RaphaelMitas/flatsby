@@ -19,7 +19,6 @@ export default function ExpensesIndex() {
 
   if (!selectedGroupId) {
     return (
-      // Without pane headers the layout already pads the top
       <SafeAreaView edges={headerShown ? ["top"] : []}>
         <View className="flex-1 items-center justify-center gap-4 p-4">
           <Icon name="wallet" size={48} color="muted-foreground" />
@@ -38,7 +37,6 @@ export default function ExpensesIndex() {
     );
   }
 
-  // The layout renders the list beside this stack on large screens
   if (isLargeScreen) {
     return (
       <View className="flex-1 items-center justify-center gap-4 p-8">

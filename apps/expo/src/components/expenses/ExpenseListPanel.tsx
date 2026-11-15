@@ -70,7 +70,6 @@ function ExpenseList() {
   const inPane = isLargeScreen && pathname !== "/expenses";
   const open = (href: Href) =>
     inPane ? router.replace(href) : router.push(href);
-  // dismissTo returns to a named screen that is already open, keeping its draft
   const openScreen = (href: Href) =>
     inPane ? router.dismissTo(href) : router.push(href);
   const createExpense = () => openScreen("/(tabs)/expenses/create");

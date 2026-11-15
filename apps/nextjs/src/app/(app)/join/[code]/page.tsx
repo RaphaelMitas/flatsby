@@ -63,7 +63,6 @@ export default async function JoinPage({
 
   return (
     <main className="bg-muted flex h-dvh overflow-y-auto p-4">
-      {/* generateMetadata would stream this into <body>; React hoists it into <head> from here */}
       {code && (
         <meta
           name="apple-itunes-app"

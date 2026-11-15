@@ -54,7 +54,6 @@ describe("withoutQueryParams", () => {
     const copy: typeof DrizzleErrors = await import(
       /* @vite-ignore */ `${import.meta.resolve("drizzle-orm/errors")}?copy`
     );
-    // Frames carry source lines, so a literal token would show up through them
     const token = crypto.randomUUID();
     const error = new Error("Failed to get session", {
       cause: new copy.DrizzleQueryError(

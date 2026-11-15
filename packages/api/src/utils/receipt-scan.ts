@@ -38,7 +38,6 @@ export const scanReceipt: ReceiptScanner = (user, file) =>
           traceId: crypto.randomUUID(),
           feature: "scan-receipt",
         }),
-      // The error chain can quote the model's reading of the receipt
       catch: (cause) =>
         Errors.externalService(
           "gateway",
@@ -52,7 +51,6 @@ export const scanReceipt: ReceiptScanner = (user, file) =>
     return receiptScanFrom(reading);
   });
 
-// CI never reaches a model, so e2e reads this receipt
 export const e2eReceiptScanner: ReceiptScanner = () =>
   Effect.succeed({
     amountInCents: 2347,

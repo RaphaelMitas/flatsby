@@ -26,7 +26,6 @@ export function Chip({
       onPress={onPress}
       className={cn(
         "flex-row items-center gap-2 rounded-full border px-3 py-1.5",
-        // Opaque even when inactive: Android drops the radius when a background appears from none (react-native#52415)
         active ? "border-primary bg-primary" : "border-border bg-background",
       )}
     >

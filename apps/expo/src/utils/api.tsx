@@ -31,7 +31,6 @@ import { getBaseUrl } from "./base-url";
 import { languageTags } from "./intl-provider";
 import { reportTRPCFailure } from "./report-trpc-error";
 
-// React Native has no window focus; coming back to the app refetches what's on screen, so housemates' changes show up
 focusManager.setEventListener((setFocused) => {
   const subscription = AppState.addEventListener("change", (state) =>
     setFocused(state === "active"),
@@ -40,7 +39,6 @@ focusManager.setEventListener((setFocused) => {
 });
 
 onlineManager.setEventListener((setOnline) => {
-  // Not isInternetReachable: Android wants a validated internet path, which a LAN-only server never gives
   const update = ({ isConnected }: NetworkState) =>
     setOnline(isConnected !== false);
   void getNetworkStateAsync().then(update);
@@ -54,7 +52,6 @@ export const queryClient = new QueryClient({
   ...trpcFailureCaches(reportTRPCFailure),
   defaultOptions: {
     queries: {
-      // A collected query drops out of the persisted cache on the next save
       gcTime: CACHE_MAX_AGE,
       retry: (failureCount, error) => {
         if (isUnauthorizedError(error)) {
@@ -63,7 +60,6 @@ export const queryClient = new QueryClient({
         return failureCount < 3;
       },
     },
-    // Only the shopping list queue waits for the network, other forms keep failing fast offline
     mutations: { networkMode: "always" },
   },
 });
@@ -77,7 +73,6 @@ const storagePersister = createAsyncStoragePersister({
 export const persistOptions = {
   persister: {
     ...storagePersister,
-    // A paused mutation replays from disk, one in flight may already have reached the server
     persistClient: (client) =>
       queryClient.isMutating({ predicate: (m) => !m.state.isPaused }) > 0 ||
       queryClient.isFetching() > 0
@@ -86,19 +81,15 @@ export const persistOptions = {
   },
   maxAge: CACHE_MAX_AGE,
   dehydrateOptions: {
-    // By age, not success: a failed refetch keeps its data, and maxAge only dates the whole save
-    // A shorter gcTime marks a throwaway query, like a search, which stays off disk
     shouldDehydrateQuery: (query) =>
       query.gcTime >= CACHE_MAX_AGE &&
       query.state.dataUpdatedAt > Date.now() - CACHE_MAX_AGE,
   },
-  // New JS can expect a different data shape than the cache it would restore
   buster: Updates.updateId ?? Application.nativeApplicationVersion ?? "",
 } satisfies Omit<PersistQueryClientOptions, "queryClient">;
 
 export function clearQueryCache() {
   queryClient.clear();
-  // Right after a restore the persister isn't subscribed yet, so the clear wouldn't reach disk
   void storagePersister.removeClient();
 }
 
@@ -114,14 +105,10 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
   }
 }
 
-/**
- * Get headers for tRPC requests
- */
 async function getHeaders({ opList }: { opList: readonly Operation[] }) {
   const headers = new Map<string, string>();
   headers.set("x-trpc-source", "expo-react");
   headers.set("Accept-Language", languageTags().join(","));
-  // The same value posthog-react-native reports as $os_name
   headers.set(
     "x-os-name",
     Platform.OS === "android" ? "Android" : (Device.osName ?? "iOS"),
@@ -129,7 +116,6 @@ async function getHeaders({ opList }: { opList: readonly Operation[] }) {
   headers.set("x-app-version", Application.nativeApplicationVersion ?? "");
   headers.set("x-app-build", Application.nativeBuildVersion ?? "");
   headers.set("x-expo-update-id", Updates.updateId ?? "");
-  // Reading the session id extends it, so background polling must not
   if (opList.some((op) => op.type === "mutation")) {
     const sessionId = consentedSessionId();
     if (sessionId) headers.set("x-posthog-session-id", sessionId);
@@ -152,21 +138,16 @@ const trpcClient = createTRPCClient<AppRouter>({
       transformer: superjson,
       url: `${getBaseUrl()}/api/trpc`,
       headers: getHeaders,
-      // iOS would append its own stored cookies to the Cookie header from getHeaders
       fetch: (url, options) => fetch(url, { ...options, credentials: "omit" }),
     }),
   ],
 });
 
-/**
- * A set of typesafe hooks for consuming your API.
- */
 export const trpc = createTRPCOptionsProxy<AppRouter>({
   client: trpcClient,
   queryClient,
 });
 
-// Registered before the cache restores, so changes queued before a restart can replay
 export const shoppingListMutations = shoppingListQueue({
   queryClient,
   keys: {

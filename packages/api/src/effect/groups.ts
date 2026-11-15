@@ -70,7 +70,6 @@ export const addMember = Effect.fn("Groups.addMember")(function* (
   return result;
 });
 
-/** Placeholders have a null userId, so they never match a session user. */
 export const requireMemberIn = <
   M extends { userId: string | null; isActive: boolean },
 >(
