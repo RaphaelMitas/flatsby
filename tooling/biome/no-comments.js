@@ -1,10 +1,10 @@
 import { ast, defineRule, registerDiagnostic } from "@biomejs/runtime/plugin";
 
 const directive =
-  /^(\/\/|\/\*)\s*(@ts-(expect-error|ignore|nocheck|check)\b|biome-ignore(-all|-start|-end)?\s|i18n-ignore\b|@vite-ignore\b)|^\/\/\/\s*<reference\b|^\/\*\*[\s*]*@(deprecated|type|typedef)\b/;
+  /^(\/\/|\/\*)\s*(@ts-(expect-error|ignore|nocheck|check)\b|i18n-ignore\b|@vite-ignore\b)|^\/\/\/\s*<reference\b|^\/\*\*[\s*]*@(deprecated|type|typedef)\b/;
 
-const suppressesThisRule =
-  /^(\/\/|\/\*)\s*biome-ignore\S*\s[^:]*\blint(\/plugin\b|(?![\w/]))/;
+const singleRuleSuppression =
+  /^\/\/\s*biome-ignore(-all|-start|-end)?(\s+lint\/(?!plugin\/)[a-zA-Z]+\/[a-zA-Z]+)+:/;
 
 const trivia = /(?:\s|\/\/.*|\/\*[\s\S]*?\*\/)*/y;
 const comments = /\/\/.*|\/\*[\s\S]*?\*\//g;
@@ -33,7 +33,8 @@ export default defineRule({
       const gap = text.slice(cursor, trivia.lastIndex);
       cursor = trivia.lastIndex;
       for (const [comment] of gap.matchAll(comments)) {
-        if (suppressesThisRule.test(comment)) {
+        if (singleRuleSuppression.test(comment)) continue;
+        if (comment.includes("biome-ignore")) {
           registerDiagnostic(root, "error", message(comment));
         } else if (!directive.test(comment)) {
           registerDiagnostic(token.parent, "error", message(comment));
