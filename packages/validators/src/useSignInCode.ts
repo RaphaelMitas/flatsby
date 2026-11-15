@@ -49,24 +49,10 @@ async function requestSignInCode(
   }
 }
 
-let clock = 0;
-let clockTimer: ReturnType<typeof setInterval> | undefined;
-const clockListeners = new Set<() => void>();
-
-function subscribeClock(listener: () => void) {
-  if (clockListeners.size === 0) {
-    clock = Date.now();
-    clockTimer = setInterval(() => {
-      clock = Date.now();
-      for (const notify of clockListeners) notify();
-    }, 1000);
-  }
-  clockListeners.add(listener);
-  return () => {
-    clockListeners.delete(listener);
-    if (clockListeners.size === 0) clearInterval(clockTimer);
-  };
-}
+const everySecond = (tick: () => void) => {
+  const timer = setInterval(tick, 1000);
+  return () => clearInterval(timer);
+};
 
 export function useSendSignInCode({
   client,
@@ -132,8 +118,8 @@ export function useSignInCode({
   const secondsUntilResend = (now: number) =>
     expired ? 0 : Math.max(0, Math.ceil((resendAt - now) / 1000));
   const waitSeconds = useSyncExternalStore(
-    subscribeClock,
-    () => secondsUntilResend(Math.max(clock, sentAt)),
+    everySecond,
+    () => secondsUntilResend(Date.now()),
     () => secondsUntilResend(sentAt),
   );
 

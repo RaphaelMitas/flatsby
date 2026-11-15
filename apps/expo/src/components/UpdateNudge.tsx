@@ -1,5 +1,4 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
-import type { RefObject } from "react";
 import { useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import * as ExpoInAppUpdates from "expo-in-app-updates";
@@ -7,7 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
-import { useMountEffect } from "@flatsby/validators/useMountEffect";
+import { OnMount } from "@flatsby/validators/OnMount";
 
 import type { UpdateNudgeFrequency } from "~/utils/update-nudge-frequency";
 import { ChoiceButtons } from "~/components/settings/ChoiceButtons";
@@ -53,20 +52,6 @@ async function nudgeVersion() {
   return version;
 }
 
-function PresentNudge({
-  storeVersion,
-  sheetRef,
-}: {
-  storeVersion: string;
-  sheetRef: RefObject<BottomSheetModal | null>;
-}) {
-  useMountEffect(() => {
-    getPostHog().capture("update_nudge_shown", { storeVersion });
-    sheetRef.current?.present();
-  });
-  return null;
-}
-
 export function UpdateNudge() {
   const t = useTranslations("appUpdate");
   const sheetRef = useRef<BottomSheetModal>(null);
@@ -108,10 +93,12 @@ export function UpdateNudge() {
   return (
     <>
       {storeVersion && (
-        <PresentNudge
+        <OnMount
           key={storeVersion}
-          storeVersion={storeVersion}
-          sheetRef={sheetRef}
+          run={() => {
+            getPostHog().capture("update_nudge_shown", { storeVersion });
+            sheetRef.current?.present();
+          }}
         />
       )}
       <SheetModal

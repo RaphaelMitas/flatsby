@@ -13,6 +13,7 @@ const permissionOptions = queryOptions({
   queryKey: ["notification-permission"],
   queryFn: () => Notifications.getPermissionsAsync(),
   gcTime: 0,
+  networkMode: "always",
   retry: false,
   refetchOnReconnect: false,
 });

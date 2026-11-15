@@ -2,7 +2,7 @@ import * as React from "react";
 import { Image, Text, View } from "react-native";
 import { tv } from "tailwind-variants";
 
-import { useMountEffect } from "@flatsby/validators/useMountEffect";
+import { OnMount } from "@flatsby/validators/OnMount";
 
 import { cn } from "../utils";
 
@@ -53,7 +53,7 @@ interface AvatarImageProps {
   alt?: string;
 }
 
-const AvatarImage = ({ src, ...props }: AvatarImageProps) => {
+const AvatarImage = ({ className, src, alt }: AvatarImageProps) => {
   const context = React.useContext(AvatarContext);
 
   if (!context) {
@@ -64,32 +64,19 @@ const AvatarImage = ({ src, ...props }: AvatarImageProps) => {
     return null;
   }
 
-  return (
-    <LoadingImage
-      key={src}
-      src={src}
-      setImageLoaded={context.setImageLoaded}
-      {...props}
-    />
-  );
-};
-
-const LoadingImage = ({
-  className,
-  src,
-  alt,
-  setImageLoaded,
-}: AvatarImageProps & Pick<AvatarContextType, "setImageLoaded">) => {
-  useMountEffect(() => () => setImageLoaded(false));
+  const { setImageLoaded } = context;
 
   return (
-    <Image
-      source={{ uri: src }}
-      className={avatarImageVariants({ className })}
-      accessibilityLabel={alt}
-      onLoad={() => setImageLoaded(true)}
-      onError={() => setImageLoaded(false)}
-    />
+    <>
+      <OnMount key={src} run={() => () => setImageLoaded(false)} />
+      <Image
+        source={{ uri: src }}
+        className={avatarImageVariants({ className })}
+        accessibilityLabel={alt}
+        onLoad={() => setImageLoaded(true)}
+        onError={() => setImageLoaded(false)}
+      />
+    </>
   );
 };
 

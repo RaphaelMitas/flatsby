@@ -1,10 +1,9 @@
-import type { Locale } from "@flatsby/i18n/locale";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { Redirect, Stack, useLocalSearchParams } from "expo-router";
 
 import { isLocale } from "@flatsby/i18n/locale";
-import { useMountEffect } from "@flatsby/validators/useMountEffect";
+import { OnMount } from "@flatsby/validators/OnMount";
 
 import {
   isE2ETestingEnabled,
@@ -18,45 +17,6 @@ type E2ELoginState =
   | { status: "done"; email: string }
   | { status: "error"; message: string };
 
-interface E2ESessionSetupProps {
-  apiUrl: string;
-  name?: string;
-  email?: string;
-  seed?: string;
-  locale?: Locale;
-  signedOut: boolean;
-  onChange: (state: E2ELoginState) => void;
-}
-
-function E2ESessionSetup({
-  signedOut,
-  onChange,
-  ...options
-}: E2ESessionSetupProps) {
-  const { setPreference } = useLocalePreference();
-
-  useMountEffect(() => {
-    if (signedOut) {
-      storeE2EApiUrl(options.apiUrl);
-      onChange({ status: "done", email: "" });
-      return;
-    }
-    setupE2ESession(options)
-      .then((session) => {
-        if (options.locale) setPreference(options.locale);
-        onChange({ status: "done", email: session.email });
-      })
-      .catch((error: unknown) => {
-        onChange({
-          status: "error",
-          message: error instanceof Error ? error.message : String(error),
-        });
-      });
-  });
-
-  return null;
-}
-
 export default function E2ELoginScreen() {
   const params = useLocalSearchParams<{
     apiUrl?: string;
@@ -66,6 +26,7 @@ export default function E2ELoginScreen() {
     locale?: string;
     signedOut?: string;
   }>();
+  const { setPreference } = useLocalePreference();
   const [state, setState] = useState<E2ELoginState>({ status: "pending" });
 
   const apiUrl = typeof params.apiUrl === "string" ? params.apiUrl : "";
@@ -82,6 +43,25 @@ export default function E2ELoginScreen() {
     return <Redirect href="/" />;
   }
 
+  const setup = () => {
+    if (signedOut) {
+      storeE2EApiUrl(apiUrl);
+      setState({ status: "done", email: "" });
+      return;
+    }
+    setupE2ESession({ apiUrl, name, email, seed, locale })
+      .then((session) => {
+        if (locale) setPreference(locale);
+        setState({ status: "done", email: session.email });
+      })
+      .catch((error: unknown) => {
+        setState({
+          status: "error",
+          message: error instanceof Error ? error.message : String(error),
+        });
+      });
+  };
+
   const displayState: E2ELoginState = apiUrl
     ? state
     : { status: "error", message: "Missing apiUrl parameter" };
@@ -93,15 +73,9 @@ export default function E2ELoginScreen() {
     >
       <Stack.Screen options={{ headerShown: false }} />
       {apiUrl !== "" && (
-        <E2ESessionSetup
+        <OnMount
           key={JSON.stringify([apiUrl, name, email, seed, locale, signedOut])}
-          apiUrl={apiUrl}
-          name={name}
-          email={email}
-          seed={seed}
-          locale={locale}
-          signedOut={signedOut}
-          onChange={setState}
+          run={setup}
         />
       )}
       {displayState.status === "pending" && (
