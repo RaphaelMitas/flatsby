@@ -19,9 +19,11 @@ import { Input } from "~/lib/ui/input";
 import { trpc } from "~/utils/api";
 import { CategoryPicker, getCategoryData } from "./ShoppingListCategory";
 
-const focusInput = (input: ComponentRef<typeof TextInput> | null) =>
-  input?.focus();
-const clearFocusRequest = () => router.setParams({ focus: undefined });
+const focusOnRequest = (input: ComponentRef<typeof TextInput> | null) => {
+  if (!input) return;
+  input.focus();
+  router.setParams({ focus: undefined });
+};
 
 interface ShoppingListItemAddFormProps {
   onSubmit: (values: CreateShoppingListItemFormValues) => void;
@@ -96,8 +98,7 @@ export const ShoppingListItemAddForm = ({
       )}
       <View className="flex-row items-center gap-3">
         <Input
-          ref={focus ? focusInput : undefined}
-          onFocus={focus ? clearFocusRequest : undefined}
+          ref={focus ? focusOnRequest : undefined}
           testID="shopping-list-item-input"
           className="flex-1"
           placeholder={t("addPlaceholder")}
