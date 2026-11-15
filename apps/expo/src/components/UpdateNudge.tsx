@@ -5,7 +5,6 @@ import * as ExpoInAppUpdates from "expo-in-app-updates";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslations } from "use-intl";
 
-import { OnMount } from "@flatsby/validators/OnMount";
 import { useMountEffect } from "@flatsby/validators/useMountEffect";
 
 import type { UpdateNudgeFrequency } from "~/utils/update-nudge-frequency";
@@ -42,30 +41,28 @@ async function availableStoreVersion() {
   return update.storeVersion;
 }
 
-const forced = __DEV__ && process.env.EXPO_PUBLIC_FORCE_UPDATE_NUDGE === "true";
-
-async function nudgeVersion() {
-  const frequency = await updateNudgeFrequency.read();
-  if (frequency === "off") return null;
-  const version = forced ? "dev" : await availableStoreVersion();
-  if (!version || (await wasDismissed(frequency, version))) return null;
-  return version;
-}
-
 export function UpdateNudge() {
   const t = useTranslations("appUpdate");
   const sheetRef = useRef<BottomSheetModal>(null);
-  const [storeVersion, setStoreVersion] = useState<string | null>(null);
+  const storeVersion = useRef<string | null>(null);
   const updatePressed = useRef(false);
   const [choosing, setChoosing] = useState(false);
   const frequency = updateNudgeFrequency.useValue();
   const { choices } = useUpdateNudgeChoices();
 
   useMountEffect(() => {
+    const forced =
+      __DEV__ && process.env.EXPO_PUBLIC_FORCE_UPDATE_NUDGE === "true";
     if (!forced && (__DEV__ || isE2ETestingEnabled())) return;
     const check = async () => {
-      const version = await nudgeVersion();
-      if (version) setStoreVersion(version);
+      const frequency = await updateNudgeFrequency.read();
+      if (frequency === "off") return;
+      const version = forced ? "dev" : await availableStoreVersion();
+      if (!version || (await wasDismissed(frequency, version))) return;
+      if (version === storeVersion.current) return;
+      storeVersion.current = version;
+      getPostHog().capture("update_nudge_shown", { storeVersion: version });
+      sheetRef.current?.present();
     };
     void check();
     const subscription = AppState.addEventListener("change", (state) => {
@@ -75,7 +72,9 @@ export function UpdateNudge() {
   });
 
   const update = () => {
-    getPostHog().capture("update_nudge_update", { storeVersion });
+    getPostHog().capture("update_nudge_update", {
+      storeVersion: storeVersion.current,
+    });
     if (Platform.OS === "ios") {
       updatePressed.current = true;
       sheetRef.current?.dismiss();
@@ -86,7 +85,7 @@ export function UpdateNudge() {
 
   const choose = (next: UpdateNudgeFrequency) => {
     getPostHog().capture("update_nudge_frequency_set", {
-      storeVersion,
+      storeVersion: storeVersion.current,
       frequency: next,
     });
     updateNudgeFrequency.save(next);
@@ -94,75 +93,62 @@ export function UpdateNudge() {
   };
 
   return (
-    <>
-      {storeVersion && (
-        <OnMount
-          key={storeVersion}
-          run={() => {
-            getPostHog().capture("update_nudge_shown", { storeVersion });
-            sheetRef.current?.present();
-          }}
-        />
-      )}
-      <SheetModal
-        ref={sheetRef}
-        onDismiss={() => {
-          setChoosing(false);
-          if (updatePressed.current) {
-            updatePressed.current = false;
-            void ExpoInAppUpdates.startUpdate(true);
-          } else if (storeVersion) {
-            void AsyncStorage.multiSet([
-              [DISMISSED_KEY, storeVersion],
-              [DISMISSED_AT_KEY, String(Date.now())],
-            ]);
-          }
-        }}
-      >
-        <View className="gap-2 px-4 pb-10">
-          <View className="bg-muted size-14 items-center justify-center rounded-2xl">
-            <Icon name="flatsby" size={32} color="foreground" />
-          </View>
-          <Text className="text-foreground mt-2 text-xl font-semibold">
-            {t("title")}
-          </Text>
-          <Text className="text-muted-foreground mb-4 text-sm">
-            {t("body")}
-          </Text>
-          <Button
-            testID="update-nudge-update"
-            title={t("update")}
-            onPress={update}
-          />
-          <Button
-            testID="update-nudge-later"
-            title={t("later")}
-            variant="ghost"
-            onPress={() => sheetRef.current?.dismiss()}
-          />
-          {choosing ? (
-            <View className="gap-2 pt-2">
-              <Text className="text-muted-foreground text-center text-sm">
-                {t("howOften")}
-              </Text>
-              <View className="flex-row gap-2">
-                <ChoiceButtons
-                  choices={choices}
-                  selected={frequency}
-                  onSelect={choose}
-                />
-              </View>
-            </View>
-          ) : (
-            <Button
-              testID="update-nudge-less"
-              title={t("remindLess")}
-              variant="ghost"
-              onPress={() => setChoosing(true)}
-            />
-          )}
+    <SheetModal
+      ref={sheetRef}
+      onDismiss={() => {
+        setChoosing(false);
+        if (updatePressed.current) {
+          updatePressed.current = false;
+          void ExpoInAppUpdates.startUpdate(true);
+        } else if (storeVersion.current) {
+          void AsyncStorage.multiSet([
+            [DISMISSED_KEY, storeVersion.current],
+            [DISMISSED_AT_KEY, String(Date.now())],
+          ]);
+        }
+      }}
+    >
+      <View className="gap-2 px-4 pb-10">
+        <View className="bg-muted size-14 items-center justify-center rounded-2xl">
+          <Icon name="flatsby" size={32} color="foreground" />
         </View>
-      </SheetModal>
-    </>
+        <Text className="text-foreground mt-2 text-xl font-semibold">
+          {t("title")}
+        </Text>
+        <Text className="text-muted-foreground mb-4 text-sm">{t("body")}</Text>
+        <Button
+          testID="update-nudge-update"
+          title={t("update")}
+          onPress={update}
+        />
+        <Button
+          testID="update-nudge-later"
+          title={t("later")}
+          variant="ghost"
+          onPress={() => sheetRef.current?.dismiss()}
+        />
+        {choosing ? (
+          <View className="gap-2 pt-2">
+            <Text className="text-muted-foreground text-center text-sm">
+              {t("howOften")}
+            </Text>
+            <View className="flex-row gap-2">
+              <ChoiceButtons
+                choices={choices}
+                selected={frequency}
+                onSelect={choose}
+              />
+            </View>
+          </View>
+        ) : (
+          <Button
+            testID="update-nudge-less"
+            title={t("remindLess")}
+            variant="ghost"
+            onPress={() => setChoosing(true)}
+          />
+        )}
+      </View>
+    </SheetModal>
   );
 }
