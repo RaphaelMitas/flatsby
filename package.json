@@ -10,7 +10,7 @@
   "scripts": {
     "build": "turbo run build",
     "ci:local": "node tooling/ci-local/src/main.ts",
-    "check": "turbo run check format --continue",
+    "check": "node scripts/check-comments.mjs && turbo run check format --continue",
     "check:fix": "turbo run check format --continue -- --write",
     "clean": "git clean -xdf node_modules",
     "clean:workspaces": "turbo run clean",
@@ -30,6 +30,7 @@
     "op-prod": "bash scripts/op.sh prod"
   },
   "devDependencies": {
+    "@babel/parser": "^8.1.2",
     "@effect/tsgo": "catalog:",
     "@flatsby/prettier-config": "workspace:*",
     "prettier": "catalog:",

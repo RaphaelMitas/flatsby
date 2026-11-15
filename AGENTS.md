@@ -118,7 +118,7 @@ components stay dumb.
 ```bash
 pnpm dev                      # all apps, watch mode
 pnpm dev:next                 # web only
-pnpm check                    # Biome and Prettier across the workspace
+pnpm check                    # no code comments, then Biome and Prettier
 pnpm check:fix                # fix what is fixable
 pnpm typecheck                # every package, this is the one that catches parity breaks
 pnpm db:generate              # generate a migration from schema changes

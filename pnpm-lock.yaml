@@ -294,6 +294,9 @@ importers:
 
   .:
     devDependencies:
+      '@babel/parser':
+        specifier: ^8.1.2
+        version: 8.1.2
       '@effect/tsgo':
         specifier: 'catalog:'
         version: 0.68.1
@@ -7910,18 +7913,6 @@ packages:
       utf-8-validate:
         optional: true
 
-  ws@8.22.2:
-    resolution: {integrity: sha512-/rEZ2ejown2N5gxVTHUu9bVVC7ttu0/Tgzf5hbTOixR3Fs7mbbXgn2DbdbcKgJOmpQMtrIUWivtYuVMnp/W/yA==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-
   ws@8.23.0:
     resolution: {integrity: sha512-wCkmX8QMOrKjgO8HW2WyDbTSGeqkocxgDzS9iR79rEAexty6/2qzilx3Ag8Tqf9ykop3irLKle0MtVn5qjVnoQ==}
     engines: {node: '>=10.0.0'}
@@ -9422,7 +9413,7 @@ snapshots:
       google-auth-library: 10.9.0(supports-color@8.1.1)
       p-retry: 4.6.2
       protobufjs: 7.6.5
-      ws: 8.22.2
+      ws: 8.23.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -14594,9 +14585,6 @@ snapshots:
   ws@7.5.13: {}
 
   ws@8.21.3: {}
-
-  ws@8.22.2:
-    optional: true
 
   ws@8.23.0: {}
 
