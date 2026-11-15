@@ -1,18 +1,19 @@
 import { ast, defineRule, registerDiagnostic } from "@biomejs/runtime/plugin";
 
 const directive =
-  /^(\/\/|\/\*)\s*(@ts-(expect-error|ignore|nocheck|check)\b|biome-ignore(-all|-start|-end)?\s+(?!lint\/plugin\b)|i18n-ignore\b|@vite-ignore\b)|^\/\/\/\s*<reference\b|^\/\*\*[\s*]*@(deprecated|type|typedef)\b/;
+  /^(\/\/|\/\*)\s*(@ts-(expect-error|ignore|nocheck|check)\b|biome-ignore(-all|-start|-end)?\s|i18n-ignore\b|@vite-ignore\b)|^\/\/\/\s*<reference\b|^\/\*\*[\s*]*@(deprecated|type|typedef)\b/;
 
-const suppressesThisRule = /^(\/\/|\/\*)\s*biome-ignore\S*\s+lint\/plugin\b/;
+const suppressesThisRule =
+  /^(\/\/|\/\*)\s*biome-ignore\S*\s[^:]*\blint\/plugin\b/;
 
-const trivia = /(?:\s|\/\/.*|\/\*[\s\S]*?(?:\*\/|$))*/y;
-const comments = /\/\/.*|\/\*[\s\S]*?(?:\*\/|$)/g;
+const trivia = /(?:\s|\/\/.*|\/\*[\s\S]*?\*\/)*/y;
+const comments = /\/\/.*|\/\*[\s\S]*?\*\//g;
 
 const unpaddedTokens = new Set(["TEMPLATE_CHUNK", "JSX_TEXT_LITERAL"]);
 
 const message = (comment) => {
   const firstLine = comment
-    .split(/\r?\n/)
+    .split("\n")
     .map((line) => line.replace(/^\s*(\/\/+|\/\*+|\*+)?|\*+\/\s*$/g, "").trim())
     .find(Boolean);
   return `Comments are not allowed: ${firstLine ?? comment}
@@ -32,12 +33,11 @@ export default defineRule({
       const gap = text.slice(cursor, trivia.lastIndex);
       cursor = trivia.lastIndex;
       for (const [comment] of gap.matchAll(comments)) {
-        if (directive.test(comment)) continue;
-        registerDiagnostic(
-          suppressesThisRule.test(comment) ? root : (token.parent ?? root),
-          "error",
-          message(comment),
-        );
+        if (suppressesThisRule.test(comment)) {
+          registerDiagnostic(root, "error", message(comment));
+        } else if (!directive.test(comment)) {
+          registerDiagnostic(token.parent, "error", message(comment));
+        }
       }
     };
 

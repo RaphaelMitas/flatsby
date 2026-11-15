@@ -19,7 +19,12 @@
       "outputLogs": "new-only"
     },
     "check": {
-      "dependsOn": ["^topo"]
+      "dependsOn": ["^topo"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/biome.json",
+        "$TURBO_ROOT$/tooling/biome/**"
+      ]
     },
     "typecheck": {
       "dependsOn": ["^topo", "^build"],
