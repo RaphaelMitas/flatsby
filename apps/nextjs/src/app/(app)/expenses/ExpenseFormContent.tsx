@@ -1,13 +1,18 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import {
   AlertCircle,
   ArrowLeft,
-  ArrowRight,
   CalendarIcon,
+  ChevronRight,
   LoaderCircle,
+  Tag,
+  User,
+  Users,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -17,18 +22,10 @@ import { Alert, AlertDescription, AlertTitle } from "@flatsby/ui/alert";
 import { Button } from "@flatsby/ui/button";
 import { Calendar } from "@flatsby/ui/calendar";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@flatsby/ui/card";
-import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@flatsby/ui/form";
 import { Input } from "@flatsby/ui/input";
@@ -40,11 +37,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@flatsby/ui/select";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
-  editableSplitMethod,
-  finalizeSplits,
-} from "@flatsby/validators/expenses/split-editing";
+  describeSplitProblem,
+  formatCurrencyFromCents,
+  memberPerson,
+} from "@flatsby/validators/expenses/formatting";
+import { finalizeSplits } from "@flatsby/validators/expenses/split-editing";
 
 import type { UseExpenseFormReturn } from "./useExpenseForm";
 import { CurrencyInput } from "~/components/CurrencyInput";
@@ -53,6 +52,26 @@ import { ConversionField } from "./ConversionField";
 import { ExpenseCategorySelector } from "./ExpenseCategorySelector";
 import { ReceiptScanCard } from "./ReceiptScan";
 import { SplitEditor } from "./SplitEditor";
+
+function FormRow({
+  Icon,
+  title,
+  children,
+}: {
+  Icon: LucideIcon;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2">
+      <span className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="flex-1 text-sm font-medium">{title}</span>
+      {children}
+    </div>
+  );
+}
 
 interface ExpenseFormContentProps {
   formState: UseExpenseFormReturn;
@@ -63,21 +82,17 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
   const locale = useLocale();
   const {
     form,
-    currentStep,
-    totalSteps,
+    view,
+    setView,
     isEditMode,
     splitMethod,
     amountInCents,
     currency,
-    paidByGroupMemberId,
-    description,
-    splits,
+    split,
     isPending,
     createExpenseMutation,
     updateExpenseMutation,
     onSubmit,
-    handleNext,
-    handleBack,
     group,
     allMembers,
     conversion,
@@ -86,12 +101,13 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
   const scanned = receiptScan.justApplied
     ? "ring-primary/40 ring-2"
     : undefined;
-  const { convertedAmountInCents } = conversion.fields;
-  const participantCount = finalizeSplits(
-    splitMethod,
-    splits,
-    amountInCents,
-  ).length;
+  const participants = finalizeSplits(splitMethod, split.splits, amountInCents);
+  const splitProblem = describeSplitProblem({
+    method: splitMethod,
+    ...split,
+    currency,
+    locale,
+  });
   const failure =
     failureOf(createExpenseMutation, t("expenses.genericError")) ??
     failureOf(updateExpenseMutation, t("expenses.genericError"));
@@ -102,344 +118,254 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
         onSubmit={form.handleSubmit((values) => onSubmit(values))}
         className="space-y-6"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {view === "split" && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setView("details")}
+              aria-label={t("common.back")}
+              data-testid="split-back"
+            >
+              <ArrowLeft />
+            </Button>
+          )}
           <h2
             data-testid="expense-form-title"
             className="text-lg font-semibold"
           >
-            {isEditMode ? t("expenses.editExpense") : t("expenses.addExpense")}
+            {view === "split"
+              ? t("expenses.splitTitle")
+              : isEditMode
+                ? t("expenses.editExpense")
+                : t("expenses.addExpense")}
           </h2>
-          <div className="text-muted-foreground flex items-center gap-4 text-sm">
-            <span data-testid="expense-form-step">
-              {t("expenses.stepShort", {
-                step: currentStep,
-                total: totalSteps,
-              })}
-            </span>
-            <div className="flex gap-1">
-              {Array.from({ length: totalSteps }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-2 w-8 rounded ${
-                    i + 1 <= currentStep ? "bg-primary" : "bg-muted"
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
         </div>
 
-        {currentStep === 1 && (
-          <div className="space-y-4">
+        {view === "split" ? (
+          <SplitEditor
+            form={form}
+            groupMembers={allMembers}
+            totalAmountCents={amountInCents}
+            currency={currency}
+            conversion={conversion.fields}
+            onDone={() => setView("details")}
+          />
+        ) : (
+          <>
             {!isEditMode && <ReceiptScanCard receiptScan={receiptScan} />}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {t("expenses.amountAndDetails")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("expenses.description")}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t("expenses.descriptionPlaceholder")}
-                          {...field}
-                          data-testid="expense-form-description"
-                          maxLength={512}
-                          className={scanned}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
-                <FormField
-                  control={form.control}
-                  name="amountInCents"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("expenses.amount")}</FormLabel>
-                      <FormControl>
-                        <div className="flex items-center gap-2">
-                          <FormField
-                            control={form.control}
-                            name="currency"
-                            render={({ field: currencyField }) => (
-                              <CurrencySelect
-                                className="w-24"
-                                data-testid="expense-form-currency"
-                                value={currencyField.value}
-                                onChange={currencyField.onChange}
-                              />
-                            )}
-                          />
-                          <CurrencyInput
-                            value={field.value}
-                            onChange={field.onChange}
-                            placeholder="0.00"
-                            min={1}
-                            className={cn("flex-1", scanned)}
-                            data-testid="expense-form-amount"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <div className="flex flex-col items-center gap-2">
+              <FormField
+                control={form.control}
+                name="amountInCents"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormControl>
+                      <CurrencyInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="0.00"
+                        min={1}
+                        className={cn(
+                          "h-16 text-center text-4xl font-bold md:text-4xl",
+                          scanned,
+                        )}
+                        aria-label={t("expenses.amount")}
+                        data-testid="expense-form-amount"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-center" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <CurrencySelect
+                    className="w-24"
+                    data-testid="expense-form-currency"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
 
-                <ConversionField currency={currency} conversion={conversion} />
+            <ConversionField currency={currency} conversion={conversion} />
 
-                <FormField
-                  control={form.control}
-                  name="paidByGroupMemberId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("expenses.paidByField")}</FormLabel>
-                      <Select
-                        value={field.value.toString()}
-                        onValueChange={(value) =>
-                          field.onChange(parseInt(value, 10))
-                        }
-                      >
-                        <FormControl>
-                          <SelectTrigger data-testid="expense-form-paid-by">
-                            <SelectValue
-                              placeholder={t("expenses.selectPayer")}
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {group.groupMembers.map((member) => (
-                            <SelectItem
-                              key={member.id}
-                              value={member.id.toString()}
-                            >
-                              {member.user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="subcategory"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("common.category")}</FormLabel>
-                      <FormControl>
-                        <ExpenseCategorySelector
-                          value={field.value}
-                          autoDetect={!isEditMode}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="expenseDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>{t("common.date")}</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start text-left font-normal"
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {format(field.value, "PPP", {
-                                locale: locale === "de" ? de : undefined,
-                              })}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={(date) => date && field.onChange(date)}
-                            autoFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {currentStep === 2 && amountInCents > 0 && (
-          <div className="space-y-4">
             <FormField
               control={form.control}
-              name="splitMethod"
+              name="description"
               render={({ field }) => (
-                <FormItem className="hidden">
+                <FormItem>
                   <FormControl>
-                    <Input {...field} value={splitMethod} readOnly />
+                    <Input
+                      placeholder={t("expenses.descriptionPlaceholder")}
+                      {...field}
+                      aria-label={t("expenses.description")}
+                      data-testid="expense-form-description"
+                      maxLength={512}
+                      className={scanned}
+                    />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
-            <SplitEditor
-              form={form}
-              groupMembers={allMembers}
-              totalAmountCents={amountInCents}
-              currency={currency}
-              conversion={conversion.fields}
-              splitMethod={editableSplitMethod(splitMethod)}
-              onSplitMethodChange={(method) => {
-                form.setValue("splitMethod", method);
-              }}
-            />
-          </div>
-        )}
 
-        {currentStep === 3 && (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {t("expenses.review")}
-                </CardTitle>
-                <CardDescription>{t("expenses.reviewHint")}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {description && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t("expenses.descriptionLabel")}
-                    </span>
-                    <span className="text-right font-semibold">
-                      {description}
-                    </span>
-                  </div>
+            <div className="divide-y rounded-lg border">
+              <FormField
+                control={form.control}
+                name="paidByGroupMemberId"
+                render={({ field }) => (
+                  <FormRow Icon={User} title={t("expenses.paidByField")}>
+                    <Select
+                      value={field.value.toString()}
+                      onValueChange={(value) =>
+                        field.onChange(parseInt(value, 10))
+                      }
+                    >
+                      <SelectTrigger
+                        className="w-1/2"
+                        aria-label={t("expenses.paidByField")}
+                        data-testid="expense-form-paid-by"
+                      >
+                        <SelectValue placeholder={t("expenses.selectPayer")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {group.groupMembers.map((member) => (
+                          <SelectItem
+                            key={member.id}
+                            value={member.id.toString()}
+                          >
+                            {member.user.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormRow>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {t("expenses.amountLabel")}
-                  </span>
-                  <span className="font-semibold">
-                    {formatCurrencyFromCents({
-                      cents: amountInCents,
-                      currency: currency,
-                      locale,
-                    })}
-                  </span>
-                </div>
-                {convertedAmountInCents !== null && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t("expenses.conversion.inCurrencyLabel", {
-                          currency: conversion.targetCurrency,
-                        })}
-                      </span>
-                      <span className="font-semibold">
-                        {formatCurrencyFromCents({
-                          cents: convertedAmountInCents,
-                          currency: conversion.targetCurrency,
-                          locale,
-                        })}
-                      </span>
+              />
+
+              <FormField
+                control={form.control}
+                name="subcategory"
+                render={({ field }) => (
+                  <FormRow Icon={Tag} title={t("common.category")}>
+                    <div className="w-1/2">
+                      <ExpenseCategorySelector
+                        value={field.value}
+                        autoDetect={!isEditMode}
+                        onChange={field.onChange}
+                      />
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t("expenses.conversion.rate")}
-                      </span>
-                      <span className="font-semibold">
-                        {conversion.rateText}
-                      </span>
-                    </div>
-                  </>
+                  </FormRow>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {t("expenses.paidByFieldLabel")}
-                  </span>
-                  <span className="font-semibold">
-                    {allMembers.find((m) => m.id === paidByGroupMemberId)?.user
-                      .name ?? t("common.unknown")}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {t("expenses.splitLabel")}
-                  </span>
-                  <span className="font-semibold">
+              />
+
+              <FormField
+                control={form.control}
+                name="expenseDate"
+                render={({ field }) => (
+                  <FormRow Icon={CalendarIcon} title={t("common.date")}>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-1/2 justify-start text-left font-normal"
+                          aria-label={t("common.date")}
+                        >
+                          {format(field.value, "PPP", {
+                            locale: locale === "de" ? de : undefined,
+                          })}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="end">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => date && field.onChange(date)}
+                          autoFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </FormRow>
+                )}
+              />
+
+              <div>
+                <FormRow Icon={Users} title={t("expenses.splitTitle")}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setView("split")}
+                    disabled={amountInCents <= 0}
+                    data-testid="expense-form-split"
+                  >
                     {t("expenses.reviewSplit", {
-                      count: participantCount,
+                      count: participants.length,
                       method: splitMethod,
                     })}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                    <ChevronRight />
+                  </Button>
+                </FormRow>
+                {splitProblem ? (
+                  <p
+                    className="text-destructive px-4 pb-3 text-sm"
+                    data-testid="expense-form-split-problem"
+                  >
+                    {t(splitProblem.key, splitProblem.values)}
+                  </p>
+                ) : (
+                  splitMethod !== "equal" &&
+                  amountInCents > 0 && (
+                    <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 px-4 pb-3 text-sm">
+                      {participants.map((participant) => {
+                        const member = allMembers.find(
+                          (m) => m.id === participant.groupMemberId,
+                        );
+                        return (
+                          <span
+                            key={participant.groupMemberId}
+                            className="flex items-center gap-1.5"
+                          >
+                            {member && (
+                              <UserAvatar {...memberPerson(member)} size="xs" />
+                            )}
+                            {formatCurrencyFromCents({
+                              cents: participant.amountInCents,
+                              currency,
+                              locale,
+                            })}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
 
-        {failure && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>{t("common.error")}</AlertTitle>
-            <AlertDescription>{failure}</AlertDescription>
-          </Alert>
-        )}
+            {failure && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>{t("common.error")}</AlertTitle>
+                <AlertDescription>{failure}</AlertDescription>
+              </Alert>
+            )}
 
-        <div className="flex gap-2 border-t pt-4">
-          {currentStep > 1 && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleBack}
-              disabled={isPending}
-              className="flex-1"
-              data-testid="expense-form-back"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t("common.back")}
-            </Button>
-          )}
-          {currentStep < totalSteps ? (
-            <Button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                void handleNext();
-              }}
-              disabled={
-                isPending || amountInCents <= 0 || conversion.isMissingConverted
-              }
-              className="flex-1"
-              data-testid="expense-form-next"
-            >
-              {t("common.next")}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          ) : (
             <Button
               type="submit"
-              disabled={isPending || conversion.isMissingConverted}
-              className="flex-1"
+              disabled={
+                isPending ||
+                amountInCents <= 0 ||
+                conversion.isMissingConverted ||
+                !split.validation.isValid
+              }
+              className="w-full"
               data-testid="expense-form-submit"
             >
               {isPending ? (
@@ -453,8 +379,8 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 t("expenses.createExpense")
               )}
             </Button>
-          )}
-        </div>
+          </>
+        )}
       </form>
     </Form>
   );

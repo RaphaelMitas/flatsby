@@ -20,11 +20,12 @@ tags:
 - tapOn:
     id: "expense-form-description"
 - inputText: "Percent dinner"
-- tapOn: "Amount & Details"
+- pressKey: Enter
 - tapOn:
-    id: "expense-form-next"
+    id: "expense-form-split"
 - extendedWaitUntil:
-    visible: "Step 2 of 3"
+    visible:
+      id: "split-details-card"
     timeout: 15000
 - tapOn:
     id: "split-method-percentage"
@@ -36,11 +37,11 @@ tags:
     id: "split-member-amount-0"
 - eraseText
 - inputText: "100"
-- tapOn: "Split Details"
 - tapOn:
-    id: "expense-form-next"
+    id: "split-done"
 - extendedWaitUntil:
-    visible: "Step 3 of 3"
+    visible:
+      id: "expense-form-submit"
     timeout: 15000
 - assertVisible: ".*100[.,]00.*"
 - tapOn:
@@ -62,11 +63,12 @@ tags:
 - tapOn:
     id: "expense-form-description"
 - inputText: "Custom utilities"
-- tapOn: "Amount & Details"
+- pressKey: Enter
 - tapOn:
-    id: "expense-form-next"
+    id: "expense-form-split"
 - extendedWaitUntil:
-    visible: "Step 2 of 3"
+    visible:
+      id: "split-details-card"
     timeout: 15000
 - tapOn:
     id: "split-method-custom"
@@ -78,11 +80,11 @@ tags:
     id: "split-member-amount-0"
 - eraseText
 - inputText: "30"
-- tapOn: "Split Details"
 - tapOn:
-    id: "expense-form-next"
+    id: "split-done"
 - extendedWaitUntil:
-    visible: "Step 3 of 3"
+    visible:
+      id: "expense-form-submit"
     timeout: 15000
 - assertVisible: ".*30[.,]00.*"
 - tapOn:
@@ -104,11 +106,12 @@ tags:
 - tapOn:
     id: "expense-form-description"
 - inputText: "Shares groceries"
-- tapOn: "Amount & Details"
+- pressKey: Enter
 - tapOn:
-    id: "expense-form-next"
+    id: "expense-form-split"
 - extendedWaitUntil:
-    visible: "Step 2 of 3"
+    visible:
+      id: "split-details-card"
     timeout: 15000
 - tapOn:
     id: "split-method-shares"
@@ -122,9 +125,10 @@ tags:
     id: "split-member-shares-0"
     text: "2"
 - tapOn:
-    id: "expense-form-next"
+    id: "split-done"
 - extendedWaitUntil:
-    visible: "Step 3 of 3"
+    visible:
+      id: "expense-form-submit"
     timeout: 15000
 - assertVisible: ".*90[.,]00.*"
 - tapOn:
@@ -152,19 +156,24 @@ tags:
     id: "expense-form-amount"
 - eraseText
 - inputText: "60.00"
-- tapOn: "Amount & Details"
+# The decimal pad has no return key, so close the keyboard from the description
 - tapOn:
-    id: "expense-form-next"
+    id: "expense-form-description"
+- pressKey: Enter
+- tapOn:
+    id: "expense-form-split"
 - extendedWaitUntil:
-    visible: "Step 2 of 3"
+    visible:
+      id: "split-details-card"
     timeout: 15000
 - assertVisible:
     id: "split-member-shares-0"
     text: "2"
 - tapOn:
-    id: "expense-form-next"
+    id: "split-done"
 - extendedWaitUntil:
-    visible: "Step 3 of 3"
+    visible:
+      id: "expense-form-submit"
     timeout: 15000
 - tapOn:
     id: "expense-form-submit"

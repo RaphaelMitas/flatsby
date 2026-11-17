@@ -1,9 +1,17 @@
-import type { Translate } from "@flatsby/i18n/message-key";
+import type { MessageKey, Translate } from "@flatsby/i18n/message-key";
+
+import { msg } from "@flatsby/i18n/message-key";
 
 import type { ConvertibleExpense } from "./conversion";
 import type { DebtKind } from "./debt";
 import type { PairActivityItem } from "./schemas";
-import type { DebtEntry, GroupDebtSummary } from "./types";
+import type { EditableSplitMethod } from "./split-editing";
+import type {
+  DebtEntry,
+  ExpenseSplit,
+  GroupDebtSummary,
+  SplitValidationResult,
+} from "./types";
 import { isPlaceholder } from "../group";
 import { expenseCategoryLabelKeys } from "./categories";
 import { centsToDecimal, rateBetween } from "./conversion";
@@ -191,6 +199,55 @@ export function formatSplitPortion({
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   }).format(fraction);
+}
+
+export function formatSplitEntry({
+  method,
+  value,
+  currency,
+  locale,
+}: {
+  method: EditableSplitMethod;
+  value: number;
+  currency: string;
+  locale: Intl.LocalesArgument;
+}): string {
+  return method === "percentage"
+    ? new Intl.NumberFormat(locale, {
+        style: "percent",
+        maximumFractionDigits: 2,
+      }).format(value / 10000)
+    : formatCurrencyFromCents({ cents: value, currency, locale });
+}
+
+export function describeSplitProblem({
+  method,
+  splits,
+  validation,
+  remaining,
+  currency,
+  locale,
+}: {
+  method: EditableSplitMethod;
+  splits: ExpenseSplit[];
+  validation: SplitValidationResult;
+  remaining: number;
+  currency: string;
+  locale: Intl.LocalesArgument;
+}): { key: MessageKey; values?: Record<string, string | number> } | undefined {
+  if (validation.isValid) return undefined;
+  if (splits.length === 0 || remaining === 0) return validation.error;
+  return {
+    key: remaining > 0 ? msg("expenses.splitLeft") : msg("expenses.splitOver"),
+    values: {
+      amount: formatSplitEntry({
+        method,
+        value: Math.abs(remaining),
+        currency,
+        locale,
+      }),
+    },
+  };
 }
 
 export interface DebtPerson {

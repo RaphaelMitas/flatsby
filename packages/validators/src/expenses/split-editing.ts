@@ -1,3 +1,6 @@
+import { z } from "zod/v4";
+
+import type { ExpenseValues } from "./schemas";
 import type { ExpenseSplit, SplitMethod } from "./types";
 import {
   distributeEqualAmounts,
@@ -5,19 +8,31 @@ import {
   distributeShareAmounts,
   emptySplit,
 } from "./distribution";
-import { splitMethodSchema } from "./schemas";
+import { expenseSchemaWithValidateSplits, splitMethodSchema } from "./schemas";
 import { MAX_SHARES } from "./types";
 import { validateSplits } from "./validation";
 
-export type EditableSplitMethod = Exclude<SplitMethod, "settlement">;
+const editableSplitMethodSchema = splitMethodSchema.exclude(["settlement"]);
+
+export type EditableSplitMethod = z.infer<typeof editableSplitMethodSchema>;
 
 export function editableSplitMethod(
   method: string | undefined,
 ): EditableSplitMethod {
-  return (
-    splitMethodSchema.exclude(["settlement"]).safeParse(method).data ?? "equal"
-  );
+  return editableSplitMethodSchema.safeParse(method).data ?? "equal";
 }
+
+export const expenseFormSchema = z.preprocess(
+  (values: ExpenseValues) => ({
+    ...values,
+    splits: splitsForTotal(
+      editableSplitMethod(values.splitMethod),
+      values.splits,
+      values.amountInCents,
+    ),
+  }),
+  expenseSchemaWithValidateSplits,
+);
 
 export function splitsForTotal(
   method: EditableSplitMethod,
@@ -61,6 +76,89 @@ export function finalizeSplits(
   return splitsForTotal(
     "custom",
     splits.filter((s) => s.amountInCents > 0),
+    totalAmountCents,
+  );
+}
+
+function isTypedMethod(method: EditableSplitMethod): boolean {
+  return method === "custom" || method === "percentage";
+}
+
+function splitGoal(
+  method: EditableSplitMethod,
+  totalAmountCents: number,
+): number {
+  return method === "percentage" ? 10000 : totalAmountCents;
+}
+
+function typedValue(method: EditableSplitMethod, split: ExpenseSplit): number {
+  return method === "percentage"
+    ? (split.percentage ?? 0)
+    : split.amountInCents;
+}
+
+export function splitRemaining(
+  method: EditableSplitMethod,
+  splits: ExpenseSplit[],
+  totalAmountCents: number,
+): number {
+  if (!isTypedMethod(method)) return 0;
+  return (
+    splitGoal(method, totalAmountCents) -
+    splits.reduce((sum, s) => sum + typedValue(method, s), 0)
+  );
+}
+
+export function restShares(
+  method: EditableSplitMethod,
+  splits: ExpenseSplit[],
+  totalAmountCents: number,
+): Map<number, number> {
+  const remaining = splitRemaining(method, splits, totalAmountCents);
+  if (remaining <= 0) return new Map();
+  const open = splits.filter((s) => typedValue(method, s) === 0);
+  const targets = open.length > 0 ? open : splits;
+  return new Map(
+    distributeEqualAmounts(
+      targets.map((s) => s.groupMemberId),
+      remaining,
+    ).map((share) => [share.groupMemberId, share.amountInCents]),
+  );
+}
+
+export function splitState(
+  method: EditableSplitMethod,
+  storedSplits: ExpenseSplit[],
+  totalAmountCents: number,
+) {
+  const splits = splitsForTotal(method, storedSplits, totalAmountCents);
+  const remaining = splitRemaining(method, splits, totalAmountCents);
+  const goal = splitGoal(method, totalAmountCents);
+  return {
+    splits,
+    validation: validateSplits({ splits, totalAmountCents, method }),
+    remaining,
+    goal,
+    isTyped: isTypedMethod(method),
+    progress:
+      goal > 0 ? Math.min(Math.max((goal - remaining) / goal, 0), 1) * 100 : 0,
+  };
+}
+
+function splitsWithRest(
+  method: EditableSplitMethod,
+  splits: ExpenseSplit[],
+  totalAmountCents: number,
+): ExpenseSplit[] {
+  const shares = restShares(method, splits, totalAmountCents);
+  return splitsForTotal(
+    method,
+    splits.map((s) => {
+      const value = typedValue(method, s) + (shares.get(s.groupMemberId) ?? 0);
+      return method === "percentage"
+        ? { ...s, percentage: value }
+        : { ...s, amountInCents: value };
+    }),
     totalAmountCents,
   );
 }
@@ -110,13 +208,17 @@ export function splitEditor({
 }) {
   const update = (fn: (current: ExpenseSplit[]) => ExpenseSplit[]) =>
     setSplits(fn(getSplits()));
-  const replaceAt = (index: number, patch: Partial<ExpenseSplit>) =>
-    getSplits().map((s, i) => (i === index ? { ...s, ...patch } : s));
+  const patch = (memberId: number, change: Partial<ExpenseSplit>) =>
+    getSplits().map((s) =>
+      s.groupMemberId === memberId ? { ...s, ...change } : s,
+    );
+
+  const state = splitState(method, splits, totalAmountCents);
 
   return {
-    validation: validateSplits({ splits, totalAmountCents, method }),
-    totalSplitCents: splits.reduce((sum, s) => sum + s.amountInCents, 0),
-    totalShares: splits.reduce((sum, s) => sum + (s.shares ?? 0), 0),
+    ...state,
+    restShares: restShares(method, state.splits, totalAmountCents),
+    totalShares: state.splits.reduce((sum, s) => sum + (s.shares ?? 0), 0),
     changeMethod: (next: EditableSplitMethod) => {
       update((current) =>
         splitsForMethod(next, method, current, totalAmountCents),
@@ -127,25 +229,27 @@ export function splitEditor({
       update((current) =>
         splitsWithMemberToggled(method, current, memberId, totalAmountCents),
       ),
-    setPercentage: (index: number, percentage: number) =>
+    splitRest: () =>
+      update((current) => splitsWithRest(method, current, totalAmountCents)),
+    setPercentage: (memberId: number, percentage: number) =>
       setSplits(
         splitsForTotal(
           "percentage",
-          replaceAt(index, { percentage }),
+          patch(memberId, { percentage }),
           totalAmountCents,
         ),
       ),
-    setShares: (index: number, shares: number) =>
+    setShares: (memberId: number, shares: number) =>
       setSplits(
         splitsForTotal(
           "shares",
-          replaceAt(index, {
+          patch(memberId, {
             shares: Math.min(Math.max(shares, 0), MAX_SHARES),
           }),
           totalAmountCents,
         ),
       ),
-    setAmount: (index: number, amountInCents: number) =>
-      setSplits(replaceAt(index, { amountInCents })),
+    setAmount: (memberId: number, amountInCents: number) =>
+      setSplits(patch(memberId, { amountInCents })),
   };
 }

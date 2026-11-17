@@ -105,8 +105,8 @@ appId: ${APP_ID}
     cropOn:
       id: "expense-card-${output.store.internetBill}"
 
-# The split screenshot needs the form mid-flight: fill Step 1 locally, walk
-# to Step 2 (the three-way split), capture, then back out without submitting.
+# The split screenshot needs the form mid-flight: fill the list locally, open
+# the split view (the three-way split), capture, then back out without submitting.
 - runFlow:
     file: ../subflows/tap-until.yaml
     env:
@@ -118,8 +118,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "expense-form-description"
 - inputText: ${output.store.description}
-# Tap a neutral heading to dismiss the keyboard (hideKeyboard is flaky on iOS)
-- tapOn: ${output.store.amountHeading}
+# Return closes the keyboard (hideKeyboard is flaky on iOS)
+- pressKey: Enter
 - waitForAnimationToEnd
 - tapOn:
     id: "expense-form-category"
@@ -139,10 +139,10 @@ appId: ${APP_ID}
       - runFlow:
           when:
             visible:
-              id: "expense-form-next"
+              id: "expense-form-split"
           commands:
             - tapOn:
-                id: "expense-form-next"
+                id: "expense-form-split"
       - extendedWaitUntil:
           visible:
             id: "split-details-card"
@@ -154,24 +154,23 @@ appId: ${APP_ID}
     cropOn:
       id: "split-details-card"
 
-# Back out: Step 2 -> Step 1 -> closed.
+# Back out: split view -> list -> closed.
 - retry:
     maxRetries: 2
     commands:
       - runFlow:
           when:
             visible:
-              id: "expense-form-back"
+              id: "split-done"
           commands:
             - tapOn:
-                id: "expense-form-back"
+                id: "split-done"
       - extendedWaitUntil:
           visible:
             id: "expense-form-amount"
           timeout: 15000
-# On Step 1 the footer has no back button (expense-form-back renders only on
-# later steps) — the way out is the navigation header's back on iOS and the
-# hardware back on Android.
+# The list has no back button of its own: the way out is the navigation
+# header's back on iOS and the hardware back on Android.
 - runFlow:
     when:
       platform: iOS

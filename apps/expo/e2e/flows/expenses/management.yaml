@@ -50,17 +50,6 @@ tags:
     id: "expense-form-amount"
 - eraseText
 - inputText: "50.00"
-- tapOn: "Amount & Details"
-- tapOn:
-    id: "expense-form-next"
-- extendedWaitUntil:
-    visible: "Step 2 of 3"
-    timeout: 15000
-- tapOn:
-    id: "expense-form-next"
-- extendedWaitUntil:
-    visible: "Step 3 of 3"
-    timeout: 15000
 - tapOn:
     id: "expense-form-submit"
 - extendedWaitUntil:

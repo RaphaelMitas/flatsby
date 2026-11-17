@@ -35,9 +35,17 @@ export async function openExpenseForm(
 }
 
 export async function submitEqualSplitExpense(page: Page) {
-  await page.getByTestId("expense-form-next").click();
-  await page.getByTestId("expense-form-next").click();
   await page.getByTestId("expense-form-submit").click();
+}
+
+export async function openSplitView(page: Page) {
+  await page.getByTestId("expense-form-split").click();
+  await expect(page.getByTestId("split-details-card")).toBeVisible();
+}
+
+export async function closeSplitView(page: Page) {
+  await page.getByTestId("split-done").click();
+  await expect(page.getByTestId("expense-form-submit")).toBeVisible();
 }
 
 export async function createEqualSplitExpense(
