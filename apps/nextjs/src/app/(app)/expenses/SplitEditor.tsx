@@ -113,133 +113,134 @@ export function SplitEditor({
       </Tabs>
 
       <div
-        className="divide-y rounded-lg border"
+        className="divide-y overflow-hidden rounded-lg border"
         data-testid="split-details-card"
       >
         {groupMembers.map((member) => {
           const row = rows.get(member.id);
           const name = member.user.name;
           const shares = row?.split.shares ?? 0;
+          const hasInput = !!row && method !== "equal";
 
           return (
-            <label
+            <div
               key={member.id}
-              htmlFor={`split-member-${member.id}`}
-              className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 py-2 pr-1 pl-3"
+              className={cn("flex items-center", hasInput && "gap-3 pr-3")}
             >
-              <Checkbox
-                id={`split-member-${member.id}`}
-                checked={!!row}
-                onCheckedChange={() => toggleMember(member.id)}
-                aria-label={t("expenses.includeInSplit", { name })}
-              />
-              <div
+              <label
+                htmlFor={`split-member-${member.id}`}
                 className={cn(
-                  "flex min-w-0 flex-1 items-center gap-3",
-                  !row && "opacity-50",
+                  "hover:bg-muted/50 flex min-w-0 flex-1 cursor-pointer items-center gap-3 self-stretch py-2 pl-3",
+                  !hasInput && "pr-3",
                 )}
               >
-                <UserAvatar {...memberPerson(member)} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{name}</div>
-                  {!!row?.detail && (
-                    <div className="text-muted-foreground text-xs">
-                      {row.detail}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {row && method === "equal" && (
-                <div className="text-right">
-                  <div className="text-sm font-semibold">{row.amount}</div>
-                  {row.converted && (
-                    <div className="text-muted-foreground text-xs">
-                      {row.converted}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {row && method !== "equal" && (
+                <Checkbox
+                  id={`split-member-${member.id}`}
+                  checked={!!row}
+                  onCheckedChange={() => toggleMember(member.id)}
+                  aria-label={t("expenses.includeInSplit", { name })}
+                />
                 <div
-                  onClick={(e) => e.preventDefault()}
-                  className="flex cursor-default items-center self-stretch px-2"
+                  className={cn(
+                    "flex min-w-0 flex-1 items-center gap-3",
+                    !row && "opacity-50",
+                  )}
                 >
-                  {method === "custom" && (
-                    <CurrencyInput
-                      value={row.split.amountInCents}
-                      onChange={(cents) => setAmount(member.id, cents)}
-                      placeholder={row.placeholder}
-                      min={0}
-                      max={totalAmountCents}
-                      className="w-28 text-right"
-                      aria-label={t("expenses.amountFor", { name })}
-                      data-testid={`split-member-amount-${member.id}`}
-                    />
-                  )}
+                  <UserAvatar {...memberPerson(member)} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">{name}</div>
+                    {!!row?.detail && (
+                      <div className="text-muted-foreground text-xs">
+                        {row.detail}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                  {method === "percentage" && (
-                    <div className="flex items-center gap-2">
-                      <CurrencyInput
-                        value={row.split.percentage ?? 0}
-                        onChange={(basisPoints) =>
-                          setPercentage(member.id, basisPoints)
-                        }
-                        placeholder={row.placeholder}
-                        min={0}
-                        max={10000}
-                        className="w-24 text-right"
-                        aria-label={t("expenses.percentageFor", { name })}
-                        data-testid={`split-member-amount-${member.id}`}
-                      />
-                      <span className="text-muted-foreground text-sm">%</span>
-                    </div>
-                  )}
+                {row && method === "equal" && (
+                  <div className="text-right">
+                    <div className="text-sm font-semibold">{row.amount}</div>
+                    {row.converted && (
+                      <div className="text-muted-foreground text-xs">
+                        {row.converted}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </label>
 
-                  {method === "shares" && (
-                    <div className="flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon-sm"
-                        onClick={() => setShares(member.id, shares - 1)}
-                        disabled={shares <= 1}
-                        aria-label={t("expenses.fewerSharesFor", { name })}
-                        data-testid={`split-member-shares-decrement-${member.id}`}
-                      >
-                        <Minus />
-                      </Button>
-                      <Input
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
-                        value={shares === 0 ? "" : shares}
-                        onChange={(e) =>
-                          setShares(
-                            member.id,
-                            Number.parseInt(e.target.value, 10) || 0,
-                          )
-                        }
-                        className="w-16 text-center"
-                        aria-label={t("expenses.sharesFor", { name })}
-                        data-testid={`split-member-shares-${member.id}`}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon-sm"
-                        onClick={() => setShares(member.id, shares + 1)}
-                        aria-label={t("expenses.moreSharesFor", { name })}
-                        data-testid={`split-member-shares-increment-${member.id}`}
-                      >
-                        <Plus />
-                      </Button>
-                    </div>
-                  )}
+              {row && method === "custom" && (
+                <CurrencyInput
+                  value={row.split.amountInCents}
+                  onChange={(cents) => setAmount(member.id, cents)}
+                  placeholder={row.placeholder}
+                  min={0}
+                  max={totalAmountCents}
+                  className="w-28 text-right"
+                  aria-label={t("expenses.amountFor", { name })}
+                  data-testid={`split-member-amount-${member.id}`}
+                />
+              )}
+
+              {row && method === "percentage" && (
+                <div className="flex items-center gap-2">
+                  <CurrencyInput
+                    value={row.split.percentage ?? 0}
+                    onChange={(basisPoints) =>
+                      setPercentage(member.id, basisPoints)
+                    }
+                    placeholder={row.placeholder}
+                    min={0}
+                    max={10000}
+                    className="w-24 text-right"
+                    aria-label={t("expenses.percentageFor", { name })}
+                    data-testid={`split-member-amount-${member.id}`}
+                  />
+                  <span className="text-muted-foreground text-sm">%</span>
                 </div>
               )}
-            </label>
+
+              {row && method === "shares" && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={() => setShares(member.id, shares - 1)}
+                    disabled={shares <= 1}
+                    aria-label={t("expenses.fewerSharesFor", { name })}
+                    data-testid={`split-member-shares-decrement-${member.id}`}
+                  >
+                    <Minus />
+                  </Button>
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={shares === 0 ? "" : shares}
+                    onChange={(e) =>
+                      setShares(
+                        member.id,
+                        Number.parseInt(e.target.value, 10) || 0,
+                      )
+                    }
+                    className="w-16 text-center"
+                    aria-label={t("expenses.sharesFor", { name })}
+                    data-testid={`split-member-shares-${member.id}`}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={() => setShares(member.id, shares + 1)}
+                    aria-label={t("expenses.moreSharesFor", { name })}
+                    data-testid={`split-member-shares-increment-${member.id}`}
+                  >
+                    <Plus />
+                  </Button>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

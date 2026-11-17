@@ -114,148 +114,151 @@ export function SplitEditor({
           onChange={changeMethod}
         />
 
-        <Card testID="split-details-card">
+        <Card testID="split-details-card" className="overflow-hidden">
           {groupMembers.map((member, index) => {
             const row = rows.get(member.id);
             const name = member.user.name;
             const shares = row?.split.shares ?? 0;
+            const hasInput = !!row && method !== "equal";
 
             return (
               <Fragment key={member.id}>
                 {index > 0 && <Separator />}
-                <Pressable
-                  accessible={false}
-                  onPress={() => toggleMember(member.id)}
-                  className="active:bg-muted flex-row items-center py-1 pr-1"
+                <View
+                  className={cn(
+                    "flex-row items-center",
+                    hasInput && "gap-2 pr-3",
+                  )}
                 >
-                  <Checkbox
-                    testID={`split-member-toggle-${index}`}
-                    checked={!!row}
-                    onCheckedChange={() => toggleMember(member.id)}
-                    accessibilityLabel={t("expenses.includeInSplit", { name })}
-                  />
-                  <View
+                  <Pressable
+                    accessible={false}
+                    onPress={() =>
+                      Keyboard.isVisible()
+                        ? Keyboard.dismiss()
+                        : toggleMember(member.id)
+                    }
                     className={cn(
-                      "flex-1 flex-row items-center gap-3",
-                      !row && "opacity-50",
+                      "active:bg-muted flex-1 flex-row items-center self-stretch py-1",
+                      !hasInput && "pr-3",
                     )}
                   >
-                    <MemberAvatar
-                      person={memberPerson(member)}
-                      className="h-8 w-8"
+                    <Checkbox
+                      testID={`split-member-toggle-${index}`}
+                      checked={!!row}
+                      onCheckedChange={() => toggleMember(member.id)}
+                      accessibilityLabel={t("expenses.includeInSplit", {
+                        name,
+                      })}
                     />
-                    <View className="flex-1">
-                      <Text
-                        numberOfLines={1}
-                        className="text-foreground text-base font-medium"
-                      >
-                        {name}
-                      </Text>
-                      {!!row?.detail && (
-                        <Text className="text-muted-foreground text-sm">
-                          {row.detail}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-
-                  {row && method === "equal" && (
-                    <View className="items-end">
-                      <Text className="text-foreground text-base font-semibold">
-                        {row.amount}
-                      </Text>
-                      {row.converted && (
-                        <Text className="text-muted-foreground text-sm">
-                          {row.converted}
-                        </Text>
-                      )}
-                    </View>
-                  )}
-
-                  {row && method !== "equal" && (
                     <View
-                      onStartShouldSetResponder={() => true}
-                      className="justify-center self-stretch px-2"
+                      className={cn(
+                        "flex-1 flex-row items-center gap-3",
+                        !row && "opacity-50",
+                      )}
                     >
-                      {method === "custom" && (
-                        <CurrencyInput
-                          testID={`split-member-amount-${index}`}
-                          value={row.split.amountInCents}
-                          onChange={(cents) => setAmount(member.id, cents)}
-                          placeholder={row.placeholder}
-                          min={0}
-                          max={totalAmountCents}
-                          className="w-28 text-right"
-                          accessibilityLabel={t("expenses.amountFor", { name })}
-                        />
-                      )}
-
-                      {method === "percentage" && (
-                        <View className="flex-row items-center gap-2">
-                          <CurrencyInput
-                            testID={`split-member-amount-${index}`}
-                            value={row.split.percentage ?? 0}
-                            onChange={(basisPoints) =>
-                              setPercentage(member.id, basisPoints)
-                            }
-                            placeholder={row.placeholder}
-                            min={0}
-                            max={10000}
-                            className="w-24 text-right"
-                            accessibilityLabel={t("expenses.percentageFor", {
-                              name,
-                            })}
-                          />
+                      <MemberAvatar
+                        person={memberPerson(member)}
+                        className="h-8 w-8"
+                      />
+                      <View className="flex-1">
+                        <Text
+                          numberOfLines={1}
+                          className="text-foreground text-base font-medium"
+                        >
+                          {name}
+                        </Text>
+                        {!!row?.detail && (
                           <Text className="text-muted-foreground text-sm">
-                            %
+                            {row.detail}
                           </Text>
-                        </View>
-                      )}
+                        )}
+                      </View>
+                    </View>
 
-                      {method === "shares" && (
-                        <View className="flex-row items-center gap-1">
-                          <Button
-                            testID={`split-member-shares-decrement-${index}`}
-                            variant="outline"
-                            size="icon"
-                            icon="minus"
-                            onPress={() => setShares(member.id, shares - 1)}
-                            disabled={shares <= 1}
-                            accessibilityLabel={t("expenses.fewerSharesFor", {
-                              name,
-                            })}
-                          />
-                          <Input
-                            testID={`split-member-shares-${index}`}
-                            keyboardType="number-pad"
-                            value={shares === 0 ? "" : String(shares)}
-                            onChangeText={(text) =>
-                              setShares(
-                                member.id,
-                                Number.parseInt(text, 10) || 0,
-                              )
-                            }
-                            textAlign="center"
-                            className="w-12 px-1"
-                            accessibilityLabel={t("expenses.sharesFor", {
-                              name,
-                            })}
-                          />
-                          <Button
-                            testID={`split-member-shares-increment-${index}`}
-                            variant="outline"
-                            size="icon"
-                            icon="plus"
-                            onPress={() => setShares(member.id, shares + 1)}
-                            accessibilityLabel={t("expenses.moreSharesFor", {
-                              name,
-                            })}
-                          />
-                        </View>
-                      )}
+                    {row && method === "equal" && (
+                      <View className="items-end">
+                        <Text className="text-foreground text-base font-semibold">
+                          {row.amount}
+                        </Text>
+                        {row.converted && (
+                          <Text className="text-muted-foreground text-sm">
+                            {row.converted}
+                          </Text>
+                        )}
+                      </View>
+                    )}
+                  </Pressable>
+
+                  {row && method === "custom" && (
+                    <CurrencyInput
+                      testID={`split-member-amount-${index}`}
+                      value={row.split.amountInCents}
+                      onChange={(cents) => setAmount(member.id, cents)}
+                      placeholder={row.placeholder}
+                      min={0}
+                      max={totalAmountCents}
+                      className="w-28 text-right"
+                      accessibilityLabel={t("expenses.amountFor", { name })}
+                    />
+                  )}
+
+                  {row && method === "percentage" && (
+                    <View className="flex-row items-center gap-2">
+                      <CurrencyInput
+                        testID={`split-member-amount-${index}`}
+                        value={row.split.percentage ?? 0}
+                        onChange={(basisPoints) =>
+                          setPercentage(member.id, basisPoints)
+                        }
+                        placeholder={row.placeholder}
+                        min={0}
+                        max={10000}
+                        className="w-24 text-right"
+                        accessibilityLabel={t("expenses.percentageFor", {
+                          name,
+                        })}
+                      />
+                      <Text className="text-muted-foreground text-sm">%</Text>
                     </View>
                   )}
-                </Pressable>
+
+                  {row && method === "shares" && (
+                    <View className="flex-row items-center gap-1">
+                      <Button
+                        testID={`split-member-shares-decrement-${index}`}
+                        variant="outline"
+                        size="icon"
+                        icon="minus"
+                        onPress={() => setShares(member.id, shares - 1)}
+                        disabled={shares <= 1}
+                        accessibilityLabel={t("expenses.fewerSharesFor", {
+                          name,
+                        })}
+                      />
+                      <Input
+                        testID={`split-member-shares-${index}`}
+                        keyboardType="number-pad"
+                        value={shares === 0 ? "" : String(shares)}
+                        onChangeText={(text) =>
+                          setShares(member.id, Number.parseInt(text, 10) || 0)
+                        }
+                        textAlign="center"
+                        className="w-12 px-1"
+                        accessibilityLabel={t("expenses.sharesFor", { name })}
+                      />
+                      <Button
+                        testID={`split-member-shares-increment-${index}`}
+                        variant="outline"
+                        size="icon"
+                        icon="plus"
+                        onPress={() => setShares(member.id, shares + 1)}
+                        accessibilityLabel={t("expenses.moreSharesFor", {
+                          name,
+                        })}
+                      />
+                    </View>
+                  )}
+                </View>
               </Fragment>
             );
           })}
