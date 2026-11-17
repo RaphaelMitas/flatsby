@@ -113,48 +113,64 @@ export function SplitEditor({
       </Tabs>
 
       <div
-        className="divide-y rounded-lg border"
+        className="divide-y overflow-hidden rounded-lg border"
         data-testid="split-details-card"
       >
         {groupMembers.map((member) => {
           const row = rows.get(member.id);
           const name = member.user.name;
           const shares = row?.split.shares ?? 0;
+          const hasInput = !!row && method !== "equal";
 
           return (
-            <div key={member.id} className="flex items-center gap-3 px-3 py-2">
-              <Checkbox
-                checked={!!row}
-                onCheckedChange={() => toggleMember(member.id)}
-                aria-label={t("expenses.includeInSplit", { name })}
-              />
-              <div
+            <div
+              key={member.id}
+              className={cn(
+                "flex items-center",
+                hasInput && "min-h-13 gap-3 pr-3",
+              )}
+            >
+              <label
+                htmlFor={`split-member-${member.id}`}
                 className={cn(
-                  "flex min-w-0 flex-1 items-center gap-3",
-                  !row && "opacity-50",
+                  "hover:bg-muted/50 active:bg-muted flex min-w-0 flex-1 cursor-pointer items-center gap-3 self-stretch py-2 pl-3",
+                  !hasInput && "pr-3",
                 )}
               >
-                <UserAvatar {...memberPerson(member)} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{name}</div>
-                  {!!row?.detail && (
-                    <div className="text-muted-foreground text-xs">
-                      {row.detail}
-                    </div>
+                <Checkbox
+                  id={`split-member-${member.id}`}
+                  checked={!!row}
+                  onCheckedChange={() => toggleMember(member.id)}
+                  aria-label={t("expenses.includeInSplit", { name })}
+                />
+                <div
+                  className={cn(
+                    "flex min-w-0 flex-1 items-center gap-3",
+                    !row && "opacity-50",
                   )}
+                >
+                  <UserAvatar {...memberPerson(member)} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">{name}</div>
+                    {!!row?.detail && (
+                      <div className="text-muted-foreground text-xs">
+                        {row.detail}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {row && method === "equal" && (
-                <div className="text-right">
-                  <div className="text-sm font-semibold">{row.amount}</div>
-                  {row.converted && (
-                    <div className="text-muted-foreground text-xs">
-                      {row.converted}
-                    </div>
-                  )}
-                </div>
-              )}
+                {row && method === "equal" && (
+                  <div className="text-right">
+                    <div className="text-sm font-semibold">{row.amount}</div>
+                    {row.converted && (
+                      <div className="text-muted-foreground text-xs">
+                        {row.converted}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </label>
 
               {row && method === "custom" && (
                 <CurrencyInput

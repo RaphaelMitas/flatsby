@@ -268,9 +268,14 @@ test.describe("Expense Creation", () => {
     await authPage.getByTestId("expense-form-paid-by").click();
     await authPage.getByRole("option", { name: "Anna" }).click();
     await openSplitView(authPage);
-    await expect(authPage.getByTestId("split-details-card")).toContainText(
-      "Anna",
-    );
+    const annaName = authPage
+      .getByTestId("split-details-card")
+      .getByText("Anna", { exact: true });
+    const annaToggle = authPage.getByRole("checkbox", { name: /Anna/ });
+    await annaName.click();
+    await expect(annaToggle).not.toBeChecked();
+    await annaName.click();
+    await expect(annaToggle).toBeChecked();
     await closeSplitView(authPage);
     await authPage.getByTestId("expense-form-submit").click();
     await expect(
