@@ -1,3 +1,4 @@
-• Flatsby is now free for everyone: automatic categories and receipt scanning (beta) no longer use credits, and there's nothing to buy.
-• New in Settings: Support Flatsby, with what stays free and how to get in touch.
+• Adding an expense is now one screen: amount, description, who paid, category, date and split at a glance, instead of three steps.
+• Splitting by custom amounts or percentages shows how much is left while you type, and "Split the rest" spreads it for you.
+• You decide how often Flatsby reminds you about app updates, right in the reminder.
 • Small fixes and improvements.
