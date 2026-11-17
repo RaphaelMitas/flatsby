@@ -127,7 +127,6 @@ export function SplitEditor({
                 checked={!!row}
                 onCheckedChange={() => toggleMember(member.id)}
                 aria-label={t("expenses.includeInSplit", { name })}
-                data-testid={`split-member-${member.id}`}
               />
               <div
                 className={cn(

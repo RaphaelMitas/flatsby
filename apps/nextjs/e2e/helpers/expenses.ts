@@ -34,10 +34,6 @@ export async function openExpenseForm(
   await selectExpenseCategory(page, options.categoryId);
 }
 
-export async function submitEqualSplitExpense(page: Page) {
-  await page.getByTestId("expense-form-submit").click();
-}
-
 export async function openSplitView(page: Page) {
   await page.getByTestId("expense-form-split").click();
   await expect(page.getByTestId("split-details-card")).toBeVisible();
@@ -54,7 +50,7 @@ export async function createEqualSplitExpense(
 ): Promise<string> {
   await page.goto("/expenses");
   await openExpenseForm(page, options);
-  await submitEqualSplitExpense(page);
+  await page.getByTestId("expense-form-submit").click();
   return options.description;
 }
 
@@ -68,7 +64,7 @@ export async function createTestExpense(
     description: uniqueDesc,
     categoryId: "restaurant",
   });
-  await submitEqualSplitExpense(page);
+  await page.getByTestId("expense-form-submit").click();
 
   await expect(page.getByTestId("expense-form-title")).not.toBeVisible({
     timeout: 15000,

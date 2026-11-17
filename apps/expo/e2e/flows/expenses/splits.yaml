@@ -257,3 +257,82 @@ tags:
 - assertVisible:
     text: ".*20[.,]00.*"
     rightOf: "Anna"
+
+# A custom split that does not add up blocks saving until it is fixed
+- tapOn:
+    id: "expense-edit-button"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-split"
+    timeout: 15000
+- tapOn:
+    id: "expense-form-split"
+- extendedWaitUntil:
+    visible:
+      id: "split-details-card"
+    timeout: 15000
+- tapOn:
+    id: "split-method-custom"
+- tapOn:
+    id: "split-member-amount-0"
+- inputText: "10"
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - runFlow:
+          file: ../../subflows/tap-until.yaml
+          env:
+            TARGET_ID: "BackButton"
+            MARKER_ID: "expense-form-split-problem"
+# On Android the first back only closes the keyboard
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - retry:
+          maxRetries: 2
+          commands:
+            - runFlow:
+                when:
+                  notVisible:
+                    id: "expense-form-split-problem"
+                commands:
+                  - back
+            - extendedWaitUntil:
+                visible:
+                  id: "expense-form-split-problem"
+                timeout: 5000
+- assertVisible:
+    id: "expense-form-split-problem"
+    text: ".*30[.,]00.*"
+- assertVisible:
+    id: "expense-form-submit"
+    enabled: false
+# Without Anna the rest goes to the one person left
+- tapOn:
+    id: "expense-form-split"
+- extendedWaitUntil:
+    visible:
+      id: "split-details-card"
+    timeout: 15000
+- tapOn:
+    id: "split-member-toggle-1"
+- tapOn:
+    id: "split-rest"
+- assertVisible:
+    id: "split-status"
+    text: ".*40[.,]00.*"
+- tapOn:
+    id: "split-done"
+- extendedWaitUntil:
+    visible:
+      id: "expense-form-submit"
+      enabled: true
+    timeout: 15000
+- tapOn:
+    id: "expense-form-submit"
+- extendedWaitUntil:
+    notVisible:
+      id: "expense-form-submit"
+    timeout: 20000

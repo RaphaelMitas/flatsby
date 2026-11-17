@@ -8,7 +8,6 @@ import {
   openExpenseEdit,
   openExpenseForm,
   openSplitView,
-  submitEqualSplitExpense,
 } from "../helpers/expenses";
 import { addPlaceholder } from "../helpers/group";
 import { waitForHydration } from "../helpers/hydration";
@@ -223,7 +222,7 @@ test.describe("Expense Creation", () => {
     await convertedInput.clear();
     await convertedInput.pressSequentially("89.46");
 
-    await submitEqualSplitExpense(authPage);
+    await authPage.getByTestId("expense-form-submit").click();
 
     const card = authPage
       .getByTestId(/^expense-card-\d+$/)
@@ -284,7 +283,7 @@ test.describe("Expense Creation", () => {
       categoryId: "coffee",
     });
 
-    await submitEqualSplitExpense(authPage);
+    await authPage.getByTestId("expense-form-submit").click();
 
     await expect(authPage.getByText("€15.00").first()).toBeVisible();
     await expect(
@@ -322,7 +321,7 @@ test.describe("Expense Creation", () => {
       "23.47",
     );
     await ensurePaidBySelected(authPage);
-    await submitEqualSplitExpense(authPage);
+    await authPage.getByTestId("expense-form-submit").click();
 
     await expect(authPage.getByText("REWE").first()).toBeVisible();
     await expect(authPage.getByText("€23.47").first()).toBeVisible();

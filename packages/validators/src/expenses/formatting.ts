@@ -3,7 +3,6 @@ import type { Translate } from "@flatsby/i18n/message-key";
 import type { ConvertibleExpense } from "./conversion";
 import type { DebtKind } from "./debt";
 import type { PairActivityItem } from "./schemas";
-import type { EditableSplitMethod } from "./split-editing";
 import type { DebtEntry, GroupDebtSummary } from "./types";
 import { isPlaceholder } from "../group";
 import { expenseCategoryLabelKeys } from "./categories";
@@ -192,25 +191,6 @@ export function formatSplitPortion({
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   }).format(fraction);
-}
-
-export function formatSplitEntry({
-  method,
-  value,
-  currency,
-  locale,
-}: {
-  method: EditableSplitMethod;
-  value: number;
-  currency: string;
-  locale: Intl.LocalesArgument;
-}): string {
-  return method === "percentage"
-    ? new Intl.NumberFormat(locale, {
-        style: "percent",
-        maximumFractionDigits: 2,
-      }).format(value / 10000)
-    : formatCurrencyFromCents({ cents: value, currency, locale });
 }
 
 export interface DebtPerson {

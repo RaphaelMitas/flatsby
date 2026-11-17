@@ -4,7 +4,6 @@ import {
   fillExpenseAmount,
   openExpenseDetail,
   openExpenseEdit,
-  submitEqualSplitExpense,
 } from "../helpers/expenses";
 
 test.describe("Expense Management", () => {
@@ -29,7 +28,7 @@ test.describe("Expense Management", () => {
 
     await openExpenseEdit(authPage);
     await fillExpenseAmount(authPage, "50.00");
-    await submitEqualSplitExpense(authPage);
+    await authPage.getByTestId("expense-form-submit").click();
 
     await expect(authPage.getByText("€50.00").first()).toBeVisible();
   });

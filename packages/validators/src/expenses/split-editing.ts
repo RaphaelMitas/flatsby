@@ -13,7 +13,7 @@ import {
   distributeShareAmounts,
   emptySplit,
 } from "./distribution";
-import { formatCurrencyFromCents, formatSplitEntry } from "./formatting";
+import { formatCurrencyFromCents } from "./formatting";
 import { expenseSchemaWithValidateSplits, splitMethodSchema } from "./schemas";
 import { MAX_SHARES } from "./types";
 import { validateSplits } from "./validation";
@@ -74,7 +74,7 @@ export function splitsForTotal(
   }
 }
 
-export function finalizeSplits(
+function finalizeSplits(
   method: SplitMethod,
   splits: ExpenseSplit[],
   totalAmountCents: number,
@@ -111,6 +111,20 @@ function typedValue(method: EditableSplitMethod, split: ExpenseSplit): number {
   return method === "percentage"
     ? (split.percentage ?? 0)
     : split.amountInCents;
+}
+
+function formatSplitEntry({
+  method,
+  value,
+  currency,
+  locale,
+}: SplitMoney & { method: EditableSplitMethod; value: number }): string {
+  return method === "percentage"
+    ? new Intl.NumberFormat(locale, {
+        style: "percent",
+        maximumFractionDigits: 2,
+      }).format(value / 10000)
+    : formatCurrencyFromCents({ cents: value, currency, locale });
 }
 
 export function splitRemaining(
