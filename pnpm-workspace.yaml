@@ -32,6 +32,11 @@ auditConfig:
     # untrusted input. Clears when Expo moves to glob 14 and minimatch 11.
     - GHSA-3g3m-2fjr-6pw4
     - GHSA-g3hv-75wg-m249
+    # picomatch <=4.0.7 - no patched release exists, 4.0.7 is the latest. Reached only
+    # via build and test tooling (metro, @expo/cli, vite, vitest, tinyglobby,
+    # micromatch) matching globs from our own config, never untrusted patterns.
+    # Clears when picomatch ships a fix; then refresh the lockfile.
+    - GHSA-fc5q-39xc-vjpf
 
 catalog:
   "@ai-sdk/provider": ^4.0.38
