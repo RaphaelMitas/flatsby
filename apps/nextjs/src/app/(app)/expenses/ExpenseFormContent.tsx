@@ -29,6 +29,15 @@ import {
   FormMessage,
 } from "@flatsby/ui/form";
 import { Input } from "@flatsby/ui/input";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemGroup,
+  ItemMedia,
+  ItemSeparator,
+  ItemTitle,
+} from "@flatsby/ui/item";
 import { Popover, PopoverContent, PopoverTrigger } from "@flatsby/ui/popover";
 import {
   Select,
@@ -39,11 +48,9 @@ import {
 } from "@flatsby/ui/select";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
 import {
-  describeSplitProblem,
   formatCurrencyFromCents,
   memberPerson,
 } from "@flatsby/validators/expenses/formatting";
-import { finalizeSplits } from "@flatsby/validators/expenses/split-editing";
 
 import type { UseExpenseFormReturn } from "./useExpenseForm";
 import { CurrencyInput } from "~/components/CurrencyInput";
@@ -63,13 +70,15 @@ function FormRow({
   children: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-2">
-      <span className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="flex-1 text-sm font-medium">{title}</span>
+    <Item size="sm">
+      <ItemMedia variant="icon">
+        <Icon />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>{title}</ItemTitle>
+      </ItemContent>
       {children}
-    </div>
+    </Item>
   );
 }
 
@@ -101,13 +110,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
   const scanned = receiptScan.justApplied
     ? "ring-primary/40 ring-2"
     : undefined;
-  const participants = finalizeSplits(splitMethod, split.splits, amountInCents);
-  const splitProblem = describeSplitProblem({
-    method: splitMethod,
-    ...split,
-    currency,
-    locale,
-  });
   const failure =
     failureOf(createExpenseMutation, t("expenses.genericError")) ??
     failureOf(updateExpenseMutation, t("expenses.genericError"));
@@ -115,7 +117,11 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((values) => onSubmit(values))}
+        onSubmit={
+          view === "split"
+            ? (event) => event.preventDefault()
+            : form.handleSubmit((values) => onSubmit(values))
+        }
         className="space-y-6"
       >
         <div className="flex items-center gap-2">
@@ -216,88 +222,97 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
               )}
             />
 
-            <div className="divide-y rounded-lg border">
+            <ItemGroup className="rounded-lg border">
               <FormField
                 control={form.control}
                 name="paidByGroupMemberId"
                 render={({ field }) => (
                   <FormRow Icon={User} title={t("expenses.paidByField")}>
-                    <Select
-                      value={field.value.toString()}
-                      onValueChange={(value) =>
-                        field.onChange(parseInt(value, 10))
-                      }
-                    >
-                      <SelectTrigger
-                        className="w-1/2"
-                        aria-label={t("expenses.paidByField")}
-                        data-testid="expense-form-paid-by"
+                    <ItemActions className="basis-1/2">
+                      <Select
+                        value={field.value.toString()}
+                        onValueChange={(value) =>
+                          field.onChange(parseInt(value, 10))
+                        }
                       >
-                        <SelectValue placeholder={t("expenses.selectPayer")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {group.groupMembers.map((member) => (
-                          <SelectItem
-                            key={member.id}
-                            value={member.id.toString()}
-                          >
-                            {member.user.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectTrigger
+                          className="w-full"
+                          aria-label={t("expenses.paidByField")}
+                          data-testid="expense-form-paid-by"
+                        >
+                          <SelectValue
+                            placeholder={t("expenses.selectPayer")}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {group.groupMembers.map((member) => (
+                            <SelectItem
+                              key={member.id}
+                              value={member.id.toString()}
+                            >
+                              {member.user.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </ItemActions>
                   </FormRow>
                 )}
               />
+              <ItemSeparator />
 
               <FormField
                 control={form.control}
                 name="subcategory"
                 render={({ field }) => (
                   <FormRow Icon={Tag} title={t("common.category")}>
-                    <div className="w-1/2">
+                    <ItemActions className="basis-1/2">
                       <ExpenseCategorySelector
                         value={field.value}
                         autoDetect={!isEditMode}
                         onChange={field.onChange}
                       />
-                    </div>
+                    </ItemActions>
                   </FormRow>
                 )}
               />
+              <ItemSeparator />
 
               <FormField
                 control={form.control}
                 name="expenseDate"
                 render={({ field }) => (
                   <FormRow Icon={CalendarIcon} title={t("common.date")}>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-1/2 justify-start text-left font-normal"
-                          aria-label={t("common.date")}
-                        >
-                          {format(field.value, "PPP", {
-                            locale: locale === "de" ? de : undefined,
-                          })}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent align="end">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={(date) => date && field.onChange(date)}
-                          autoFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <ItemActions className="basis-1/2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                            aria-label={t("common.date")}
+                          >
+                            {format(field.value, "PPP", {
+                              locale: locale === "de" ? de : undefined,
+                            })}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={(date) => date && field.onChange(date)}
+                            autoFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </ItemActions>
                   </FormRow>
                 )}
               />
+              <ItemSeparator />
 
-              <div>
-                <FormRow Icon={Users} title={t("expenses.splitTitle")}>
+              <FormRow Icon={Users} title={t("expenses.splitTitle")}>
+                <ItemActions>
                   <Button
                     type="button"
                     variant="ghost"
@@ -306,24 +321,24 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                     data-testid="expense-form-split"
                   >
                     {t("expenses.reviewSplit", {
-                      count: participants.length,
+                      count: split.participants.length,
                       method: splitMethod,
                     })}
                     <ChevronRight />
                   </Button>
-                </FormRow>
-                {splitProblem ? (
+                </ItemActions>
+                {split.problem ? (
                   <p
-                    className="text-destructive px-4 pb-3 text-sm"
+                    className="text-destructive basis-full text-sm"
                     data-testid="expense-form-split-problem"
                   >
-                    {t(splitProblem.key, splitProblem.values)}
+                    {t(split.problem.key, split.problem.values)}
                   </p>
                 ) : (
                   splitMethod !== "equal" &&
                   amountInCents > 0 && (
-                    <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 px-4 pb-3 text-sm">
-                      {participants.map((participant) => {
+                    <div className="text-muted-foreground flex basis-full flex-wrap gap-x-3 gap-y-1 text-sm">
+                      {split.participants.map((participant) => {
                         const member = allMembers.find(
                           (m) => m.id === participant.groupMemberId,
                         );
@@ -346,8 +361,8 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                     </div>
                   )
                 )}
-              </div>
-            </div>
+              </FormRow>
+            </ItemGroup>
 
             {failure && (
               <Alert variant="destructive">

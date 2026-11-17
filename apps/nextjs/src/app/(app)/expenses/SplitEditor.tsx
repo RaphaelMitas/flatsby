@@ -15,16 +15,7 @@ import { Checkbox } from "@flatsby/ui/checkbox";
 import { Input } from "@flatsby/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@flatsby/ui/tabs";
 import { UserAvatar } from "@flatsby/ui/user-avatar";
-import {
-  centsToDecimal,
-  inLedgerCurrency,
-} from "@flatsby/validators/expenses/conversion";
-import {
-  describeSplitProblem,
-  formatCurrencyFromCents,
-  formatSplitEntry,
-  memberPerson,
-} from "@flatsby/validators/expenses/formatting";
+import { memberPerson } from "@flatsby/validators/expenses/formatting";
 import {
   editableSplitMethod,
   splitEditor,
@@ -38,6 +29,18 @@ const SPLIT_METHODS = [
   "shares",
   "custom",
 ] as const satisfies readonly EditableSplitMethod[];
+
+const TONE_TEXT = {
+  default: undefined,
+  destructive: "text-destructive",
+  success: "text-success",
+} as const;
+
+const TONE_BAR = {
+  default: "bg-primary",
+  destructive: "bg-destructive",
+  success: "bg-success",
+} as const;
 
 interface SplitEditorProps {
   form: UseFormReturn<ExpenseValues>;
@@ -66,14 +69,12 @@ export function SplitEditor({
   );
   const storedSplits = useWatch({ control: form.control, name: "splits" });
   const {
-    splits,
     validation,
-    remaining,
-    goal,
     isTyped,
     progress,
-    restShares,
-    totalShares,
+    status,
+    canSplitRest,
+    rows,
     changeMethod,
     toggleMember,
     splitRest,
@@ -87,34 +88,10 @@ export function SplitEditor({
     method,
     onMethodChange: (next) => form.setValue("splitMethod", next),
     totalAmountCents,
-  });
-  const ledger = inLedgerCurrency({
-    amountInCents: totalAmountCents,
-    currency,
-    ...conversion,
-    expenseSplits: splits,
-  });
-  const isConverted = ledger.currency !== currency;
-  const money = (cents: number) =>
-    formatCurrencyFromCents({ cents, currency, locale });
-  const ledgerMoney = (memberId: number) =>
-    formatCurrencyFromCents({
-      cents:
-        ledger.expenseSplits.find((s) => s.groupMemberId === memberId)
-          ?.amountInCents ?? 0,
-      currency: ledger.currency,
-      locale,
-    });
-  const total = formatSplitEntry({ method, value: goal, currency, locale });
-  const problem = describeSplitProblem({
-    method,
-    splits,
-    validation,
-    remaining,
     currency,
     locale,
+    conversion,
   });
-  const people = t("expenses.peopleCount", { count: splits.length });
 
   return (
     <div className="space-y-4">
@@ -140,23 +117,14 @@ export function SplitEditor({
         data-testid="split-details-card"
       >
         {groupMembers.map((member) => {
-          const split = splits.find((s) => s.groupMemberId === member.id);
+          const row = rows.get(member.id);
           const name = member.user.name;
-          const shares = split?.shares ?? 0;
-          const rest = centsToDecimal(restShares.get(member.id) ?? 0);
-          const amount = split ? money(split.amountInCents) : undefined;
-          const converted = isConverted ? ledgerMoney(member.id) : undefined;
-          const detail =
-            method === "equal"
-              ? undefined
-              : method === "custom"
-                ? converted
-                : [amount, converted].filter(Boolean).join(" · ");
+          const shares = row?.split.shares ?? 0;
 
           return (
             <div key={member.id} className="flex items-center gap-3 px-3 py-2">
               <Checkbox
-                checked={!!split}
+                checked={!!row}
                 onCheckedChange={() => toggleMember(member.id)}
                 aria-label={t("expenses.includeInSplit", { name })}
                 data-testid={`split-member-${member.id}`}
@@ -164,36 +132,36 @@ export function SplitEditor({
               <div
                 className={cn(
                   "flex min-w-0 flex-1 items-center gap-3",
-                  !split && "opacity-50",
+                  !row && "opacity-50",
                 )}
               >
                 <UserAvatar {...memberPerson(member)} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{name}</div>
-                  {split && !!detail && (
+                  {!!row?.detail && (
                     <div className="text-muted-foreground text-xs">
-                      {detail}
+                      {row.detail}
                     </div>
                   )}
                 </div>
               </div>
 
-              {split && method === "equal" && (
+              {row && method === "equal" && (
                 <div className="text-right">
-                  <div className="text-sm font-semibold">{amount}</div>
-                  {converted && (
+                  <div className="text-sm font-semibold">{row.amount}</div>
+                  {row.converted && (
                     <div className="text-muted-foreground text-xs">
-                      {converted}
+                      {row.converted}
                     </div>
                   )}
                 </div>
               )}
 
-              {split && method === "custom" && (
+              {row && method === "custom" && (
                 <CurrencyInput
-                  value={split.amountInCents}
+                  value={row.split.amountInCents}
                   onChange={(cents) => setAmount(member.id, cents)}
-                  placeholder={rest.toFixed(2)}
+                  placeholder={row.placeholder}
                   min={0}
                   max={totalAmountCents}
                   className="w-28 text-right"
@@ -202,14 +170,14 @@ export function SplitEditor({
                 />
               )}
 
-              {split && method === "percentage" && (
+              {row && method === "percentage" && (
                 <div className="flex items-center gap-2">
                   <CurrencyInput
-                    value={split.percentage ?? 0}
+                    value={row.split.percentage ?? 0}
                     onChange={(basisPoints) =>
                       setPercentage(member.id, basisPoints)
                     }
-                    placeholder={rest.toFixed(2)}
+                    placeholder={row.placeholder}
                     min={0}
                     max={10000}
                     className="w-24 text-right"
@@ -220,7 +188,7 @@ export function SplitEditor({
                 </div>
               )}
 
-              {split && method === "shares" && (
+              {row && method === "shares" && (
                 <div className="flex items-center gap-1">
                   <Button
                     type="button"
@@ -265,43 +233,19 @@ export function SplitEditor({
         })}
       </div>
 
-      <div className="space-y-3 border-t pt-4">
+      <div className="bg-background sticky bottom-0 space-y-3 border-t py-4">
         <div className="flex min-h-9 items-center justify-between gap-2 text-sm">
           <p data-testid="split-status">
-            {problem ? (
-              <>
-                <span
-                  className={cn(
-                    "font-semibold",
-                    remaining <= 0 && "text-destructive",
-                  )}
-                >
-                  {t(problem.key, problem.values)}
-                </span>
-                {isTyped && splits.length > 0 && (
-                  <span className="text-muted-foreground">
-                    {` ${t("expenses.splitOfTotal", { total })}`}
-                  </span>
-                )}
-              </>
-            ) : isTyped ? (
-              <span className="text-success font-semibold">
-                {t("expenses.splitAddsUp", { total })}
+            <span className={cn("font-semibold", TONE_TEXT[status.tone])}>
+              {t(status.primary.key, status.primary.values)}
+            </span>
+            {status.secondary && (
+              <span className="text-muted-foreground">
+                {` ${t(status.secondary.key, status.secondary.values)}`}
               </span>
-            ) : (
-              <>
-                <span className="font-semibold">
-                  {method === "shares"
-                    ? t("expenses.sharesCount", { count: totalShares })
-                    : t("expenses.splitEach", {
-                        amount: money(splits[0]?.amountInCents ?? 0),
-                      })}
-                </span>
-                <span className="text-muted-foreground">{` · ${people}`}</span>
-              </>
             )}
           </p>
-          {remaining > 0 && !validation.isValid && (
+          {canSplitRest && (
             <Button
               type="button"
               variant="outline"
@@ -318,11 +262,7 @@ export function SplitEditor({
             <div
               className={cn(
                 "h-1 rounded-full transition-all",
-                remaining < 0
-                  ? "bg-destructive"
-                  : validation.isValid
-                    ? "bg-success"
-                    : "bg-primary",
+                TONE_BAR[status.tone],
               )}
               style={{ width: `${progress}%` }}
             />

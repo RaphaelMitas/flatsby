@@ -79,7 +79,16 @@ tags:
 - tapOn:
     id: "split-member-amount-0"
 - eraseText
-- inputText: "30"
+- inputText: "10"
+# 20.00 is left: the bar offers to split it, and the field takes it over
+- assertVisible:
+    id: "split-status"
+    text: ".*20[.,]00.*"
+- tapOn:
+    id: "split-rest"
+- assertVisible:
+    id: "split-member-amount-0"
+    text: "30[.,]00"
 - tapOn:
     id: "split-done"
 - extendedWaitUntil:

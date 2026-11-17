@@ -59,7 +59,7 @@ export const expenses = {
   splitAddsUp: "Adds up to {total}",
   splitRest: "Split the rest",
   splitEach: "{amount} each",
-  peopleCount: "{count, plural, one {# person} other {# people}}",
+  splitAmong: "· {count, plural, one {# person} other {# people}}",
   sharesCount: "{count, plural, one {# share} other {# shares}}",
   includeInSplit: "Include {name}",
   amountFor: "Amount for {name}",

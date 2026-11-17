@@ -1,16 +1,32 @@
+import type { MessageKey } from "@flatsby/i18n/message-key";
 import { z } from "zod/v4";
 
+import { msg } from "@flatsby/i18n/message-key";
+
+import type { ConvertibleExpense } from "./conversion";
 import type { ExpenseValues } from "./schemas";
 import type { ExpenseSplit, SplitMethod } from "./types";
+import { centsToDecimal, inLedgerCurrency } from "./conversion";
 import {
   distributeEqualAmounts,
   distributePercentageAmounts,
   distributeShareAmounts,
   emptySplit,
 } from "./distribution";
+import { formatCurrencyFromCents, formatSplitEntry } from "./formatting";
 import { expenseSchemaWithValidateSplits, splitMethodSchema } from "./schemas";
 import { MAX_SHARES } from "./types";
 import { validateSplits } from "./validation";
+
+interface SplitMessage {
+  key: MessageKey;
+  values?: Record<string, string | number>;
+}
+
+interface SplitMoney {
+  currency: string;
+  locale: Intl.LocalesArgument;
+}
 
 const editableSplitMethodSchema = splitMethodSchema.exclude(["settlement"]);
 
@@ -126,22 +142,46 @@ export function restShares(
   );
 }
 
-export function splitState(
-  method: EditableSplitMethod,
-  storedSplits: ExpenseSplit[],
-  totalAmountCents: number,
-) {
+export function splitState({
+  method,
+  splits: storedSplits,
+  totalAmountCents,
+  currency,
+  locale,
+}: SplitMoney & {
+  method: EditableSplitMethod;
+  splits: ExpenseSplit[];
+  totalAmountCents: number;
+}) {
   const splits = splitsForTotal(method, storedSplits, totalAmountCents);
+  const validation = validateSplits({ splits, totalAmountCents, method });
   const remaining = splitRemaining(method, splits, totalAmountCents);
   const goal = splitGoal(method, totalAmountCents);
+  const left: SplitMessage = {
+    key: remaining > 0 ? msg("expenses.splitLeft") : msg("expenses.splitOver"),
+    values: {
+      amount: formatSplitEntry({
+        method,
+        value: Math.abs(remaining),
+        currency,
+        locale,
+      }),
+    },
+  };
   return {
     splits,
-    validation: validateSplits({ splits, totalAmountCents, method }),
+    validation,
     remaining,
     goal,
     isTyped: isTypedMethod(method),
     progress:
       goal > 0 ? Math.min(Math.max((goal - remaining) / goal, 0), 1) * 100 : 0,
+    problem: validation.isValid
+      ? undefined
+      : splits.length > 0 && remaining !== 0
+        ? left
+        : validation.error,
+    participants: finalizeSplits(method, splits, totalAmountCents),
   };
 }
 
@@ -198,13 +238,20 @@ export function splitEditor({
   method,
   onMethodChange,
   totalAmountCents,
-}: {
+  currency,
+  locale,
+  conversion,
+}: SplitMoney & {
   splits: ExpenseSplit[];
   getSplits: () => ExpenseSplit[];
   setSplits: (splits: ExpenseSplit[]) => void;
   method: EditableSplitMethod;
   onMethodChange: (method: EditableSplitMethod) => void;
   totalAmountCents: number;
+  conversion: Pick<
+    ConvertibleExpense,
+    "convertedAmountInCents" | "convertedCurrency"
+  >;
 }) {
   const update = (fn: (current: ExpenseSplit[]) => ExpenseSplit[]) =>
     setSplits(fn(getSplits()));
@@ -213,12 +260,109 @@ export function splitEditor({
       s.groupMemberId === memberId ? { ...s, ...change } : s,
     );
 
-  const state = splitState(method, splits, totalAmountCents);
+  const state = splitState({
+    method,
+    splits,
+    totalAmountCents,
+    currency,
+    locale,
+  });
+  const { validation, remaining, isTyped, problem } = state;
+  const rest = restShares(method, state.splits, totalAmountCents);
+  const totalShares = state.splits.reduce((sum, s) => sum + (s.shares ?? 0), 0);
+  const ledger = inLedgerCurrency({
+    amountInCents: totalAmountCents,
+    currency,
+    ...conversion,
+    expenseSplits: state.splits,
+  });
+  const showsConverted = ledger.currency !== currency && validation.isValid;
+  const total = formatSplitEntry({
+    method,
+    value: state.goal,
+    currency,
+    locale,
+  });
+  const among: SplitMessage = {
+    key: msg("expenses.splitAmong"),
+    values: { count: state.splits.length },
+  };
+  const status: {
+    primary: SplitMessage;
+    secondary?: SplitMessage;
+    tone: "default" | "destructive" | "success";
+  } = problem
+    ? {
+        primary: problem,
+        secondary:
+          isTyped && state.splits.length > 0
+            ? { key: msg("expenses.splitOfTotal"), values: { total } }
+            : undefined,
+        tone: remaining > 0 ? "default" : "destructive",
+      }
+    : isTyped
+      ? {
+          primary: { key: msg("expenses.splitAddsUp"), values: { total } },
+          tone: "success",
+        }
+      : {
+          primary:
+            method === "shares"
+              ? {
+                  key: msg("expenses.sharesCount"),
+                  values: { count: totalShares },
+                }
+              : {
+                  key: msg("expenses.splitEach"),
+                  values: {
+                    amount: formatCurrencyFromCents({
+                      cents: state.splits[0]?.amountInCents ?? 0,
+                      currency,
+                      locale,
+                    }),
+                  },
+                },
+          secondary: among,
+          tone: "default",
+        };
 
   return {
     ...state,
-    restShares: restShares(method, state.splits, totalAmountCents),
-    totalShares: state.splits.reduce((sum, s) => sum + (s.shares ?? 0), 0),
+    status,
+    canSplitRest: remaining > 0 && !validation.isValid,
+    rows: new Map(
+      state.splits.map((split, index) => {
+        const amount = formatCurrencyFromCents({
+          cents: split.amountInCents,
+          currency,
+          locale,
+        });
+        const converted = showsConverted
+          ? formatCurrencyFromCents({
+              cents: ledger.expenseSplits[index]?.amountInCents ?? 0,
+              currency: ledger.currency,
+              locale,
+            })
+          : undefined;
+        return [
+          split.groupMemberId,
+          {
+            split,
+            amount,
+            converted,
+            detail:
+              method === "equal"
+                ? undefined
+                : method === "custom"
+                  ? converted
+                  : [amount, converted].filter(Boolean).join(" · "),
+            placeholder: centsToDecimal(
+              rest.get(split.groupMemberId) ?? 0,
+            ).toFixed(2),
+          },
+        ];
+      }),
+    ),
     changeMethod: (next: EditableSplitMethod) => {
       update((current) =>
         splitsForMethod(next, method, current, totalAmountCents),

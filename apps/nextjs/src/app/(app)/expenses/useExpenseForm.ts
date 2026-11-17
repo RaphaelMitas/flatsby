@@ -114,7 +114,13 @@ export function useExpenseForm({
   });
   const currency = useWatch({ control: form.control, name: "currency" });
   const storedSplits = useWatch({ control: form.control, name: "splits" });
-  const split = splitState(splitMethod, storedSplits, amountInCents);
+  const split = splitState({
+    method: splitMethod,
+    splits: storedSplits,
+    totalAmountCents: amountInCents,
+    currency,
+    locale,
+  });
   const expenseDate = useWatch({ control: form.control, name: "expenseDate" });
   const conversion = useExpenseConversion({
     group,

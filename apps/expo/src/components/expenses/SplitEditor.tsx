@@ -8,16 +8,7 @@ import { Text, View } from "react-native";
 import { useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
-import {
-  centsToDecimal,
-  inLedgerCurrency,
-} from "@flatsby/validators/expenses/conversion";
-import {
-  describeSplitProblem,
-  formatCurrencyFromCents,
-  formatSplitEntry,
-  memberPerson,
-} from "@flatsby/validators/expenses/formatting";
+import { memberPerson } from "@flatsby/validators/expenses/formatting";
 import {
   editableSplitMethod,
   splitEditor,
@@ -43,6 +34,18 @@ const SPLIT_METHODS = [
 ] as const satisfies readonly { value: EditableSplitMethod; testID: string }[];
 
 const FOOTER_HEIGHT = 144;
+
+const TONE_TEXT = {
+  default: undefined,
+  destructive: "text-destructive",
+  success: "text-success",
+} as const;
+
+const TONE_BAR = {
+  default: "bg-primary",
+  destructive: "bg-destructive",
+  success: "bg-success",
+} as const;
 
 interface SplitEditorProps {
   form: UseFormReturn<ExpenseValues>;
@@ -71,14 +74,12 @@ export function SplitEditor({
   );
   const storedSplits = useWatch({ control: form.control, name: "splits" });
   const {
-    splits,
     validation,
-    remaining,
-    goal,
     isTyped,
     progress,
-    restShares,
-    totalShares,
+    status,
+    canSplitRest,
+    rows,
     changeMethod,
     toggleMember,
     splitRest,
@@ -92,34 +93,10 @@ export function SplitEditor({
     method,
     onMethodChange: (next) => form.setValue("splitMethod", next),
     totalAmountCents,
-  });
-  const ledger = inLedgerCurrency({
-    amountInCents: totalAmountCents,
-    currency,
-    ...conversion,
-    expenseSplits: splits,
-  });
-  const isConverted = ledger.currency !== currency;
-  const money = (cents: number) =>
-    formatCurrencyFromCents({ cents, currency, locale });
-  const ledgerMoney = (memberId: number) =>
-    formatCurrencyFromCents({
-      cents:
-        ledger.expenseSplits.find((s) => s.groupMemberId === memberId)
-          ?.amountInCents ?? 0,
-      currency: ledger.currency,
-      locale,
-    });
-  const total = formatSplitEntry({ method, value: goal, currency, locale });
-  const problem = describeSplitProblem({
-    method,
-    splits,
-    validation,
-    remaining,
     currency,
     locale,
+    conversion,
   });
-  const people = t("expenses.peopleCount", { count: splits.length });
 
   return (
     <>
@@ -139,18 +116,9 @@ export function SplitEditor({
 
         <Card testID="split-details-card">
           {groupMembers.map((member, index) => {
-            const split = splits.find((s) => s.groupMemberId === member.id);
+            const row = rows.get(member.id);
             const name = member.user.name;
-            const shares = split?.shares ?? 0;
-            const rest = centsToDecimal(restShares.get(member.id) ?? 0);
-            const amount = split ? money(split.amountInCents) : undefined;
-            const converted = isConverted ? ledgerMoney(member.id) : undefined;
-            const detail =
-              method === "equal"
-                ? undefined
-                : method === "custom"
-                  ? converted
-                  : [amount, converted].filter(Boolean).join(" · ");
+            const shares = row?.split.shares ?? 0;
 
             return (
               <Fragment key={member.id}>
@@ -158,14 +126,14 @@ export function SplitEditor({
                 <View className="flex-row items-center py-1 pr-3">
                   <Checkbox
                     testID={`split-member-toggle-${index}`}
-                    checked={!!split}
+                    checked={!!row}
                     onCheckedChange={() => toggleMember(member.id)}
                     accessibilityLabel={t("expenses.includeInSplit", { name })}
                   />
                   <View
                     className={cn(
                       "flex-1 flex-row items-center gap-3",
-                      !split && "opacity-50",
+                      !row && "opacity-50",
                     )}
                   >
                     <MemberAvatar
@@ -179,33 +147,33 @@ export function SplitEditor({
                       >
                         {name}
                       </Text>
-                      {split && !!detail && (
+                      {!!row?.detail && (
                         <Text className="text-muted-foreground text-sm">
-                          {detail}
+                          {row.detail}
                         </Text>
                       )}
                     </View>
                   </View>
 
-                  {split && method === "equal" && (
+                  {row && method === "equal" && (
                     <View className="items-end">
                       <Text className="text-foreground text-base font-semibold">
-                        {amount}
+                        {row.amount}
                       </Text>
-                      {converted && (
+                      {row.converted && (
                         <Text className="text-muted-foreground text-sm">
-                          {converted}
+                          {row.converted}
                         </Text>
                       )}
                     </View>
                   )}
 
-                  {split && method === "custom" && (
+                  {row && method === "custom" && (
                     <CurrencyInput
                       testID={`split-member-amount-${index}`}
-                      value={split.amountInCents}
+                      value={row.split.amountInCents}
                       onChange={(cents) => setAmount(member.id, cents)}
-                      placeholder={rest.toFixed(2)}
+                      placeholder={row.placeholder}
                       min={0}
                       max={totalAmountCents}
                       className="w-28 text-right"
@@ -213,15 +181,15 @@ export function SplitEditor({
                     />
                   )}
 
-                  {split && method === "percentage" && (
+                  {row && method === "percentage" && (
                     <View className="flex-row items-center gap-2">
                       <CurrencyInput
                         testID={`split-member-amount-${index}`}
-                        value={split.percentage ?? 0}
+                        value={row.split.percentage ?? 0}
                         onChange={(basisPoints) =>
                           setPercentage(member.id, basisPoints)
                         }
-                        placeholder={rest.toFixed(2)}
+                        placeholder={row.placeholder}
                         min={0}
                         max={10000}
                         className="w-24 text-right"
@@ -233,7 +201,7 @@ export function SplitEditor({
                     </View>
                   )}
 
-                  {split && method === "shares" && (
+                  {row && method === "shares" && (
                     <View className="flex-row items-center gap-1">
                       <Button
                         testID={`split-member-shares-decrement-${index}`}
@@ -279,40 +247,16 @@ export function SplitEditor({
       <AppKeyboardStickyView className="border-border bg-background gap-3 border-t p-4">
         <View className="min-h-9 flex-row items-center justify-between gap-2">
           <Text testID="split-status" className="text-foreground shrink">
-            {problem ? (
-              <>
-                <Text
-                  className={cn(
-                    "font-semibold",
-                    remaining <= 0 && "text-destructive",
-                  )}
-                >
-                  {t(problem.key, problem.values)}
-                </Text>
-                {isTyped && splits.length > 0 && (
-                  <Text className="text-muted-foreground">
-                    {` ${t("expenses.splitOfTotal", { total })}`}
-                  </Text>
-                )}
-              </>
-            ) : isTyped ? (
-              <Text className="text-success font-semibold">
-                {t("expenses.splitAddsUp", { total })}
+            <Text className={cn("font-semibold", TONE_TEXT[status.tone])}>
+              {t(status.primary.key, status.primary.values)}
+            </Text>
+            {status.secondary && (
+              <Text className="text-muted-foreground">
+                {` ${t(status.secondary.key, status.secondary.values)}`}
               </Text>
-            ) : (
-              <>
-                <Text className="font-semibold">
-                  {method === "shares"
-                    ? t("expenses.sharesCount", { count: totalShares })
-                    : t("expenses.splitEach", {
-                        amount: money(splits[0]?.amountInCents ?? 0),
-                      })}
-                </Text>
-                <Text className="text-muted-foreground">{` · ${people}`}</Text>
-              </>
             )}
           </Text>
-          {remaining > 0 && !validation.isValid && (
+          {canSplitRest && (
             <Button
               testID="split-rest"
               title={t("expenses.splitRest")}
@@ -325,14 +269,7 @@ export function SplitEditor({
         {isTyped && (
           <View className="bg-muted h-1 overflow-hidden rounded-full">
             <View
-              className={cn(
-                "h-1 rounded-full",
-                remaining < 0
-                  ? "bg-destructive"
-                  : validation.isValid
-                    ? "bg-success"
-                    : "bg-primary",
-              )}
+              className={cn("h-1 rounded-full", TONE_BAR[status.tone])}
               style={{ width: `${progress}%` }}
             />
           </View>

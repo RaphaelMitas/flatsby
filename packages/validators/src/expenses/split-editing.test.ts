@@ -18,6 +18,10 @@ function editorOn(
   initial: ExpenseSplit[],
   method: "custom" | "percentage",
   totalAmountCents: number,
+  conversion: {
+    convertedAmountInCents?: number;
+    convertedCurrency?: string;
+  } = {},
 ) {
   let splits = initial;
   const editor = () =>
@@ -30,6 +34,9 @@ function editorOn(
       method,
       onMethodChange: () => undefined,
       totalAmountCents,
+      currency: "USD",
+      locale: "en",
+      conversion,
     });
   return { editor, current: () => splits };
 }
@@ -120,6 +127,81 @@ describe("splitEditor.splitRest", () => {
     editor().splitRest();
     expect(current().map((s) => s.percentage)).toEqual([4000, 2500, 3500]);
     expect(current().map((s) => s.amountInCents)).toEqual([4000, 2500, 3500]);
+  });
+});
+
+describe("splitEditor status", () => {
+  it("says what is left of the total while a custom split is short", () => {
+    const { status, canSplitRest } = editorOn(
+      [split(1, 3000), split(2)],
+      "custom",
+      8460,
+    ).editor();
+    expect(status.primary).toEqual({
+      key: "expenses.splitLeft",
+      values: { amount: "$54.60" },
+    });
+    expect(status.secondary?.values).toEqual({ total: "$84.60" });
+    expect(canSplitRest).toBe(true);
+  });
+
+  it("turns destructive once more than the total is assigned", () => {
+    const { status, canSplitRest } = editorOn(
+      [split(1, 5000), split(2, 5000)],
+      "custom",
+      8460,
+    ).editor();
+    expect(status.primary.key).toBe("expenses.splitOver");
+    expect(status.tone).toBe("destructive");
+    expect(canSplitRest).toBe(false);
+  });
+
+  it("counts percent, and offers no rest once rounding makes it complete", () => {
+    const { status, canSplitRest } = editorOn(
+      [split(1, 0, 3333), split(2, 0, 3333), split(3, 0, 3333)],
+      "percentage",
+      9000,
+    ).editor();
+    expect(status.primary).toEqual({
+      key: "expenses.splitAddsUp",
+      values: { total: "100%" },
+    });
+    expect(canSplitRest).toBe(false);
+  });
+});
+
+describe("splitEditor rows", () => {
+  const converted = { convertedAmountInCents: 9000, convertedCurrency: "EUR" };
+
+  it("hides converted amounts until the split adds up", () => {
+    const { rows } = editorOn(
+      [split(1, 1000), split(2)],
+      "custom",
+      10000,
+      converted,
+    ).editor();
+    expect(rows.get(1)?.converted).toBeUndefined();
+  });
+
+  it("shows each share of the converted total once it adds up", () => {
+    const { rows } = editorOn(
+      [split(1, 2500), split(2, 7500)],
+      "custom",
+      10000,
+      converted,
+    ).editor();
+    expect(rows.get(1)?.detail).toBe("€22.50");
+    expect(rows.get(2)?.detail).toBe("€67.50");
+  });
+
+  it("previews an even share of what is left in the empty rows", () => {
+    const { rows } = editorOn(
+      [split(1, 3000), split(2), split(3)],
+      "custom",
+      8460,
+    ).editor();
+    expect(rows.get(2)?.placeholder).toBe("27.30");
+    expect(rows.get(1)?.placeholder).toBe("0.00");
   });
 });
 

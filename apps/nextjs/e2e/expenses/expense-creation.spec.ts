@@ -160,6 +160,50 @@ test.describe("Expense Creation", () => {
     ).toBeVisible();
   });
 
+  test("a custom split says what is left and splits the rest", async ({
+    authPage,
+  }) => {
+    await addPlaceholder(authPage, "Anna");
+    await authPage.goto("/expenses");
+    await openExpenseForm(authPage, {
+      amount: "30.00",
+      description: "Custom with a rest",
+      categoryId: "groceries",
+    });
+
+    await openSplitView(authPage);
+    await authPage.getByTestId("split-method-custom").click();
+    const firstAmount = authPage.getByTestId(/^split-member-amount-/).first();
+    await firstAmount.click();
+    await firstAmount.pressSequentially("10");
+    await expect(authPage.getByTestId("split-status")).toContainText(
+      "€20.00 left",
+    );
+    await expect(authPage.getByTestId("split-done")).toBeDisabled();
+
+    await authPage.getByTestId("split-back").click();
+    await expect(
+      authPage.getByTestId("expense-form-split-problem"),
+    ).toContainText("€20.00 left");
+    await expect(authPage.getByTestId("expense-form-submit")).toBeDisabled();
+
+    await openSplitView(authPage);
+    await authPage.getByTestId("split-rest").click();
+    await expect(authPage.getByTestId("split-status")).toContainText(
+      "Adds up to €30.00",
+    );
+    await closeSplitView(authPage);
+    await authPage.getByTestId("expense-form-submit").click();
+    await expect(
+      authPage.getByText("Expense created successfully"),
+    ).toBeVisible();
+
+    await openExpenseDetail(authPage, "Custom with a rest");
+    await expect(authPage.getByTestId("expense-split-details")).toContainText(
+      "€20.00",
+    );
+  });
+
   test("converts a foreign expense at a typed amount", async ({ authPage }) => {
     const description = "Dinner in Zurich";
     await authPage.goto("/expenses");

@@ -20,7 +20,6 @@ import {
 import { isExchangeRateFinal } from "@flatsby/validators/expenses/conversion";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import {
-  describeSplitProblem,
   formatCurrencyFromCents,
   memberPerson,
 } from "@flatsby/validators/expenses/formatting";
@@ -446,14 +445,13 @@ export function ExpenseForm({
   });
   const subcategory = useWatch({ control: form.control, name: "subcategory" });
   const storedSplits = useWatch({ control: form.control, name: "splits" });
-  const split = splitState(splitMethod, storedSplits, amountInCents);
-  const splitProblem = describeSplitProblem({
+  const split = splitState({
     method: splitMethod,
-    ...split,
+    splits: storedSplits,
+    totalAmountCents: amountInCents,
     currency,
     locale,
   });
-  const participants = finalizeSplits(splitMethod, split.splits, amountInCents);
   const category = getExpenseCategoryData({
     subcategoryId: subcategory ?? AI_AUTO_DETECT,
   });
@@ -650,23 +648,23 @@ export function ExpenseForm({
                       icon="users"
                       title={t("expenses.splitTitle")}
                       value={t("expenses.reviewSplit", {
-                        count: participants.length,
+                        count: split.participants.length,
                         method: splitMethod,
                       })}
                       trailing="chevron-right"
                     />
-                    {splitProblem ? (
+                    {split.problem ? (
                       <Text
                         testID="expense-form-split-problem"
                         className="text-destructive px-4 pb-3 text-sm"
                       >
-                        {t(splitProblem.key, splitProblem.values)}
+                        {t(split.problem.key, split.problem.values)}
                       </Text>
                     ) : (
                       splitMethod !== "equal" &&
                       amountInCents > 0 && (
                         <View className="flex-row flex-wrap gap-x-3 gap-y-1 px-4 pb-3">
-                          {participants.map((participant) => {
+                          {split.participants.map((participant) => {
                             const member = allMembers.find(
                               (m) => m.id === participant.groupMemberId,
                             );

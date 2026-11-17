@@ -61,12 +61,6 @@ export function CurrencyInput({
     return centsToDecimal(value).toFixed(2);
   }, [value]);
 
-  const formattedDisplayValue = useMemo(() => {
-    if (!isFocused) return computedDisplayValue;
-    if (!rawInput || rawInput === "") return "";
-    return limitDecimals(rawInput);
-  }, [isFocused, rawInput, computedDisplayValue]);
-
   const parseInputToCents = (input: string): number => {
     const cleaned = extractDigits(input);
     if (!cleaned || cleaned === "") {
@@ -77,6 +71,12 @@ export function CurrencyInput({
     const decimalValue = parseFloat(limited) || 0;
     return decimalToCents(decimalValue);
   };
+
+  const typedIsCurrent = parseInputToCents(rawInput) === value;
+  const formattedDisplayValue =
+    isFocused && typedIsCurrent
+      ? limitDecimals(rawInput)
+      : computedDisplayValue;
 
   const handleChange = (text: string) => {
     const cleaned = extractDigits(text);
