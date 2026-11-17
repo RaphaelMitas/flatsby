@@ -125,12 +125,15 @@ export function SplitEditor({
           return (
             <div
               key={member.id}
-              className={cn("flex items-center", hasInput && "gap-3 pr-3")}
+              className={cn(
+                "flex items-center",
+                hasInput && "min-h-13 gap-3 pr-3",
+              )}
             >
               <label
                 htmlFor={`split-member-${member.id}`}
                 className={cn(
-                  "hover:bg-muted/50 flex min-w-0 flex-1 cursor-pointer items-center gap-3 self-stretch py-2 pl-3",
+                  "hover:bg-muted/50 active:bg-muted flex min-w-0 flex-1 cursor-pointer items-center gap-3 self-stretch py-2 pl-3",
                   !hasInput && "pr-3",
                 )}
               >

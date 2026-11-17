@@ -5,6 +5,7 @@ import type { EditableSplitMethod } from "@flatsby/validators/expenses/split-edi
 import type { UseFormReturn } from "react-hook-form";
 import { Fragment } from "react";
 import { Keyboard, Pressable, Text, View } from "react-native";
+import { KeyboardController } from "react-native-keyboard-controller";
 import { useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -98,6 +99,14 @@ export function SplitEditor({
     conversion,
   });
 
+  const pressMember = (memberId: number) => {
+    if (KeyboardController.isVisible()) {
+      Keyboard.dismiss();
+      return;
+    }
+    toggleMember(memberId);
+  };
+
   return (
     <>
       <AppScrollView
@@ -132,20 +141,15 @@ export function SplitEditor({
                 >
                   <Pressable
                     accessible={false}
-                    onPress={() =>
-                      Keyboard.isVisible()
-                        ? Keyboard.dismiss()
-                        : toggleMember(member.id)
-                    }
+                    onPress={() => pressMember(member.id)}
                     className={cn(
                       "active:bg-muted flex-1 flex-row items-center self-stretch py-1",
                       !hasInput && "pr-3",
                     )}
                   >
                     <Checkbox
-                      testID={`split-member-toggle-${index}`}
                       checked={!!row}
-                      onCheckedChange={() => toggleMember(member.id)}
+                      onCheckedChange={() => pressMember(member.id)}
                       accessibilityLabel={t("expenses.includeInSplit", {
                         name,
                       })}
