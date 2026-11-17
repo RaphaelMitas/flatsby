@@ -4,7 +4,7 @@ import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { EditableSplitMethod } from "@flatsby/validators/expenses/split-editing";
 import type { UseFormReturn } from "react-hook-form";
 import { Fragment } from "react";
-import { Keyboard, Text, View } from "react-native";
+import { Keyboard, Pressable, Text, View } from "react-native";
 import { useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -123,7 +123,11 @@ export function SplitEditor({
             return (
               <Fragment key={member.id}>
                 {index > 0 && <Separator />}
-                <View className="flex-row items-center py-1 pr-3">
+                <Pressable
+                  accessible={false}
+                  onPress={() => toggleMember(member.id)}
+                  className="active:bg-muted flex-row items-center py-1 pr-1"
+                >
                   <Checkbox
                     testID={`split-member-toggle-${index}`}
                     checked={!!row}
@@ -168,76 +172,90 @@ export function SplitEditor({
                     </View>
                   )}
 
-                  {row && method === "custom" && (
-                    <CurrencyInput
-                      testID={`split-member-amount-${index}`}
-                      value={row.split.amountInCents}
-                      onChange={(cents) => setAmount(member.id, cents)}
-                      placeholder={row.placeholder}
-                      min={0}
-                      max={totalAmountCents}
-                      className="w-28 text-right"
-                      accessibilityLabel={t("expenses.amountFor", { name })}
-                    />
-                  )}
+                  {row && method !== "equal" && (
+                    <View
+                      onStartShouldSetResponder={() => true}
+                      className="justify-center self-stretch px-2"
+                    >
+                      {method === "custom" && (
+                        <CurrencyInput
+                          testID={`split-member-amount-${index}`}
+                          value={row.split.amountInCents}
+                          onChange={(cents) => setAmount(member.id, cents)}
+                          placeholder={row.placeholder}
+                          min={0}
+                          max={totalAmountCents}
+                          className="w-28 text-right"
+                          accessibilityLabel={t("expenses.amountFor", { name })}
+                        />
+                      )}
 
-                  {row && method === "percentage" && (
-                    <View className="flex-row items-center gap-2">
-                      <CurrencyInput
-                        testID={`split-member-amount-${index}`}
-                        value={row.split.percentage ?? 0}
-                        onChange={(basisPoints) =>
-                          setPercentage(member.id, basisPoints)
-                        }
-                        placeholder={row.placeholder}
-                        min={0}
-                        max={10000}
-                        className="w-24 text-right"
-                        accessibilityLabel={t("expenses.percentageFor", {
-                          name,
-                        })}
-                      />
-                      <Text className="text-muted-foreground text-sm">%</Text>
+                      {method === "percentage" && (
+                        <View className="flex-row items-center gap-2">
+                          <CurrencyInput
+                            testID={`split-member-amount-${index}`}
+                            value={row.split.percentage ?? 0}
+                            onChange={(basisPoints) =>
+                              setPercentage(member.id, basisPoints)
+                            }
+                            placeholder={row.placeholder}
+                            min={0}
+                            max={10000}
+                            className="w-24 text-right"
+                            accessibilityLabel={t("expenses.percentageFor", {
+                              name,
+                            })}
+                          />
+                          <Text className="text-muted-foreground text-sm">
+                            %
+                          </Text>
+                        </View>
+                      )}
+
+                      {method === "shares" && (
+                        <View className="flex-row items-center gap-1">
+                          <Button
+                            testID={`split-member-shares-decrement-${index}`}
+                            variant="outline"
+                            size="icon"
+                            icon="minus"
+                            onPress={() => setShares(member.id, shares - 1)}
+                            disabled={shares <= 1}
+                            accessibilityLabel={t("expenses.fewerSharesFor", {
+                              name,
+                            })}
+                          />
+                          <Input
+                            testID={`split-member-shares-${index}`}
+                            keyboardType="number-pad"
+                            value={shares === 0 ? "" : String(shares)}
+                            onChangeText={(text) =>
+                              setShares(
+                                member.id,
+                                Number.parseInt(text, 10) || 0,
+                              )
+                            }
+                            textAlign="center"
+                            className="w-12 px-1"
+                            accessibilityLabel={t("expenses.sharesFor", {
+                              name,
+                            })}
+                          />
+                          <Button
+                            testID={`split-member-shares-increment-${index}`}
+                            variant="outline"
+                            size="icon"
+                            icon="plus"
+                            onPress={() => setShares(member.id, shares + 1)}
+                            accessibilityLabel={t("expenses.moreSharesFor", {
+                              name,
+                            })}
+                          />
+                        </View>
+                      )}
                     </View>
                   )}
-
-                  {row && method === "shares" && (
-                    <View className="flex-row items-center gap-1">
-                      <Button
-                        testID={`split-member-shares-decrement-${index}`}
-                        variant="outline"
-                        size="icon"
-                        icon="minus"
-                        onPress={() => setShares(member.id, shares - 1)}
-                        disabled={shares <= 1}
-                        accessibilityLabel={t("expenses.fewerSharesFor", {
-                          name,
-                        })}
-                      />
-                      <Input
-                        testID={`split-member-shares-${index}`}
-                        keyboardType="number-pad"
-                        value={shares === 0 ? "" : String(shares)}
-                        onChangeText={(text) =>
-                          setShares(member.id, Number.parseInt(text, 10) || 0)
-                        }
-                        textAlign="center"
-                        className="w-12 px-1"
-                        accessibilityLabel={t("expenses.sharesFor", { name })}
-                      />
-                      <Button
-                        testID={`split-member-shares-increment-${index}`}
-                        variant="outline"
-                        size="icon"
-                        icon="plus"
-                        onPress={() => setShares(member.id, shares + 1)}
-                        accessibilityLabel={t("expenses.moreSharesFor", {
-                          name,
-                        })}
-                      />
-                    </View>
-                  )}
-                </View>
+                </Pressable>
               </Fragment>
             );
           })}

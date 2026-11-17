@@ -317,7 +317,9 @@ tags:
       id: "split-details-card"
     timeout: 15000
 - tapOn:
-    id: "split-member-toggle-1"
+    text: "Anna"
+    childOf:
+      id: "split-details-card"
 - tapOn:
     id: "split-rest"
 - assertVisible:
