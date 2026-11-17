@@ -168,6 +168,13 @@ describe("splitEditor status", () => {
     });
     expect(canSplitRest).toBe(false);
   });
+
+  it("asks for a person instead of offering the rest when nobody is in", () => {
+    const { status, canSplitRest } = editorOn([], "custom", 8460).editor();
+    expect(status.primary.key).toBe("expenses.validation.atLeastOnePerson");
+    expect(status.tone).toBe("destructive");
+    expect(canSplitRest).toBe(false);
+  });
 });
 
 describe("splitEditor rows", () => {
@@ -213,6 +220,13 @@ describe("expenseFormSchema", () => {
     expect(parsed.data?.splits.map((s) => s.amountInCents)).toEqual([
       4500, 4500,
     ]);
+  });
+
+  it("leaves out the people a custom split gives nothing", () => {
+    const parsed = expenseFormSchema.safeParse(
+      formValues("custom", 9000, [split(1, 9000), split(2)]),
+    );
+    expect(parsed.data?.splits.map((s) => s.groupMemberId)).toEqual([1]);
   });
 
   it("rejects a custom split that no longer matches the amount", () => {

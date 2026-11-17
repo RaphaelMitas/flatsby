@@ -41,7 +41,7 @@ export function editableSplitMethod(
 export const expenseFormSchema = z.preprocess(
   (values: ExpenseValues) => ({
     ...values,
-    splits: splitsForTotal(
+    splits: finalizeSplits(
       editableSplitMethod(values.splitMethod),
       values.splits,
       values.amountInCents,
@@ -267,8 +267,9 @@ export function splitEditor({
     currency,
     locale,
   });
-  const { validation, remaining, isTyped, problem } = state;
+  const { validation, isTyped, problem } = state;
   const rest = restShares(method, state.splits, totalAmountCents);
+  const canSplitRest = rest.size > 0 && !validation.isValid;
   const totalShares = state.splits.reduce((sum, s) => sum + (s.shares ?? 0), 0);
   const ledger = inLedgerCurrency({
     amountInCents: totalAmountCents,
@@ -283,10 +284,6 @@ export function splitEditor({
     currency,
     locale,
   });
-  const among: SplitMessage = {
-    key: msg("expenses.splitAmong"),
-    values: { count: state.splits.length },
-  };
   const status: {
     primary: SplitMessage;
     secondary?: SplitMessage;
@@ -298,7 +295,7 @@ export function splitEditor({
           isTyped && state.splits.length > 0
             ? { key: msg("expenses.splitOfTotal"), values: { total } }
             : undefined,
-        tone: remaining > 0 ? "default" : "destructive",
+        tone: canSplitRest ? "default" : "destructive",
       }
     : isTyped
       ? {
@@ -322,14 +319,17 @@ export function splitEditor({
                     }),
                   },
                 },
-          secondary: among,
+          secondary: {
+            key: msg("expenses.splitAmong"),
+            values: { count: state.splits.length },
+          },
           tone: "default",
         };
 
   return {
     ...state,
     status,
-    canSplitRest: remaining > 0 && !validation.isValid,
+    canSplitRest,
     rows: new Map(
       state.splits.map((split, index) => {
         const amount = formatCurrencyFromCents({

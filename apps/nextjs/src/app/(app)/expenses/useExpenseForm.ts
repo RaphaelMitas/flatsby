@@ -20,7 +20,6 @@ import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import {
   editableSplitMethod,
   expenseFormSchema,
-  finalizeSplits,
   splitState,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
@@ -369,12 +368,6 @@ export function useExpenseForm({
   );
 
   const onSubmit = (values: ExpenseValues) => {
-    const splits = finalizeSplits(
-      values.splitMethod,
-      values.splits,
-      values.amountInCents,
-    );
-
     if (isEditMode) {
       updateExpenseMutation.mutate({
         expenseId: expense.id,
@@ -384,7 +377,7 @@ export function useExpenseForm({
         description: values.description,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
-        splits,
+        splits: values.splits,
         splitMethod: values.splitMethod,
         ...conversion.fields,
       });
@@ -397,7 +390,7 @@ export function useExpenseForm({
         description: values.description,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
-        splits,
+        splits: values.splits,
         splitMethod: values.splitMethod,
         ...conversion.fields,
         receipt: receiptScan.report(values),

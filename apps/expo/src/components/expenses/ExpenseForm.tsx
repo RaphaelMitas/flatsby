@@ -26,7 +26,6 @@ import {
 import {
   editableSplitMethod,
   expenseFormSchema,
-  finalizeSplits,
   splitState,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
@@ -402,12 +401,6 @@ export function ExpenseForm({
   );
 
   const onSubmit = (values: ExpenseValues) => {
-    const splits = finalizeSplits(
-      values.splitMethod,
-      values.splits,
-      values.amountInCents,
-    );
-
     if (isEditMode) {
       updateExpenseMutation.mutate({
         expenseId: expense.id,
@@ -418,7 +411,7 @@ export function ExpenseForm({
         description: values.description,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
-        splits,
+        splits: values.splits,
         splitMethod: values.splitMethod,
       });
     } else {
@@ -431,7 +424,7 @@ export function ExpenseForm({
         description: values.description,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
-        splits,
+        splits: values.splits,
         splitMethod: values.splitMethod,
         receipt: receiptScan.report(values),
       });
@@ -439,11 +432,6 @@ export function ExpenseForm({
     }
   };
 
-  const paidByGroupMemberId = useWatch({
-    control: form.control,
-    name: "paidByGroupMemberId",
-  });
-  const subcategory = useWatch({ control: form.control, name: "subcategory" });
   const storedSplits = useWatch({ control: form.control, name: "splits" });
   const split = splitState({
     method: splitMethod,
@@ -451,9 +439,6 @@ export function ExpenseForm({
     totalAmountCents: amountInCents,
     currency,
     locale,
-  });
-  const category = getExpenseCategoryData({
-    subcategoryId: subcategory ?? AI_AUTO_DETECT,
   });
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
@@ -586,9 +571,8 @@ export function ExpenseForm({
                             icon="user"
                             title={t("expenses.paidByField")}
                             value={
-                              allMembers.find(
-                                (m) => m.id === paidByGroupMemberId,
-                              )?.user.name ?? t("expenses.selectPayer")
+                              allMembers.find((m) => m.id === field.value)?.user
+                                .name ?? t("expenses.selectPayer")
                             }
                             trailing="chevrons-up-down"
                           />
@@ -600,24 +584,29 @@ export function ExpenseForm({
                   <FormField
                     control={form.control}
                     name="subcategory"
-                    render={({ field }) => (
-                      <ExpenseCategoryPicker
-                        testID="expense-form-category"
-                        value={field.value}
-                        autoDetect={!isEditMode}
-                        onChange={field.onChange}
-                        trigger={
-                          <ExpenseFormRow
-                            icon="tag"
-                            title={t("common.category")}
-                            value={t(category.name)}
-                            trailing="chevrons-up-down"
-                          >
-                            {category.icon}
-                          </ExpenseFormRow>
-                        }
-                      />
-                    )}
+                    render={({ field }) => {
+                      const category = getExpenseCategoryData({
+                        subcategoryId: field.value ?? AI_AUTO_DETECT,
+                      });
+                      return (
+                        <ExpenseCategoryPicker
+                          testID="expense-form-category"
+                          value={field.value}
+                          autoDetect={!isEditMode}
+                          onChange={field.onChange}
+                          trigger={
+                            <ExpenseFormRow
+                              icon="tag"
+                              title={t("common.category")}
+                              value={t(category.name)}
+                              trailing="chevrons-up-down"
+                            >
+                              {category.icon}
+                            </ExpenseFormRow>
+                          }
+                        />
+                      );
+                    }}
                   />
                   <Separator />
                   <FormField
