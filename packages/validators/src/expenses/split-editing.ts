@@ -185,7 +185,6 @@ export function splitState({
   return {
     splits,
     validation,
-    remaining,
     goal,
     isTyped: isTypedMethod(method),
     progress:
@@ -205,44 +204,21 @@ function splitsWithRest(
   totalAmountCents: number,
 ): ExpenseSplit[] {
   const shares = restShares(method, splits, totalAmountCents);
-  return splitsForTotal(
-    method,
-    splits.map((s) => {
-      const value = typedValue(method, s) + (shares.get(s.groupMemberId) ?? 0);
-      return method === "percentage"
-        ? { ...s, percentage: value }
-        : { ...s, amountInCents: value };
-    }),
-    totalAmountCents,
-  );
-}
-
-function splitsForMethod(
-  next: EditableSplitMethod,
-  current: EditableSplitMethod,
-  splits: ExpenseSplit[],
-  totalAmountCents: number,
-): ExpenseSplit[] {
-  if (next === current && next !== "equal") return splits;
-  return splitsForTotal(
-    next,
-    splits.map((s) => emptySplit(s.groupMemberId)),
-    totalAmountCents,
-  );
+  return splits.map((s) => {
+    const value = typedValue(method, s) + (shares.get(s.groupMemberId) ?? 0);
+    return method === "percentage"
+      ? { ...s, percentage: value }
+      : { ...s, amountInCents: value };
+  });
 }
 
 function splitsWithMemberToggled(
-  method: EditableSplitMethod,
   splits: ExpenseSplit[],
   memberId: number,
-  totalAmountCents: number,
 ): ExpenseSplit[] {
-  const next = splits.some((s) => s.groupMemberId === memberId)
+  return splits.some((s) => s.groupMemberId === memberId)
     ? splits.filter((s) => s.groupMemberId !== memberId)
     : [...splits, emptySplit(memberId)];
-  return method === "equal" || method === "shares"
-    ? splitsForTotal(method, next, totalAmountCents)
-    : next;
 }
 
 export function splitEditor({
@@ -378,34 +354,21 @@ export function splitEditor({
       }),
     ),
     changeMethod: (next: EditableSplitMethod) => {
-      update((current) =>
-        splitsForMethod(next, method, current, totalAmountCents),
-      );
+      if (next === method) return;
+      update((current) => current.map((s) => emptySplit(s.groupMemberId)));
       onMethodChange(next);
     },
     toggleMember: (memberId: number) =>
-      update((current) =>
-        splitsWithMemberToggled(method, current, memberId, totalAmountCents),
-      ),
+      update((current) => splitsWithMemberToggled(current, memberId)),
     splitRest: () =>
       update((current) => splitsWithRest(method, current, totalAmountCents)),
     setPercentage: (memberId: number, percentage: number) =>
-      setSplits(
-        splitsForTotal(
-          "percentage",
-          patch(memberId, { percentage }),
-          totalAmountCents,
-        ),
-      ),
+      setSplits(patch(memberId, { percentage })),
     setShares: (memberId: number, shares: number) =>
       setSplits(
-        splitsForTotal(
-          "shares",
-          patch(memberId, {
-            shares: Math.min(Math.max(shares, 0), MAX_SHARES),
-          }),
-          totalAmountCents,
-        ),
+        patch(memberId, {
+          shares: Math.min(Math.max(shares, 0), MAX_SHARES),
+        }),
       ),
     setAmount: (memberId: number, amountInCents: number) =>
       setSplits(patch(memberId, { amountInCents })),

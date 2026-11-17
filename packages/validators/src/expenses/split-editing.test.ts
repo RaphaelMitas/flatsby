@@ -114,7 +114,6 @@ describe("splitEditor.splitRest", () => {
     expect(current().map((s) => s.amountInCents)).toEqual([
       3000, 2230, 1615, 1615,
     ]);
-    expect(editor().remaining).toBe(0);
     expect(editor().validation.isValid).toBe(true);
   });
 
@@ -126,7 +125,9 @@ describe("splitEditor.splitRest", () => {
     );
     editor().splitRest();
     expect(current().map((s) => s.percentage)).toEqual([4000, 2500, 3500]);
-    expect(current().map((s) => s.amountInCents)).toEqual([4000, 2500, 3500]);
+    expect(editor().splits.map((s) => s.amountInCents)).toEqual([
+      4000, 2500, 3500,
+    ]);
   });
 });
 
