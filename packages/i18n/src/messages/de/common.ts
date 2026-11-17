@@ -12,6 +12,7 @@ export const common = {
   date: "Datum",
   delete: "Löschen",
   deleting: "Wird gelöscht...",
+  done: "Fertig",
   edit: "Bearbeiten",
   error: "Fehler",
   loading: "Wird geladen...",

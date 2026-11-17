@@ -1,12 +1,13 @@
 import { expect, test } from "../fixtures/auth";
 import {
+  closeSplitView,
   createEqualSplitExpense,
   ensurePaidBySelected,
   fillExpenseAmount,
   openExpenseDetail,
   openExpenseEdit,
   openExpenseForm,
-  submitEqualSplitExpense,
+  openSplitView,
 } from "../helpers/expenses";
 import { addPlaceholder } from "../helpers/group";
 import { waitForHydration } from "../helpers/hydration";
@@ -37,10 +38,7 @@ test.describe("Expense Creation", () => {
       categoryId: "restaurant",
     });
 
-    await authPage.getByTestId("expense-form-next").click();
-    await expect(authPage.getByTestId("expense-form-step")).toContainText(
-      "Step 2/3",
-    );
+    await openSplitView(authPage);
 
     await authPage.getByTestId("split-method-percentage").click();
 
@@ -53,10 +51,7 @@ test.describe("Expense Creation", () => {
       await percentInputs.first().pressSequentially("100");
     }
 
-    await authPage.getByTestId("expense-form-next").click();
-    await expect(authPage.getByTestId("expense-form-step")).toContainText(
-      "Step 3/3",
-    );
+    await closeSplitView(authPage);
 
     await expect(authPage.getByText("€100.00").first()).toBeVisible();
 
@@ -78,10 +73,7 @@ test.describe("Expense Creation", () => {
       categoryId: "groceries",
     });
 
-    await authPage.getByTestId("expense-form-next").click();
-    await expect(authPage.getByTestId("expense-form-step")).toContainText(
-      "Step 2/3",
-    );
+    await openSplitView(authPage);
 
     await authPage.getByTestId("split-method-shares").click();
 
@@ -94,10 +86,7 @@ test.describe("Expense Creation", () => {
       splitDetailsCard.getByTestId(/^split-member-shares-\d+$/).first(),
     ).toHaveValue("2");
 
-    await authPage.getByTestId("expense-form-next").click();
-    await expect(authPage.getByTestId("expense-form-step")).toContainText(
-      "Step 3/3",
-    );
+    await closeSplitView(authPage);
 
     await authPage.getByTestId("expense-form-submit").click();
 
@@ -116,13 +105,13 @@ test.describe("Expense Creation", () => {
 
     await openExpenseEdit(authPage);
     await fillExpenseAmount(authPage, "60.00");
-    await authPage.getByTestId("expense-form-next").click();
+    await openSplitView(authPage);
     await expect(
       splitDetailsCard.getByTestId(/^split-member-shares-\d+$/).first(),
     ).toHaveValue("2");
     await expect(splitDetailsCard).toContainText("€60.00");
 
-    await authPage.getByTestId("expense-form-next").click();
+    await closeSplitView(authPage);
     await authPage.getByTestId("expense-form-submit").click();
     await expect(authPage.getByTestId("expense-form-title")).not.toBeVisible({
       timeout: 15000,
@@ -145,10 +134,7 @@ test.describe("Expense Creation", () => {
       categoryId: "other-housing",
     });
 
-    await authPage.getByTestId("expense-form-next").click();
-    await expect(authPage.getByTestId("expense-form-step")).toContainText(
-      "Step 2/3",
-    );
+    await openSplitView(authPage);
 
     await authPage.getByTestId("split-method-custom").click();
 
@@ -161,10 +147,7 @@ test.describe("Expense Creation", () => {
       await customInputs.first().pressSequentially("3000");
     }
 
-    await authPage.getByTestId("expense-form-next").click();
-    await expect(authPage.getByTestId("expense-form-step")).toContainText(
-      "Step 3/3",
-    );
+    await closeSplitView(authPage);
 
     await expect(authPage.getByText("€30.00").first()).toBeVisible();
 
@@ -174,6 +157,50 @@ test.describe("Expense Creation", () => {
     await expect(
       authPage.getByText("Rent utilities custom split").first(),
     ).toBeVisible();
+  });
+
+  test("a custom split says what is left and splits the rest", async ({
+    authPage,
+  }) => {
+    await addPlaceholder(authPage, "Anna");
+    await authPage.goto("/expenses");
+    await openExpenseForm(authPage, {
+      amount: "30.00",
+      description: "Custom with a rest",
+      categoryId: "groceries",
+    });
+
+    await openSplitView(authPage);
+    await authPage.getByTestId("split-method-custom").click();
+    const firstAmount = authPage.getByTestId(/^split-member-amount-/).first();
+    await firstAmount.click();
+    await firstAmount.pressSequentially("10");
+    await expect(authPage.getByTestId("split-status")).toContainText(
+      "€20.00 left",
+    );
+    await expect(authPage.getByTestId("split-done")).toBeDisabled();
+
+    await authPage.getByTestId("split-back").click();
+    await expect(
+      authPage.getByTestId("expense-form-split-problem"),
+    ).toContainText("€20.00 left");
+    await expect(authPage.getByTestId("expense-form-submit")).toBeDisabled();
+
+    await openSplitView(authPage);
+    await authPage.getByTestId("split-rest").click();
+    await expect(authPage.getByTestId("split-status")).toContainText(
+      "Adds up to €30.00",
+    );
+    await closeSplitView(authPage);
+    await authPage.getByTestId("expense-form-submit").click();
+    await expect(
+      authPage.getByText("Expense created successfully"),
+    ).toBeVisible();
+
+    await openExpenseDetail(authPage, "Custom with a rest");
+    await expect(authPage.getByTestId("expense-split-details")).toContainText(
+      "€20.00",
+    );
   });
 
   test("converts a foreign expense at a typed amount", async ({ authPage }) => {
@@ -195,7 +222,7 @@ test.describe("Expense Creation", () => {
     await convertedInput.clear();
     await convertedInput.pressSequentially("89.46");
 
-    await submitEqualSplitExpense(authPage);
+    await authPage.getByTestId("expense-form-submit").click();
 
     const card = authPage
       .getByTestId(/^expense-card-\d+$/)
@@ -219,11 +246,11 @@ test.describe("Expense Creation", () => {
     });
     await authPage.getByTestId("expense-form-paid-by").click();
     await authPage.getByRole("option", { name: "Anna" }).click();
-    await authPage.getByTestId("expense-form-next").click();
+    await openSplitView(authPage);
     await expect(authPage.getByTestId("split-details-card")).toContainText(
       "Anna",
     );
-    await authPage.getByTestId("expense-form-next").click();
+    await closeSplitView(authPage);
     await authPage.getByTestId("expense-form-submit").click();
     await expect(
       authPage.getByText("Expense created successfully"),
@@ -256,7 +283,7 @@ test.describe("Expense Creation", () => {
       categoryId: "coffee",
     });
 
-    await submitEqualSplitExpense(authPage);
+    await authPage.getByTestId("expense-form-submit").click();
 
     await expect(authPage.getByText("€15.00").first()).toBeVisible();
     await expect(
@@ -294,7 +321,7 @@ test.describe("Expense Creation", () => {
       "23.47",
     );
     await ensurePaidBySelected(authPage);
-    await submitEqualSplitExpense(authPage);
+    await authPage.getByTestId("expense-form-submit").click();
 
     await expect(authPage.getByText("REWE").first()).toBeVisible();
     await expect(authPage.getByText("€23.47").first()).toBeVisible();

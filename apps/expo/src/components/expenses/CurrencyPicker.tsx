@@ -1,4 +1,5 @@
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
+import type { ReactNode } from "react";
 
 import {
   CURRENCY_CODES,
@@ -17,11 +18,13 @@ export function CurrencyPicker({
   value,
   onChange,
   disabled,
+  trigger,
   testID,
 }: {
   value: CurrencyCode;
   onChange: (currency: CurrencyCode) => void;
   disabled?: boolean;
+  trigger?: ReactNode;
   testID?: string;
 }) {
   return (
@@ -33,6 +36,7 @@ export function CurrencyPicker({
         if (isCurrencyCode(item.id)) onChange(item.id);
       }}
       triggerTitle={value}
+      trigger={trigger}
       disabled={disabled}
     />
   );

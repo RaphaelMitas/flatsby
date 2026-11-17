@@ -15,6 +15,8 @@ interface CurrencyInputProps {
   min?: number;
   max?: number;
   disabled?: boolean;
+  autoFocus?: boolean;
+  accessibilityLabel?: string;
   testID?: string;
 }
 
@@ -26,6 +28,8 @@ export function CurrencyInput({
   min,
   max,
   disabled,
+  autoFocus,
+  accessibilityLabel,
   testID,
 }: CurrencyInputProps) {
   const [rawInput, setRawInput] = useState("");
@@ -124,6 +128,8 @@ export function CurrencyInput({
   return (
     <Input
       testID={testID}
+      autoFocus={autoFocus}
+      accessibilityLabel={accessibilityLabel}
       inputMode="decimal"
       placeholder={placeholder}
       value={formattedDisplayValue}

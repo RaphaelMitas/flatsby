@@ -16,6 +16,7 @@ interface CurrencyInputProps {
   min?: number;
   max?: number;
   disabled?: boolean;
+  "aria-label"?: string;
   "data-testid"?: string;
 }
 
@@ -27,6 +28,7 @@ export function CurrencyInput({
   min,
   max,
   disabled,
+  "aria-label": ariaLabel,
   "data-testid": dataTestId,
 }: CurrencyInputProps) {
   const [rawInput, setRawInput] = useState("");
@@ -210,6 +212,7 @@ export function CurrencyInput({
       onPaste={handlePaste}
       className={className}
       disabled={disabled}
+      aria-label={ariaLabel}
       data-testid={dataTestId}
     />
   );

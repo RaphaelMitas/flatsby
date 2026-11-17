@@ -16,8 +16,8 @@ appId: ${APP_ID}
 - tapOn:
     id: "expense-form-description"
 - inputText: ${DESCRIPTION}
-# Tap a neutral text to dismiss the keyboard (hideKeyboard is flaky on iOS)
-- tapOn: "Amount & Details"
+# Return closes the keyboard (hideKeyboard is flaky on iOS)
+- pressKey: Enter
 - runFlow:
     when:
       true: ${typeof CATEGORY !== 'undefined' && CATEGORY !== ''}
@@ -44,20 +44,6 @@ appId: ${APP_ID}
       - tapOn:
           id: "picker-item-${CATEGORY}"
       - waitForAnimationToEnd
-- tapOn:
-    id: "expense-form-next"
-- extendedWaitUntil:
-    visible:
-      id: "expense-form-step"
-      text: "Step 2 of 3"
-    timeout: 45000
-- tapOn:
-    id: "expense-form-next"
-- extendedWaitUntil:
-    visible:
-      id: "expense-form-step"
-      text: "Step 3 of 3"
-    timeout: 45000
 - tapOn:
     id: "expense-form-submit"
 # The form closes on submit; the card is disabled until the server confirms it

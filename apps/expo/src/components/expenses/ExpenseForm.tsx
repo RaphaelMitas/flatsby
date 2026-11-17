@@ -5,26 +5,28 @@ import type {
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useMemo, useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
-import { useRouter } from "expo-router";
+import { Stack, usePreventRemove, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
 import { restoreSnapshot, resultMutation } from "@flatsby/api/resultMutation";
-import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
+import {
+  AI_AUTO_DETECT,
+  getSubcategoryGroup,
+} from "@flatsby/validators/expenses/categories";
 import { isExchangeRateFinal } from "@flatsby/validators/expenses/conversion";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
 import {
   formatCurrencyFromCents,
   memberPerson,
 } from "@flatsby/validators/expenses/formatting";
-import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
   editableSplitMethod,
-  finalizeSplits,
-  splitsForTotal,
+  expenseFormSchema,
+  splitState,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
@@ -38,13 +40,8 @@ import {
   BottomSheetPickerTrigger,
 } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/lib/ui/card";
+import { Card } from "~/lib/ui/card";
+import Icon from "~/lib/ui/custom/icons/Icon";
 import { DatePickerField } from "~/lib/ui/date-picker-field";
 import {
   Form,
@@ -54,8 +51,8 @@ import {
   useForm as useFormHook,
 } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
-import { Label } from "~/lib/ui/label";
 import { SafeAreaView } from "~/lib/ui/safe-area";
+import { Separator } from "~/lib/ui/separator";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useCloseScreen } from "~/utils/useCloseScreen";
@@ -63,7 +60,9 @@ import { useReviewNudge } from "~/utils/useReviewNudge";
 import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
 import { CurrencyPicker } from "./CurrencyPicker";
+import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
 import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
+import { ExpenseFormRow } from "./ExpenseFormRow";
 import { MemberAvatar } from "./MemberAvatar";
 import { ReceiptScanCard } from "./ReceiptScan";
 import { SplitEditor } from "./SplitEditor";
@@ -102,10 +101,10 @@ export function ExpenseForm({
   const trpcClient = trpc;
   const queryClient = useQueryClient();
   const recordHappyAction = useReviewNudge();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [view, setView] = useState<"details" | "split">("details");
+  usePreventRemove(view === "split", () => setView("details"));
 
   const isEditMode = !!expense;
-  const totalSteps = 3;
 
   const { cancelLists, patchLists, invalidateAll } = useInvalidateExpenses(
     group.id,
@@ -117,10 +116,8 @@ export function ExpenseForm({
       })
     : undefined;
 
-  const initialSplitMethod = editableSplitMethod(expense?.splitMethod);
-
   const form = useFormHook<ExpenseValues, ExpenseValues>({
-    schema: expenseSchemaWithValidateSplits,
+    schema: expenseFormSchema,
     defaultValues: {
       paidByGroupMemberId:
         expense?.paidByGroupMemberId ?? group.thisGroupMember.id,
@@ -134,17 +131,19 @@ export function ExpenseForm({
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
         : new Date(),
-      splitMethod: initialSplitMethod,
+      splitMethod: editableSplitMethod(expense?.splitMethod),
       splits:
         expense?.expenseSplits.map((split) => ({
           groupMemberId: split.groupMemberId,
           amountInCents: split.amountInCents,
           percentage: split.percentage,
           shares: split.shares,
-        })) ?? [],
+        })) ?? group.groupMembers.map((member) => emptySplit(member.id)),
     },
   });
-  const splitMethod = useWatch({ control: form.control, name: "splitMethod" });
+  const splitMethod = editableSplitMethod(
+    useWatch({ control: form.control, name: "splitMethod" }),
+  );
   const amountInCents = useWatch({
     control: form.control,
     name: "amountInCents",
@@ -180,7 +179,6 @@ export function ExpenseForm({
       tooLarge: t("expenses.receiptScan.fileTooLarge"),
     },
   });
-  const scanned = receiptScan.justApplied ? "border-primary" : undefined;
 
   const allMembers = useMemo(() => {
     if (!expense) return group.groupMembers;
@@ -403,12 +401,6 @@ export function ExpenseForm({
   );
 
   const onSubmit = (values: ExpenseValues) => {
-    const splits = finalizeSplits(
-      values.splitMethod,
-      values.splits,
-      values.amountInCents,
-    );
-
     if (isEditMode) {
       updateExpenseMutation.mutate({
         expenseId: expense.id,
@@ -419,7 +411,7 @@ export function ExpenseForm({
         description: values.description,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
-        splits,
+        splits: values.splits,
         splitMethod: values.splitMethod,
       });
     } else {
@@ -432,7 +424,7 @@ export function ExpenseForm({
         description: values.description,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
-        splits,
+        splits: values.splits,
         splitMethod: values.splitMethod,
         receipt: receiptScan.report(values),
       });
@@ -440,59 +432,14 @@ export function ExpenseForm({
     }
   };
 
-  const handleNext = async () => {
-    let fieldsToValidate: (keyof ExpenseValues)[] = [];
-
-    if (currentStep === 1) {
-      fieldsToValidate = [
-        "paidByGroupMemberId",
-        "amountInCents",
-        "currency",
-        "description",
-        "expenseDate",
-      ];
-    } else if (currentStep === 2) {
-      fieldsToValidate = ["splits"];
-    }
-
-    const isValid = await form.trigger(fieldsToValidate);
-    if (isValid) {
-      if (currentStep === 1) {
-        const currentSplits = form.getValues("splits");
-        const amountCents = form.getValues("amountInCents");
-
-        if (splitMethod !== "settlement") {
-          form.setValue(
-            "splits",
-            splitsForTotal(
-              splitMethod,
-              currentSplits.length > 0
-                ? currentSplits
-                : group.groupMembers.map((m) => emptySplit(m.id)),
-              amountCents,
-            ),
-          );
-        }
-      }
-      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
-    }
-  };
-
-  const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
-  };
-
-  const paidByGroupMemberId = useWatch({
-    control: form.control,
-    name: "paidByGroupMemberId",
+  const storedSplits = useWatch({ control: form.control, name: "splits" });
+  const split = splitState({
+    method: splitMethod,
+    splits: storedSplits,
+    totalAmountCents: amountInCents,
+    currency,
+    locale,
   });
-  const description = useWatch({ control: form.control, name: "description" });
-  const splits = useWatch({ control: form.control, name: "splits" });
-  const participantCount = finalizeSplits(
-    splitMethod,
-    splits,
-    amountInCents,
-  ).length;
   const isPending =
     createExpenseMutation.isPending || updateExpenseMutation.isPending;
 
@@ -506,306 +453,262 @@ export function ExpenseForm({
 
   return (
     <SafeAreaView edges={[]}>
+      <Stack.Screen
+        options={{
+          headerTitle:
+            view === "split"
+              ? t("expenses.splitTitle")
+              : isEditMode
+                ? t("expenses.editExpense")
+                : t("expenses.addExpense"),
+        }}
+      />
       <BottomSheetPickerProvider>
-        <View className="border-border flex-row items-center justify-between border-b px-4 py-3">
-          <Text
-            testID="expense-form-step"
-            className="text-muted-foreground text-sm"
-          >
-            {t("expenses.stepOf", { step: currentStep, total: totalSteps })}
-          </Text>
-          <View className="flex-row gap-1">
-            {Array.from({ length: totalSteps }).map((_, i) => (
-              <View
-                key={i}
-                className={`h-2 w-8 rounded ${
-                  i + 1 <= currentStep ? "bg-primary" : "bg-muted"
-                }`}
-              />
-            ))}
-          </View>
-        </View>
-
         <Form {...form}>
-          <AppScrollView
-            className="flex-1"
-            contentContainerClassName="p-4"
-            bottomOffset={96}
-          >
-            {currentStep === 1 && (
-              <View className="gap-4">
+          {view === "split" ? (
+            <SplitEditor
+              form={form}
+              groupMembers={allMembers}
+              totalAmountCents={amountInCents}
+              currency={currency}
+              conversion={conversion.fields}
+              onDone={() => setView("details")}
+            />
+          ) : (
+            <>
+              <AppScrollView
+                className="flex-1"
+                contentContainerClassName="gap-4 p-4"
+                bottomOffset={96}
+              >
                 {!isEditMode && <ReceiptScanCard receiptScan={receiptScan} />}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t("expenses.amountAndDetails")}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="gap-4">
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>{t("expenses.description")}</Label>
-                          <FormControl>
-                            <Input
-                              testID="expense-form-description"
-                              autoFocus={autoFocus}
-                              placeholder={t("expenses.descriptionPlaceholder")}
-                              value={field.value}
-                              onChangeText={field.onChange}
-                              onBlur={field.onBlur}
-                              maxLength={512}
-                              className={scanned}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </View>
-                      )}
-                    />
 
-                    <FormField
-                      control={form.control}
-                      name="amountInCents"
-                      render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>{t("expenses.amount")}</Label>
-                          <View className="flex-row items-center gap-2">
-                            <FormField
-                              control={form.control}
-                              name="currency"
-                              render={({ field: currencyField }) => (
-                                <CurrencyPicker
-                                  testID="expense-form-currency"
-                                  value={currencyField.value}
-                                  onChange={currencyField.onChange}
-                                />
-                              )}
-                            />
-                            <CurrencyInput
-                              testID="expense-form-amount"
-                              value={field.value}
-                              onChange={field.onChange}
-                              placeholder="0.00"
-                              min={1}
-                              className={cn("flex-1", scanned)}
-                            />
-                          </View>
-                          <FormMessage />
-                        </View>
-                      )}
-                    />
-
-                    <ConversionField
-                      currency={currency}
-                      conversion={conversion}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="paidByGroupMemberId"
-                      render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>{t("expenses.paidByField")}</Label>
-                          <BottomSheetPickerTrigger
-                            items={paidByItems}
-                            selectedId={field.value.toString()}
-                            onSelect={(item) => {
-                              field.onChange(parseInt(item.id, 10));
-                            }}
-                            triggerTitle={
-                              group.groupMembers.find(
-                                (m) => m.id === field.value,
-                              )?.user.name ?? t("expenses.selectPayer")
-                            }
-                          />
-                          <FormMessage />
-                        </View>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="subcategory"
-                      render={({ field }) => (
-                        <View className="gap-2">
-                          <Label>{t("common.category")}</Label>
-                          <ExpenseCategoryPicker
-                            testID="expense-form-category"
-                            value={field.value}
-                            autoDetect={!isEditMode}
-                            onChange={field.onChange}
-                          />
-                        </View>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="expenseDate"
-                      render={({ field }) => (
-                        <DatePickerField
-                          label={t("common.date")}
+                <View className="items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name="amountInCents"
+                    render={({ field }) => (
+                      <>
+                        <CurrencyInput
+                          testID="expense-form-amount"
+                          autoFocus={autoFocus}
                           value={field.value}
                           onChange={field.onChange}
+                          placeholder="0.00"
+                          min={1}
+                          className={cn(
+                            "h-16 border-0 text-center text-4xl font-bold",
+                            receiptScan.justApplied && "bg-muted",
+                          )}
+                          accessibilityLabel={t("expenses.amount")}
                         />
-                      )}
-                    />
-                  </CardContent>
-                </Card>
-              </View>
-            )}
+                        <FormMessage />
+                      </>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <CurrencyPicker
+                        testID="expense-form-currency"
+                        value={field.value}
+                        onChange={field.onChange}
+                        trigger={
+                          <View className="border-border flex-row items-center gap-1.5 rounded-full border px-3 py-1.5">
+                            <Text className="text-foreground text-sm font-medium">
+                              {field.value}
+                            </Text>
+                            <Icon
+                              name="chevrons-up-down"
+                              size={14}
+                              color="muted-foreground"
+                            />
+                          </View>
+                        }
+                      />
+                    )}
+                  />
+                </View>
 
-            {currentStep === 2 && amountInCents > 0 && (
-              <View className="gap-4">
+                <ConversionField currency={currency} conversion={conversion} />
+
                 <FormField
                   control={form.control}
-                  name="splitMethod"
+                  name="description"
                   render={({ field }) => (
                     <FormControl>
-                      <SplitEditor
-                        form={form}
-                        groupMembers={allMembers}
-                        totalAmountCents={amountInCents}
-                        currency={currency}
-                        conversion={conversion.fields}
-                        splitMethod={editableSplitMethod(splitMethod)}
-                        onSplitMethodChange={(method) => {
-                          field.onChange(method);
-                        }}
+                      <Input
+                        testID="expense-form-description"
+                        placeholder={t("expenses.descriptionPlaceholder")}
+                        value={field.value}
+                        onChangeText={field.onChange}
+                        onBlur={field.onBlur}
+                        maxLength={512}
+                        className={
+                          receiptScan.justApplied ? "border-primary" : undefined
+                        }
+                        accessibilityLabel={t("expenses.description")}
                       />
                     </FormControl>
                   )}
                 />
-              </View>
-            )}
 
-            {currentStep === 3 && (
-              <View className="gap-4">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>{t("expenses.review")}</CardTitle>
-                    <CardDescription>
-                      {t("expenses.reviewHint")}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="gap-3">
-                    {description && (
-                      <View className="flex-row justify-between">
-                        <Text className="text-muted-foreground">
-                          {t("expenses.descriptionLabel")}
-                        </Text>
-                        <Text className="text-foreground text-right font-semibold">
-                          {description}
-                        </Text>
-                      </View>
+                  <FormField
+                    control={form.control}
+                    name="paidByGroupMemberId"
+                    render={({ field }) => (
+                      <BottomSheetPickerTrigger
+                        testID="expense-form-paid-by"
+                        items={paidByItems}
+                        selectedId={field.value.toString()}
+                        onSelect={(item) =>
+                          field.onChange(parseInt(item.id, 10))
+                        }
+                        trigger={
+                          <ExpenseFormRow
+                            icon="user"
+                            title={t("expenses.paidByField")}
+                            value={
+                              allMembers.find((m) => m.id === field.value)?.user
+                                .name ?? t("expenses.selectPayer")
+                            }
+                            trailing="chevrons-up-down"
+                          />
+                        }
+                      />
                     )}
-                    <View className="flex-row justify-between">
-                      <Text className="text-muted-foreground">
-                        {t("expenses.amountLabel")}
-                      </Text>
-                      <Text className="text-foreground font-semibold">
-                        {formatCurrencyFromCents({
-                          cents: amountInCents,
-                          currency: currency,
-                          locale,
-                        })}
-                      </Text>
-                    </View>
-                    {conversion.fields.convertedAmountInCents !== null && (
-                      <>
-                        <View className="flex-row justify-between">
-                          <Text className="text-muted-foreground">
-                            {t("expenses.conversion.inCurrencyLabel", {
-                              currency: conversion.targetCurrency,
-                            })}
-                          </Text>
-                          <Text className="text-foreground font-semibold">
-                            {formatCurrencyFromCents({
-                              cents: conversion.fields.convertedAmountInCents,
-                              currency: conversion.targetCurrency,
-                              locale,
-                            })}
-                          </Text>
-                        </View>
-                        <View className="flex-row justify-between gap-4">
-                          <Text className="text-muted-foreground">
-                            {t("expenses.conversion.rate")}
-                          </Text>
-                          <Text className="text-foreground flex-1 text-right font-semibold">
-                            {conversion.rateText}
-                          </Text>
-                        </View>
-                      </>
+                  />
+                  <Separator />
+                  <FormField
+                    control={form.control}
+                    name="subcategory"
+                    render={({ field }) => {
+                      const category = getExpenseCategoryData({
+                        subcategoryId: field.value ?? AI_AUTO_DETECT,
+                      });
+                      return (
+                        <ExpenseCategoryPicker
+                          testID="expense-form-category"
+                          value={field.value}
+                          autoDetect={!isEditMode}
+                          onChange={field.onChange}
+                          trigger={
+                            <ExpenseFormRow
+                              icon="tag"
+                              title={t("common.category")}
+                              value={t(category.name)}
+                              trailing="chevrons-up-down"
+                            >
+                              {category.icon}
+                            </ExpenseFormRow>
+                          }
+                        />
+                      );
+                    }}
+                  />
+                  <Separator />
+                  <FormField
+                    control={form.control}
+                    name="expenseDate"
+                    render={({ field }) => (
+                      <ExpenseFormRow icon="calendar" title={t("common.date")}>
+                        <DatePickerField
+                          value={field.value}
+                          onChange={field.onChange}
+                          accessibilityLabel={t("common.date")}
+                        />
+                      </ExpenseFormRow>
                     )}
-                    <View className="flex-row justify-between">
-                      <Text className="text-muted-foreground">
-                        {t("expenses.paidByFieldLabel")}
+                  />
+                  <Separator />
+                  <Pressable
+                    testID="expense-form-split"
+                    accessibilityRole="button"
+                    onPress={() => setView("split")}
+                    disabled={amountInCents <= 0}
+                    className={cn(
+                      "active:bg-muted",
+                      amountInCents <= 0 && "opacity-50",
+                    )}
+                  >
+                    <ExpenseFormRow
+                      icon="users"
+                      title={t("expenses.splitTitle")}
+                      value={t("expenses.reviewSplit", {
+                        count: split.participants.length,
+                        method: splitMethod,
+                      })}
+                      trailing="chevron-right"
+                    />
+                    {split.problem ? (
+                      <Text
+                        testID="expense-form-split-problem"
+                        className="text-destructive px-4 pb-3 text-sm"
+                      >
+                        {t(split.problem.key, split.problem.values)}
                       </Text>
-                      <Text className="text-foreground font-semibold">
-                        {allMembers.find((m) => m.id === paidByGroupMemberId)
-                          ?.user.name ?? t("common.unknown")}
-                      </Text>
-                    </View>
-                    <View className="flex-row justify-between">
-                      <Text className="text-muted-foreground">
-                        {t("expenses.splitLabel")}
-                      </Text>
-                      <Text className="text-foreground font-semibold">
-                        {t("expenses.reviewSplit", {
-                          count: participantCount,
-                          method: splitMethod,
-                        })}
-                      </Text>
-                    </View>
-                  </CardContent>
+                    ) : (
+                      splitMethod !== "equal" &&
+                      amountInCents > 0 && (
+                        <View className="flex-row flex-wrap gap-x-3 gap-y-1 px-4 pb-3">
+                          {split.participants.map((participant) => {
+                            const member = allMembers.find(
+                              (m) => m.id === participant.groupMemberId,
+                            );
+                            return (
+                              <View
+                                key={participant.groupMemberId}
+                                className="flex-row items-center gap-1.5"
+                              >
+                                {member && (
+                                  <MemberAvatar
+                                    person={memberPerson(member)}
+                                    className="h-5 w-5"
+                                    textClassName="text-xs"
+                                  />
+                                )}
+                                <Text className="text-muted-foreground text-sm">
+                                  {formatCurrencyFromCents({
+                                    cents: participant.amountInCents,
+                                    currency,
+                                    locale,
+                                  })}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      )
+                    )}
+                  </Pressable>
                 </Card>
-              </View>
-            )}
-          </AppScrollView>
-          <AppKeyboardStickyView className="border-border bg-background flex-row gap-2 border-t p-4">
-            {currentStep > 1 && (
-              <Button
-                testID="expense-form-back"
-                title={t("common.back")}
-                variant="outline"
-                onPress={handleBack}
-                disabled={isPending}
-                icon="arrow-left"
-                className="flex-1"
-              />
-            )}
-            {currentStep < totalSteps ? (
-              <Button
-                testID="expense-form-next"
-                title={t("common.next")}
-                onPress={handleNext}
-                disabled={
-                  isPending ||
-                  amountInCents <= 0 ||
-                  conversion.isMissingConverted
-                }
-                icon="arrow-right"
-                className="flex-1"
-              />
-            ) : (
-              <Button
-                testID="expense-form-submit"
-                title={
-                  isPending
-                    ? isEditMode
-                      ? t("common.updating")
-                      : t("common.creating")
-                    : isEditMode
-                      ? t("expenses.updateExpense")
-                      : t("expenses.createExpense")
-                }
-                disabled={isPending || conversion.isMissingConverted}
-                icon={isPending ? "loader" : undefined}
-                onPress={form.handleSubmit(onSubmit)}
-                className="flex-1"
-              />
-            )}
-          </AppKeyboardStickyView>
+              </AppScrollView>
+              <AppKeyboardStickyView className="border-border bg-background border-t p-4">
+                <Button
+                  testID="expense-form-submit"
+                  title={
+                    isPending
+                      ? isEditMode
+                        ? t("common.updating")
+                        : t("common.creating")
+                      : isEditMode
+                        ? t("expenses.updateExpense")
+                        : t("expenses.createExpense")
+                  }
+                  disabled={
+                    isPending ||
+                    amountInCents <= 0 ||
+                    conversion.isMissingConverted ||
+                    !split.validation.isValid
+                  }
+                  icon={isPending ? "loader" : undefined}
+                  onPress={form.handleSubmit(onSubmit)}
+                />
+              </AppKeyboardStickyView>
+            </>
+          )}
         </Form>
       </BottomSheetPickerProvider>
     </SafeAreaView>

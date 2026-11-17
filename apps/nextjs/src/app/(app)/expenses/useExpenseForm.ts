@@ -17,11 +17,10 @@ import { toast } from "@flatsby/ui/toast";
 import { getSubcategoryGroup } from "@flatsby/validators/expenses/categories";
 import { isExchangeRateFinal } from "@flatsby/validators/expenses/conversion";
 import { emptySplit } from "@flatsby/validators/expenses/distribution";
-import { expenseSchemaWithValidateSplits } from "@flatsby/validators/expenses/schemas";
 import {
   editableSplitMethod,
-  finalizeSplits,
-  splitsForTotal,
+  expenseFormSchema,
+  splitState,
 } from "@flatsby/validators/expenses/split-editing";
 import { isCurrencyCode } from "@flatsby/validators/expenses/types";
 import { useExpenseConversion } from "@flatsby/validators/expenses/useExpenseConversion";
@@ -65,10 +64,9 @@ export function useExpenseForm({
   const t = useTranslations();
   const locale = useLocale();
   const queryClient = useQueryClient();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [view, setView] = useState<"details" | "split">("details");
 
   const isEditMode = !!expense;
-  const totalSteps = 3;
 
   const { cancelLists, patchLists, invalidateAll } = useExpenseInvalidation(
     group.id,
@@ -80,10 +78,8 @@ export function useExpenseForm({
       })
     : undefined;
 
-  const initialSplitMethod = editableSplitMethod(expense?.splitMethod);
-
   const form = useForm<ExpenseValues>({
-    resolver: zodResolver(expenseSchemaWithValidateSplits),
+    resolver: zodResolver(expenseFormSchema),
     defaultValues: {
       paidByGroupMemberId:
         expense?.paidByGroupMemberId ?? group.thisGroupMember.id,
@@ -97,29 +93,33 @@ export function useExpenseForm({
       expenseDate: expense?.expenseDate
         ? new Date(expense.expenseDate)
         : new Date(),
-      splitMethod: initialSplitMethod,
+      splitMethod: editableSplitMethod(expense?.splitMethod),
       splits:
         expense?.expenseSplits.map((split) => ({
           groupMemberId: split.groupMemberId,
           amountInCents: split.amountInCents,
           percentage: split.percentage,
           shares: split.shares,
-        })) ?? [],
+        })) ?? group.groupMembers.map((member) => emptySplit(member.id)),
     },
   });
 
-  const splitMethod = useWatch({ control: form.control, name: "splitMethod" });
+  const splitMethod = editableSplitMethod(
+    useWatch({ control: form.control, name: "splitMethod" }),
+  );
   const amountInCents = useWatch({
     control: form.control,
     name: "amountInCents",
   });
   const currency = useWatch({ control: form.control, name: "currency" });
-  const paidByGroupMemberId = useWatch({
-    control: form.control,
-    name: "paidByGroupMemberId",
+  const storedSplits = useWatch({ control: form.control, name: "splits" });
+  const split = splitState({
+    method: splitMethod,
+    splits: storedSplits,
+    totalAmountCents: amountInCents,
+    currency,
+    locale,
   });
-  const description = useWatch({ control: form.control, name: "description" });
-  const splits = useWatch({ control: form.control, name: "splits" });
   const expenseDate = useWatch({ control: form.control, name: "expenseDate" });
   const conversion = useExpenseConversion({
     group,
@@ -272,7 +272,7 @@ export function useExpenseForm({
           onSuccess?.(created.id);
           onClose();
           form.reset();
-          setCurrentStep(1);
+          setView("details");
         },
       }),
     ),
@@ -368,12 +368,6 @@ export function useExpenseForm({
   );
 
   const onSubmit = (values: ExpenseValues) => {
-    const splits = finalizeSplits(
-      values.splitMethod,
-      values.splits,
-      values.amountInCents,
-    );
-
     if (isEditMode) {
       updateExpenseMutation.mutate({
         expenseId: expense.id,
@@ -383,7 +377,7 @@ export function useExpenseForm({
         description: values.description,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
-        splits,
+        splits: values.splits,
         splitMethod: values.splitMethod,
         ...conversion.fields,
       });
@@ -396,55 +390,13 @@ export function useExpenseForm({
         description: values.description,
         subcategory: values.subcategory,
         expenseDate: values.expenseDate,
-        splits,
+        splits: values.splits,
         splitMethod: values.splitMethod,
         ...conversion.fields,
         receipt: receiptScan.report(values),
       });
       if (closeOnSubmit) onClose();
     }
-  };
-
-  const handleNext = async () => {
-    let fieldsToValidate: (keyof ExpenseValues)[] = [];
-
-    if (currentStep === 1) {
-      fieldsToValidate = [
-        "paidByGroupMemberId",
-        "amountInCents",
-        "currency",
-        "description",
-        "expenseDate",
-      ];
-    } else if (currentStep === 2) {
-      fieldsToValidate = ["splits"];
-    }
-
-    const isValid = await form.trigger(fieldsToValidate);
-    if (isValid) {
-      if (currentStep === 1) {
-        const currentSplits = form.getValues("splits");
-        const amountCents = form.getValues("amountInCents");
-
-        if (splitMethod !== "settlement") {
-          form.setValue(
-            "splits",
-            splitsForTotal(
-              splitMethod,
-              currentSplits.length > 0
-                ? currentSplits
-                : group.groupMembers.map((m) => emptySplit(m.id)),
-              amountCents,
-            ),
-          );
-        }
-      }
-      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
-    }
-  };
-
-  const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
   const isPending =
@@ -465,21 +417,17 @@ export function useExpenseForm({
 
   return {
     form,
-    currentStep,
-    totalSteps,
+    view,
+    setView,
     isEditMode,
     splitMethod,
     amountInCents,
     currency,
-    paidByGroupMemberId,
-    description,
-    splits,
+    split,
     isPending,
     createExpenseMutation,
     updateExpenseMutation,
     onSubmit,
-    handleNext,
-    handleBack,
     group,
     allMembers,
     conversion,
