@@ -4,7 +4,7 @@ import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { EditableSplitMethod } from "@flatsby/validators/expenses/split-editing";
 import type { UseFormReturn } from "react-hook-form";
 import { Fragment } from "react";
-import { Text, View } from "react-native";
+import { Keyboard, Text, View } from "react-native";
 import { useWatch } from "react-hook-form";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -262,7 +262,10 @@ export function SplitEditor({
               title={t("expenses.splitRest")}
               variant="outline"
               size="sm"
-              onPress={splitRest}
+              onPress={() => {
+                Keyboard.dismiss();
+                splitRest();
+              }}
             />
           )}
         </View>
