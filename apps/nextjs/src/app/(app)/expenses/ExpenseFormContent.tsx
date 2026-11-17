@@ -2,6 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { useRef } from "react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import {
@@ -57,7 +58,7 @@ import { CurrencyInput } from "~/components/CurrencyInput";
 import { CurrencySelect } from "~/components/CurrencySelect";
 import { ConversionField } from "./ConversionField";
 import { ExpenseCategorySelector } from "./ExpenseCategorySelector";
-import { ReceiptScanCard } from "./ReceiptScan";
+import { ReceiptScanButton, ReceiptScanFailed } from "./ReceiptScan";
 import { SplitEditor } from "./SplitEditor";
 
 function FormRow({
@@ -107,6 +108,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
     conversion,
     receiptScan,
   } = formState;
+  const scanFileInput = useRef<HTMLInputElement>(null);
   const scanned = receiptScan.justApplied
     ? "ring-primary/40 ring-2"
     : undefined;
@@ -147,6 +149,14 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 ? t("expenses.editExpense")
                 : t("expenses.addExpense")}
           </h2>
+          {view === "details" && !isEditMode && (
+            <div className="ml-auto">
+              <ReceiptScanButton
+                receiptScan={receiptScan}
+                fileInput={scanFileInput}
+              />
+            </div>
+          )}
         </div>
 
         {view === "split" ? (
@@ -160,7 +170,12 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
           />
         ) : (
           <>
-            {!isEditMode && <ReceiptScanCard receiptScan={receiptScan} />}
+            {!isEditMode && (
+              <ReceiptScanFailed
+                receiptScan={receiptScan}
+                fileInput={scanFileInput}
+              />
+            )}
 
             <div className="flex flex-col items-center gap-2">
               <FormField
@@ -174,6 +189,9 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                         onChange={field.onChange}
                         placeholder="0.00"
                         min={1}
+                        autoFocus={!isEditMode && field.value === 0}
+                        enterKeyHint="next"
+                        onEnter={() => form.setFocus("description")}
                         className={cn(
                           "h-16 text-center text-4xl font-bold md:text-4xl",
                           scanned,
@@ -260,57 +278,6 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                 )}
               />
               <ItemSeparator />
-
-              <FormField
-                control={form.control}
-                name="subcategory"
-                render={({ field }) => (
-                  <FormRow Icon={Tag} title={t("common.category")}>
-                    <ItemActions className="basis-1/2">
-                      <ExpenseCategorySelector
-                        value={field.value}
-                        autoDetect={!isEditMode}
-                        onChange={field.onChange}
-                      />
-                    </ItemActions>
-                  </FormRow>
-                )}
-              />
-              <ItemSeparator />
-
-              <FormField
-                control={form.control}
-                name="expenseDate"
-                render={({ field }) => (
-                  <FormRow Icon={CalendarIcon} title={t("common.date")}>
-                    <ItemActions className="basis-1/2">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start text-left font-normal"
-                            aria-label={t("common.date")}
-                          >
-                            {format(field.value, "PPP", {
-                              locale: locale === "de" ? de : undefined,
-                            })}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent align="end">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={(date) => date && field.onChange(date)}
-                            autoFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </ItemActions>
-                  </FormRow>
-                )}
-              />
-              <ItemSeparator />
-
               <FormRow Icon={Users} title={t("expenses.splitTitle")}>
                 <ItemActions>
                   <Button
@@ -362,6 +329,56 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
                   )
                 )}
               </FormRow>
+              <ItemSeparator />
+
+              <FormField
+                control={form.control}
+                name="subcategory"
+                render={({ field }) => (
+                  <FormRow Icon={Tag} title={t("common.category")}>
+                    <ItemActions className="basis-1/2">
+                      <ExpenseCategorySelector
+                        value={field.value}
+                        autoDetect={!isEditMode}
+                        onChange={field.onChange}
+                      />
+                    </ItemActions>
+                  </FormRow>
+                )}
+              />
+              <ItemSeparator />
+
+              <FormField
+                control={form.control}
+                name="expenseDate"
+                render={({ field }) => (
+                  <FormRow Icon={CalendarIcon} title={t("common.date")}>
+                    <ItemActions className="basis-1/2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                            aria-label={t("common.date")}
+                          >
+                            {format(field.value, "PPP", {
+                              locale: locale === "de" ? de : undefined,
+                            })}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={(date) => date && field.onChange(date)}
+                            autoFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </ItemActions>
+                  </FormRow>
+                )}
+              />
             </ItemGroup>
 
             {failure && (

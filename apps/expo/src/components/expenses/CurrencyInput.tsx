@@ -1,3 +1,4 @@
+import type { TextInputProps } from "react-native";
 import { useMemo, useState } from "react";
 
 import {
@@ -7,7 +8,16 @@ import {
 
 import { Input } from "~/lib/ui/input";
 
-interface CurrencyInputProps {
+interface CurrencyInputProps extends Pick<
+  TextInputProps,
+  | "autoFocus"
+  | "accessibilityLabel"
+  | "testID"
+  | "returnKeyType"
+  | "inputAccessoryViewButtonLabel"
+  | "submitBehavior"
+  | "onSubmitEditing"
+> {
   value: number;
   onChange: (cents: number) => void;
   placeholder?: string;
@@ -15,9 +25,6 @@ interface CurrencyInputProps {
   min?: number;
   max?: number;
   disabled?: boolean;
-  autoFocus?: boolean;
-  accessibilityLabel?: string;
-  testID?: string;
 }
 
 export function CurrencyInput({
@@ -28,9 +35,7 @@ export function CurrencyInput({
   min,
   max,
   disabled,
-  autoFocus,
-  accessibilityLabel,
-  testID,
+  ...inputProps
 }: CurrencyInputProps) {
   const [rawInput, setRawInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -127,9 +132,7 @@ export function CurrencyInput({
 
   return (
     <Input
-      testID={testID}
-      autoFocus={autoFocus}
-      accessibilityLabel={accessibilityLabel}
+      {...inputProps}
       inputMode="decimal"
       placeholder={placeholder}
       value={formattedDisplayValue}
