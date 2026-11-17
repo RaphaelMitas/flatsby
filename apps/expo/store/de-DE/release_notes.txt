@@ -1,3 +1,4 @@
-• Flatsby ist jetzt für alle kostenlos: Automatische Kategorien und Belegscan (Beta) brauchen keine Credits mehr, und es gibt nichts zu kaufen.
-• Neu in den Einstellungen: „Flatsby unterstützen“, mit allem, was kostenlos bleibt, und wie du mich erreichst.
+• Eine Ausgabe hinzufügen passt jetzt auf einen Bildschirm: Betrag, Beschreibung, wer bezahlt hat, Kategorie, Datum und Aufteilung auf einen Blick statt in drei Schritten.
+• Beim Aufteilen nach eigenen Beträgen oder Prozenten siehst du beim Tippen, wie viel noch offen ist, und „Rest aufteilen“ verteilt es für dich.
+• Du bestimmst direkt in der Erinnerung, wie oft Flatsby dich an App-Updates erinnert.
 • Kleine Fehlerbehebungen und Verbesserungen.
