@@ -16,6 +16,9 @@ interface CurrencyInputProps {
   min?: number;
   max?: number;
   disabled?: boolean;
+  autoFocus?: boolean;
+  enterKeyHint?: React.InputHTMLAttributes<HTMLInputElement>["enterKeyHint"];
+  onEnter?: () => void;
   "aria-label"?: string;
   "data-testid"?: string;
 }
@@ -28,6 +31,9 @@ export function CurrencyInput({
   min,
   max,
   disabled,
+  autoFocus,
+  enterKeyHint,
+  onEnter,
   "aria-label": ariaLabel,
   "data-testid": dataTestId,
 }: CurrencyInputProps) {
@@ -127,6 +133,12 @@ export function CurrencyInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && onEnter) {
+      e.preventDefault();
+      onEnter();
+      return;
+    }
+
     if (
       (e.key === "." || e.key === ",") &&
       formattedDisplayValue.includes(".")
@@ -212,6 +224,8 @@ export function CurrencyInput({
       onPaste={handlePaste}
       className={className}
       disabled={disabled}
+      autoFocus={autoFocus}
+      enterKeyHint={enterKeyHint}
       aria-label={ariaLabel}
       data-testid={dataTestId}
     />

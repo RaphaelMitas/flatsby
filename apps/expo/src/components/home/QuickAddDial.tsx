@@ -97,13 +97,7 @@ export function QuickAddDial({
             label={tActions("expense")}
             onPress={() =>
               go(() =>
-                router.push(
-                  {
-                    pathname: "/(tabs)/expenses/create",
-                    params: { focus: "1" },
-                  },
-                  { withAnchor: true },
-                ),
+                router.push("/(tabs)/expenses/create", { withAnchor: true }),
               )
             }
           />

@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { ReceiptTextLine } from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
 import type { ImagePickerOptions } from "expo-image-picker";
-import type { ComponentRef, ReactNode } from "react";
+import type { ComponentRef, ReactNode, Ref, RefObject } from "react";
 import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
@@ -49,12 +49,42 @@ async function receiptBase64(uri: string) {
   return base64;
 }
 
-export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
+export function ReceiptScanButton({
+  ref,
+  onPress,
+}: {
+  ref: Ref<ComponentRef<typeof View>>;
+  onPress: () => void;
+}) {
+  const t = useTranslations();
+  return (
+    <Pressable
+      ref={ref}
+      collapsable={false}
+      testID="receipt-scan"
+      accessibilityRole="button"
+      accessibilityLabel={t("expenses.receiptScan.title")}
+      hitSlop={8}
+      onPress={onPress}
+      className="size-9 items-center justify-center"
+    >
+      <Icon name="camera" size={22} color="foreground" />
+    </Pressable>
+  );
+}
+
+export function ReceiptScan({
+  receiptScan,
+  sourceSheet,
+  button,
+}: {
+  receiptScan: ReceiptScan;
+  sourceSheet: RefObject<BottomSheetModal | null>;
+  button: RefObject<ComponentRef<typeof View> | null>;
+}) {
   const t = useTranslations();
   const { getColor } = useThemeColors();
-  const sourceSheet = useRef<BottomSheetModal>(null);
   const chosenSource = useRef<Source | null>(null);
-  const card = useRef<ComponentRef<typeof View>>(null);
   const [photo, setPhoto] = useState<StagePhoto | "document">();
   const [origin, setOrigin] = useState<StageOrigin>();
   const [lines, setLines] = useState<ReceiptTextLine[]>([]);
@@ -70,7 +100,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
 
   const open = (paper: StagePhoto | "document") => {
     setPhoto(paper);
-    card.current?.measureInWindow((x, y, width, height) =>
+    button.current?.measureInWindow((x, y, width, height) =>
       setOrigin({ x, y, width, height }),
     );
     setLines([]);
@@ -113,43 +143,35 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
   };
 
   return (
-    <View ref={card} collapsable={false}>
-      {state.status === "failed" ? (
-        <Alert variant="destructive" className="gap-3">
-          <View className="flex-row items-center gap-3">
-            <View style={{ transform: [{ rotate: "-9deg" }] }}>
-              <FlatsbyCat size={36} color={getColor("primary")} squint />
+    <>
+      {state.status === "failed" && (
+        <View className="px-4 pt-4">
+          <Alert variant="destructive" className="gap-3">
+            <View className="flex-row items-center gap-3">
+              <View style={{ transform: [{ rotate: "-9deg" }] }}>
+                <FlatsbyCat size={36} color={getColor("primary")} squint />
+              </View>
+              <View className="flex-1">
+                <AlertTitle>
+                  {state.message
+                    ? t("expenses.receiptScan.failedTitle")
+                    : t("expenses.receiptScan.unreadableTitle")}
+                </AlertTitle>
+                <AlertDescription>
+                  {state.message ?? t("expenses.receiptScan.unreadableBody")}
+                </AlertDescription>
+              </View>
             </View>
-            <View className="flex-1">
-              <AlertTitle>
-                {state.message
-                  ? t("expenses.receiptScan.failedTitle")
-                  : t("expenses.receiptScan.unreadableTitle")}
-              </AlertTitle>
-              <AlertDescription>
-                {state.message ?? t("expenses.receiptScan.unreadableBody")}
-              </AlertDescription>
-            </View>
-          </View>
-          <Button
-            testID="receipt-scan-retry"
-            title={t("expenses.receiptScan.newPhoto")}
-            variant="outline"
-            size="sm"
-            icon="camera"
-            onPress={() => sourceSheet.current?.present()}
-          />
-        </Alert>
-      ) : (
-        <OptionRow
-          testID="receipt-scan"
-          icon="camera"
-          title={t("expenses.receiptScan.title")}
-          badge={beta}
-          hint={t("expenses.receiptScan.subtitle")}
-          className="border-muted-foreground border-dashed"
-          onPress={() => sourceSheet.current?.present()}
-        />
+            <Button
+              testID="receipt-scan-retry"
+              title={t("expenses.receiptScan.newPhoto")}
+              variant="outline"
+              size="sm"
+              icon="camera"
+              onPress={() => sourceSheet.current?.present()}
+            />
+          </Alert>
+        </View>
       )}
 
       <SheetModal
@@ -206,7 +228,7 @@ export function ReceiptScanCard({ receiptScan }: { receiptScan: ReceiptScan }) {
               : {}
         }
       />
-    </View>
+    </>
   );
 }
 

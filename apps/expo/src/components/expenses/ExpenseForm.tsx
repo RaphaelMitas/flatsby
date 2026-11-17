@@ -1,11 +1,14 @@
+import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type {
   ExpenseWithSplitsAndMembers,
   GroupWithAccess,
 } from "@flatsby/api";
 import type { ExpenseValues } from "@flatsby/validators/expenses/schemas";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
-import { useMemo, useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import type { ComponentRef } from "react";
+import type { TextInput } from "react-native";
+import { useMemo, useRef, useState } from "react";
+import { Alert, Keyboard, Pressable, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import { Stack, usePreventRemove, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -57,6 +60,7 @@ import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useCloseScreen } from "~/utils/useCloseScreen";
 import { useReviewNudge } from "~/utils/useReviewNudge";
+import { usePaneHeaderShown } from "../splitview/usePaneHeaderShown";
 import { ConversionField } from "./ConversionField";
 import { CurrencyInput } from "./CurrencyInput";
 import { CurrencyPicker } from "./CurrencyPicker";
@@ -64,7 +68,7 @@ import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
 import { ExpenseCategoryPicker } from "./ExpenseCategoryPicker";
 import { ExpenseFormRow } from "./ExpenseFormRow";
 import { MemberAvatar } from "./MemberAvatar";
-import { ReceiptScanCard } from "./ReceiptScan";
+import { ReceiptScan, ReceiptScanButton } from "./ReceiptScan";
 import { SplitEditor } from "./SplitEditor";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
 
@@ -86,14 +90,9 @@ function useExchangeRate(
 interface ExpenseFormProps {
   group: GroupWithAccess;
   expense?: ExpenseWithSplitsAndMembers;
-  autoFocus?: boolean;
 }
 
-export function ExpenseForm({
-  group,
-  expense,
-  autoFocus = false,
-}: ExpenseFormProps) {
+export function ExpenseForm({ group, expense }: ExpenseFormProps) {
   const router = useRouter();
   const close = useCloseScreen();
   const t = useTranslations();
@@ -103,6 +102,10 @@ export function ExpenseForm({
   const recordHappyAction = useReviewNudge();
   const [view, setView] = useState<"details" | "split">("details");
   usePreventRemove(view === "split", () => setView("details"));
+  const descriptionInput = useRef<ComponentRef<typeof TextInput>>(null);
+  const headerShown = usePaneHeaderShown();
+  const scanSheet = useRef<BottomSheetModal>(null);
+  const scanButton = useRef<ComponentRef<typeof View>>(null);
 
   const isEditMode = !!expense;
 
@@ -451,6 +454,17 @@ export function ExpenseForm({
     }),
   );
 
+  const canScan = !isEditMode && view === "details";
+  const scanButtonElement = (
+    <ReceiptScanButton
+      ref={scanButton}
+      onPress={() => {
+        Keyboard.dismiss();
+        scanSheet.current?.present();
+      }}
+    />
+  );
+
   return (
     <SafeAreaView edges={[]}>
       <Stack.Screen
@@ -461,6 +475,7 @@ export function ExpenseForm({
               : isEditMode
                 ? t("expenses.editExpense")
                 : t("expenses.addExpense"),
+          headerRight: canScan ? () => scanButtonElement : undefined,
         }}
       />
       <BottomSheetPickerProvider>
@@ -476,13 +491,23 @@ export function ExpenseForm({
             />
           ) : (
             <>
+              {canScan && !headerShown && (
+                <View className="flex-row justify-end px-4 pt-2">
+                  {scanButtonElement}
+                </View>
+              )}
+              {!isEditMode && (
+                <ReceiptScan
+                  receiptScan={receiptScan}
+                  sourceSheet={scanSheet}
+                  button={scanButton}
+                />
+              )}
               <AppScrollView
                 className="flex-1"
                 contentContainerClassName="gap-4 p-4"
                 bottomOffset={96}
               >
-                {!isEditMode && <ReceiptScanCard receiptScan={receiptScan} />}
-
                 <View className="items-center gap-2">
                   <FormField
                     control={form.control}
@@ -491,7 +516,13 @@ export function ExpenseForm({
                       <>
                         <CurrencyInput
                           testID="expense-form-amount"
-                          autoFocus={autoFocus}
+                          autoFocus={!isEditMode && field.value === 0}
+                          returnKeyType="next"
+                          inputAccessoryViewButtonLabel={t("common.next")}
+                          submitBehavior="submit"
+                          onSubmitEditing={() =>
+                            descriptionInput.current?.focus()
+                          }
                           value={field.value}
                           onChange={field.onChange}
                           placeholder="0.00"
@@ -539,7 +570,9 @@ export function ExpenseForm({
                   render={({ field }) => (
                     <FormControl>
                       <Input
+                        ref={descriptionInput}
                         testID="expense-form-description"
+                        returnKeyType="done"
                         placeholder={t("expenses.descriptionPlaceholder")}
                         value={field.value}
                         onChangeText={field.onChange}
@@ -578,48 +611,6 @@ export function ExpenseForm({
                           />
                         }
                       />
-                    )}
-                  />
-                  <Separator />
-                  <FormField
-                    control={form.control}
-                    name="subcategory"
-                    render={({ field }) => {
-                      const category = getExpenseCategoryData({
-                        subcategoryId: field.value ?? AI_AUTO_DETECT,
-                      });
-                      return (
-                        <ExpenseCategoryPicker
-                          testID="expense-form-category"
-                          value={field.value}
-                          autoDetect={!isEditMode}
-                          onChange={field.onChange}
-                          trigger={
-                            <ExpenseFormRow
-                              icon="tag"
-                              title={t("common.category")}
-                              value={t(category.name)}
-                              trailing="chevrons-up-down"
-                            >
-                              {category.icon}
-                            </ExpenseFormRow>
-                          }
-                        />
-                      );
-                    }}
-                  />
-                  <Separator />
-                  <FormField
-                    control={form.control}
-                    name="expenseDate"
-                    render={({ field }) => (
-                      <ExpenseFormRow icon="calendar" title={t("common.date")}>
-                        <DatePickerField
-                          value={field.value}
-                          onChange={field.onChange}
-                          accessibilityLabel={t("common.date")}
-                        />
-                      </ExpenseFormRow>
                     )}
                   />
                   <Separator />
@@ -683,6 +674,48 @@ export function ExpenseForm({
                       )
                     )}
                   </Pressable>
+                  <Separator />
+                  <FormField
+                    control={form.control}
+                    name="subcategory"
+                    render={({ field }) => {
+                      const category = getExpenseCategoryData({
+                        subcategoryId: field.value ?? AI_AUTO_DETECT,
+                      });
+                      return (
+                        <ExpenseCategoryPicker
+                          testID="expense-form-category"
+                          value={field.value}
+                          autoDetect={!isEditMode}
+                          onChange={field.onChange}
+                          trigger={
+                            <ExpenseFormRow
+                              icon="tag"
+                              title={t("common.category")}
+                              value={t(category.name)}
+                              trailing="chevrons-up-down"
+                            >
+                              {category.icon}
+                            </ExpenseFormRow>
+                          }
+                        />
+                      );
+                    }}
+                  />
+                  <Separator />
+                  <FormField
+                    control={form.control}
+                    name="expenseDate"
+                    render={({ field }) => (
+                      <ExpenseFormRow icon="calendar" title={t("common.date")}>
+                        <DatePickerField
+                          value={field.value}
+                          onChange={field.onChange}
+                          accessibilityLabel={t("common.date")}
+                        />
+                      </ExpenseFormRow>
+                    )}
+                  />
                 </Card>
               </AppScrollView>
               <AppKeyboardStickyView className="border-border bg-background border-t p-4">

@@ -17,11 +17,9 @@ tags:
     visible:
       id: "expense-form-amount"
     timeout: 15000
-- tapOn:
-    id: "expense-form-amount"
+# The amount has the focus, and Next moves on to the description
 - inputText: "25.00"
-- tapOn:
-    id: "expense-form-description"
+- pressKey: Enter
 - inputText: "Team snacks"
 - pressKey: Enter
 - tapOn:

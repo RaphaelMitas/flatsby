@@ -30,6 +30,27 @@ test.describe("Expense Creation", () => {
     await expect(authPage.getByText(description).first()).toBeVisible();
   });
 
+  test("starts in the amount, and Enter moves on to the description", async ({
+    authPage,
+  }) => {
+    await authPage.goto("/expenses");
+    const addButton = authPage
+      .getByTestId("expense-add-button")
+      .filter({ visible: true });
+    await waitForHydration(addButton);
+    await addButton.click();
+
+    await expect(authPage.getByTestId("expense-form-amount")).toBeFocused();
+    await authPage.keyboard.type("12.50");
+    await authPage.keyboard.press("Enter");
+    await expect(
+      authPage.getByTestId("expense-form-description"),
+    ).toBeFocused();
+    await expect(authPage.getByTestId("expense-form-amount")).toHaveValue(
+      "12.50",
+    );
+  });
+
   test("creates an expense with percentage split", async ({ authPage }) => {
     await authPage.goto("/expenses");
     await openExpenseForm(authPage, {
