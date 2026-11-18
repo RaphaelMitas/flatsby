@@ -10,7 +10,12 @@ import { topCategories } from "@flatsby/validators/categories";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
-import { HomeCard, PaceNumbers, useHomePace } from "./home-card";
+import {
+  HomeCard,
+  PaceNumbers,
+  useHomeCardOpened,
+  useHomePace,
+} from "./home-card";
 import { PaceChart } from "./pace-chart";
 
 const STACK_SIZE = 4;
@@ -25,7 +30,8 @@ export function ShoppingCard({
   const t = useTranslations();
   const trpc = useTRPC();
   const { currentShoppingList } = useGroupContext();
-  const pace = useHomePace(groupId, today);
+  const { pace, fadeIn } = useHomePace(groupId, today);
+  const opened = useHomeCardOpened(groupId);
   const { data: listsData } = useQuery(
     trpc.shoppingList.getShoppingLists.queryOptions({ groupId }),
   );
@@ -48,15 +54,22 @@ export function ShoppingCard({
       href={shownList ? `/shopping-list/${shownList.id}` : "/shopping-list"}
       title={t("navigation.shopping")}
       testId="home-card-shopping"
+      onOpen={() => opened("shopping")}
     >
       <PaceNumbers
         pace={pace?.itemsBought}
-        today={today}
+        today={pace?.today}
+        fadeIn={fadeIn}
         format={String}
         unit={(count) => t("home.itemsBought", { count })}
       />
-      {pace && today ? (
-        <PaceChart pace={pace.itemsBought} today={today} className="h-12" />
+      {pace ? (
+        <PaceChart
+          pace={pace.itemsBought}
+          today={pace.today}
+          className="h-12"
+          fadeIn={fadeIn}
+        />
       ) : (
         <Skeleton className="mt-2 h-12" />
       )}

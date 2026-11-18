@@ -1,5 +1,5 @@
 import type { InvitePlaceholder } from "@flatsby/validators/group";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Pressable, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -28,7 +28,29 @@ import { Card, CardContent } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { trpc } from "~/utils/api";
 
-const dismissedKey = (groupId: number) => `invite_card_dismissed_${groupId}`;
+const DISMISSED_PREFIX = "invite_card_dismissed_";
+
+let dismissedGroups: Set<number> | undefined;
+const dismissalListeners = new Set<() => void>();
+
+function setDismissedGroups(groups: Set<number>) {
+  dismissedGroups = groups;
+  for (const listener of dismissalListeners) listener();
+}
+
+void AsyncStorage.getAllKeys()
+  .then((keys) =>
+    keys
+      .filter((key) => key.startsWith(DISMISSED_PREFIX))
+      .map((key) => Number(key.slice(DISMISSED_PREFIX.length))),
+  )
+  .catch(() => [])
+  .then((groups) => setDismissedGroups(new Set(groups)));
+
+const subscribeToDismissals = (listener: () => void) => {
+  dismissalListeners.add(listener);
+  return () => dismissalListeners.delete(listener);
+};
 
 export function InviteFlatmatesCard({
   groupId,
@@ -38,10 +60,9 @@ export function InviteFlatmatesCard({
   className?: string;
 }) {
   const t = useTranslations();
-  const [dismissal, setDismissal] = useState<{
-    groupId: number;
-    dismissed: boolean;
-  }>();
+  const dismissed = useSyncExternalStore(subscribeToDismissals, () =>
+    dismissedGroups?.has(groupId),
+  );
   const once = useOnce();
   const { data: group } = useQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
@@ -50,8 +71,7 @@ export function InviteFlatmatesCard({
     groupId,
     group?.success ? group.data.groupMembers : undefined,
   );
-  const visible =
-    waiting && dismissal?.groupId === groupId && !dismissal.dismissed;
+  const visible = waiting && dismissed === false;
 
   const invite = useQuery({
     ...trpc.invite.get.queryOptions({ groupId }),
@@ -61,17 +81,11 @@ export function InviteFlatmatesCard({
   const shareInvite = useShareInvite();
   const sharePressed = useMutation(trpc.invite.sharePressed.mutationOptions());
 
-  useEffect(() => {
-    AsyncStorage.getItem(dismissedKey(groupId))
-      .then((value) => setDismissal({ groupId, dismissed: value !== null }))
-      .catch(() => setDismissal({ groupId, dismissed: false }));
-  }, [groupId]);
-
   if (!visible || !group?.success) return null;
 
   const dismiss = () => {
-    setDismissal({ groupId, dismissed: true });
-    void AsyncStorage.setItem(dismissedKey(groupId), "true");
+    setDismissedGroups(new Set(dismissedGroups).add(groupId));
+    void AsyncStorage.setItem(`${DISMISSED_PREFIX}${groupId}`, "true");
   };
 
   const placeholders = openPlaceholders(group.data.groupMembers);

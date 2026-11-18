@@ -81,6 +81,11 @@ function groupIdOf(value: unknown): number | undefined {
   return "data" in value ? groupIdOf(value.data) : undefined;
 }
 
+const UNLOGGED_MUTATIONS = new Set([
+  "user.setAnalyticsOptOut",
+  "stats.homeCardOpened",
+]);
+
 const timingMiddleware = t.middleware(
   async ({ ctx, next, path, type, getRawInput }) => {
     if (t._config.isDev) {
@@ -96,11 +101,7 @@ const timingMiddleware = t.middleware(
       console.log(`[TRPC] ${path} took ${durationMs}ms to execute`);
     }
 
-    if (
-      ctx.session &&
-      type === "mutation" &&
-      path !== "user.setAnalyticsOptOut"
-    ) {
+    if (ctx.session && type === "mutation" && !UNLOGGED_MUTATIONS.has(path)) {
       const isStream = result.ok && Symbol.asyncIterator in Object(result.data);
       captureUserEvent({
         user: ctx.session.user,

@@ -1,6 +1,11 @@
 import type { Pace } from "@flatsby/validators/home";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import {
   Circle,
   Defs,
@@ -16,33 +21,65 @@ import { useLocale, useTranslations } from "use-intl";
 
 import { paceChart, paceLabels } from "@flatsby/validators/home";
 
+import { Skeleton } from "~/lib/ui/skeleton";
 import { useThemeColors } from "~/lib/utils";
 
 const INSET = 8;
 const LABEL_ROW = 20;
 const LABEL_GAP = 48;
 
+const heightOf = (height: number, labelled: boolean) =>
+  height + 2 * INSET + (labelled ? LABEL_ROW : 0);
+
 export function PaceChart({
+  pace,
+  today,
+  ...size
+}: {
+  pace: Pace | undefined;
+  today: string | undefined;
+  height: number;
+  labelled?: boolean;
+  drawIn: boolean;
+}) {
+  if (!pace || !today)
+    return (
+      <Skeleton
+        className="mt-3 rounded-xl"
+        style={{ height: heightOf(size.height, size.labelled ?? false) }}
+      />
+    );
+  return <DrawnPaceChart pace={pace} today={today} {...size} />;
+}
+
+function DrawnPaceChart({
   pace,
   today,
   height,
   labelled = false,
+  drawIn,
 }: {
   pace: Pace;
   today: string;
   height: number;
   labelled?: boolean;
+  drawIn: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
   const { getColor } = useThemeColors();
   const labels = labelled && paceLabels(today, locale);
   const [width, setWidth] = useState(0);
+  const drawn = useSharedValue(drawIn ? 0 : 1);
+  useEffect(() => {
+    if (width > 0) drawn.set(withTiming(1, { duration: 600 }));
+  }, [drawn, width]);
+  const reveal = useAnimatedStyle(() => ({ width: drawn.get() * width }));
   const plotWidth = Math.max(width - 2 * INSET, 1);
   const chart = paceChart(pace, today, { width: plotWidth, height });
   const foreground = getColor("foreground");
   const muted = getColor("muted-foreground");
-  const totalHeight = height + 2 * INSET + (labels ? LABEL_ROW : 0);
+  const totalHeight = heightOf(height, labelled);
 
   const beforeEnd = chart.beforeEnd.y;
   const monthLabelY =
@@ -56,7 +93,7 @@ export function PaceChart({
       style={{ height: totalHeight }}
       onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
     >
-      {width > 0 && (
+      <Animated.View className="overflow-hidden" style={reveal}>
         <Svg width={width} height={totalHeight}>
           <Defs>
             <LinearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
@@ -121,7 +158,7 @@ export function PaceChart({
             )}
           </G>
         </Svg>
-      )}
+      </Animated.View>
     </View>
   );
 }

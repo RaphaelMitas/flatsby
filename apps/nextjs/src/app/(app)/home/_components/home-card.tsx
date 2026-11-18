@@ -1,11 +1,18 @@
 "use client";
 
-import type { Pace } from "@flatsby/validators/home";
+import type { HomeCardName, Pace } from "@flatsby/validators/home";
+import { useState } from "react";
 import Link from "next/link";
-import { skipToken, useIsMutating, useQuery } from "@tanstack/react-query";
+import {
+  skipToken,
+  useIsMutating,
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { cn } from "@flatsby/ui";
 import { Card } from "@flatsby/ui/card";
 import { Skeleton } from "@flatsby/ui/skeleton";
 import { deviceTimeZone } from "@flatsby/validators/calendar";
@@ -18,27 +25,42 @@ export function useHomePace(groupId: number, today: string | null) {
   const settled = useIsMutating() === 0;
   const { data } = useQuery({
     ...trpc.stats.getHomePace.queryOptions(
-      today ? { groupId, today, timeZone: deviceTimeZone() } : skipToken,
+      today ? { groupId, timeZone: deviceTimeZone() } : skipToken,
     ),
     staleTime: 0,
     enabled: today !== null && settled,
   });
-  return data?.success ? data.data : undefined;
+  const pace = data?.success ? data.data : undefined;
+  const [fadeIn] = useState(pace === undefined);
+  return { pace, fadeIn };
+}
+
+export function useHomeCardOpened(groupId: number) {
+  const trpc = useTRPC();
+  const { mutate } = useMutation(trpc.stats.homeCardOpened.mutationOptions());
+  return (card: HomeCardName) => mutate({ groupId, card });
 }
 
 export function HomeCard({
   href,
   title,
   testId,
+  onOpen,
   children,
 }: {
   href: string;
   title: string;
   testId: string;
+  onOpen: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <Link href={href} data-testid={testId} className="block rounded-3xl">
+    <Link
+      href={href}
+      data-testid={testId}
+      onClick={onOpen}
+      className="block rounded-3xl"
+    >
       <Card className="hover:border-foreground/30 flex flex-col rounded-3xl p-4 shadow-none transition-colors">
         <div className="text-muted-foreground flex items-center justify-between text-sm font-semibold">
           {title}
@@ -55,11 +77,13 @@ export function PaceNumbers({
   today,
   format,
   unit,
+  fadeIn,
 }: {
   pace: Pace | undefined;
-  today: string | null;
+  today: string | undefined;
   format: (value: number) => string;
   unit?: (count: number) => string;
+  fadeIn: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -75,7 +99,7 @@ export function PaceNumbers({
   const { total, difference, direction } = paceSummary(pace);
 
   return (
-    <>
+    <div className={cn(fadeIn && "animate-in fade-in duration-300")}>
       <p className="mt-2 text-4xl font-extrabold tracking-tight tabular-nums">
         {format(total)}
         {unit && (
@@ -93,6 +117,6 @@ export function PaceNumbers({
           ),
         })}
       </p>
-    </>
+    </div>
   );
 }

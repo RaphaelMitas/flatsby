@@ -14,11 +14,13 @@ export function PaceChart({
   today,
   className,
   labelled = false,
+  fadeIn,
 }: {
   pace: Pace;
   today: string;
   className: string;
   labelled?: boolean;
+  fadeIn: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -27,7 +29,13 @@ export function PaceChart({
   const labels = paceLabels(today, locale);
 
   return (
-    <div className="mt-2 flex flex-col" aria-hidden>
+    <div
+      className={cn(
+        "mt-2 flex flex-col",
+        fadeIn && "animate-in fade-in duration-300",
+      )}
+      aria-hidden
+    >
       <div className={cn("text-foreground relative", className)}>
         <svg
           viewBox={`0 0 ${SIZE.width} ${SIZE.height}`}

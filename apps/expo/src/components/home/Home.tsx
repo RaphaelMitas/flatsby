@@ -1,12 +1,13 @@
 import type { GroupWithAccess } from "@flatsby/api";
 import type { CalendarRange } from "@flatsby/validators/calendar";
+import type { HomeCardName } from "@flatsby/validators/home";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useFocusEffect, useIsFocused, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
-  keepPreviousData,
   useIsMutating,
+  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -25,7 +26,10 @@ import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting
 import type { CatPose } from "./HomeCat";
 import { AnalyticsPrompt } from "~/components/analytics/AnalyticsPrompt";
 import { fromPickerTime } from "~/components/calendar/calendarDates";
-import { calendarRangeOptions } from "~/components/calendar/calendarRangeOptions";
+import {
+  calendarRangeOptions,
+  lastKnownCalendarRange,
+} from "~/components/calendar/calendarRangeOptions";
 import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";
 import { GroupGate } from "~/components/GroupGate";
 import { GroupSwitcher } from "~/components/switcher/GroupSwitcher";
@@ -115,7 +119,8 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
 
   const { data: rangeData } = useQuery({
     ...calendarRangeOptions(group.id, listWindow(today, today)),
-    placeholderData: keepPreviousData,
+    placeholderData: (previous) =>
+      previous ?? lastKnownCalendarRange(group.id, today),
   });
   const { data: listsData } = useQuery(
     trpc.shoppingList.getShoppingLists.queryOptions({ groupId: group.id }),
@@ -123,10 +128,12 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const { data: paceData } = useQuery(
     trpc.stats.getHomePace.queryOptions({
       groupId: group.id,
-      today,
       timeZone: deviceTimeZone(),
     }),
   );
+  const opened = useMutation(trpc.stats.homeCardOpened.mutationOptions());
+  const count = (card: HomeCardName) =>
+    opened.mutate({ groupId: group.id, card });
 
   const settled = useIsMutating() === 0;
   useFocusEffect(
@@ -150,6 +157,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
     lists.find(({ id }) => id === selectedShoppingListId) ?? lists[0];
   const openCount = lastList?.uncheckedItemLength ?? 0;
   const pace = paceData?.success ? paceData.data : undefined;
+  const [startedEmpty] = useState(pace === undefined);
 
   const { data: countsData } = useQuery({
     ...trpc.shoppingList.getCategoryCounts.queryOptions({
@@ -228,7 +236,10 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             <Pressable
               testID="home-turn"
               accessibilityRole="button"
-              onPress={() => openCalendar(firstDue.occurrence.date)}
+              onPress={() => {
+                count("turn");
+                openCalendar(firstDue.occurrence.date);
+              }}
               className="mt-3 flex-row items-center gap-2.5 active:opacity-70"
             >
               <View
@@ -275,29 +286,30 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
           <HomeCard
             testID="home-card-expenses"
             title={t("navigation.expenses")}
-            onPress={() => router.navigate("/(tabs)/expenses")}
+            onPress={() => {
+              count("expenses");
+              router.navigate("/(tabs)/expenses");
+            }}
           >
-            {pace && (
-              <>
-                <PaceHeadline
-                  pace={pace.spending}
-                  today={today}
-                  format={(cents) =>
-                    formatCurrencyFromCents({
-                      cents,
-                      currency: group.currency,
-                      locale,
-                    })
-                  }
-                />
-                <PaceChart
-                  pace={pace.spending}
-                  today={today}
-                  height={80}
-                  labelled
-                />
-              </>
-            )}
+            <PaceHeadline
+              pace={pace?.spending}
+              today={pace?.today}
+              fadeIn={startedEmpty}
+              format={(cents) =>
+                formatCurrencyFromCents({
+                  cents,
+                  currency: group.currency,
+                  locale,
+                })
+              }
+            />
+            <PaceChart
+              pace={pace?.spending}
+              today={pace?.today}
+              height={80}
+              labelled
+              drawIn={startedEmpty}
+            />
           </HomeCard>
           <CatOverlay pose={pose} speech={speech} />
         </View>
@@ -305,20 +317,25 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
         <HomeCard
           testID="home-card-shopping"
           title={t("navigation.shopping")}
-          onPress={openShopping}
+          onPress={() => {
+            count("shopping");
+            openShopping();
+          }}
           className="mt-4"
         >
-          {pace && (
-            <>
-              <PaceHeadline
-                pace={pace.itemsBought}
-                today={today}
-                format={String}
-                unit={(count) => t("home.itemsBought", { count })}
-              />
-              <PaceChart pace={pace.itemsBought} today={today} height={44} />
-            </>
-          )}
+          <PaceHeadline
+            pace={pace?.itemsBought}
+            today={pace?.today}
+            fadeIn={startedEmpty}
+            format={String}
+            unit={(items) => t("home.itemsBought", { count: items })}
+          />
+          <PaceChart
+            pace={pace?.itemsBought}
+            today={pace?.today}
+            height={44}
+            drawIn={startedEmpty}
+          />
           {lastList && (
             <View className="mt-4 flex-row items-center gap-3">
               {openCount > 0 && <CategoryStack counts={categoryCounts} />}
@@ -340,17 +357,19 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
         <HomeCard
           testID="home-card-calendar"
           title={t("navigation.calendar")}
-          onPress={() => openCalendar()}
+          onPress={() => {
+            count("calendar");
+            openCalendar();
+          }}
           className="mt-4"
         >
-          {pace && (
-            <PaceHeadline
-              pace={pace.choresDone}
-              today={today}
-              format={String}
-              unit={(count) => t("home.choresDone", { count })}
-            />
-          )}
+          <PaceHeadline
+            pace={pace?.choresDone}
+            today={pace?.today}
+            fadeIn={startedEmpty}
+            format={String}
+            unit={(chores) => t("home.choresDone", { count: chores })}
+          />
           <WeekStrip days={days} today={today} />
           {nextEvent && (
             <View className="mt-4 flex-row items-center gap-2">

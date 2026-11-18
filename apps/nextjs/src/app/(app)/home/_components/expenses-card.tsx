@@ -7,7 +7,12 @@ import { Skeleton } from "@flatsby/ui/skeleton";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 
 import { useTRPC } from "~/trpc/react";
-import { HomeCard, PaceNumbers, useHomePace } from "./home-card";
+import {
+  HomeCard,
+  PaceNumbers,
+  useHomeCardOpened,
+  useHomePace,
+} from "./home-card";
 import { PaceChart } from "./pace-chart";
 
 export function ExpensesCard({
@@ -23,7 +28,8 @@ export function ExpensesCard({
   const { data: group } = useQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
-  const pace = useHomePace(groupId, today);
+  const { pace, fadeIn } = useHomePace(groupId, today);
+  const opened = useHomeCardOpened(groupId);
   const currency = group?.success ? group.data.currency : undefined;
   const spending = currency ? pace?.spending : undefined;
 
@@ -32,16 +38,24 @@ export function ExpensesCard({
       href="/expenses"
       title={t("navigation.expenses")}
       testId="home-card-expenses"
+      onOpen={() => opened("expenses")}
     >
       <PaceNumbers
         pace={spending}
-        today={today}
+        today={pace?.today}
+        fadeIn={fadeIn}
         format={(cents) =>
           formatCurrencyFromCents({ cents, currency: currency ?? "", locale })
         }
       />
-      {spending && today ? (
-        <PaceChart pace={spending} today={today} className="h-22" labelled />
+      {spending && pace ? (
+        <PaceChart
+          pace={spending}
+          today={pace.today}
+          className="h-22"
+          labelled
+          fadeIn={fadeIn}
+        />
       ) : (
         <Skeleton className="mt-2 h-28" />
       )}

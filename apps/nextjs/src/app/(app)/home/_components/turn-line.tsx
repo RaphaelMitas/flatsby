@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@flatsby/ui";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
+import { useHomeCardOpened } from "./home-card";
 import { useHomeCalendar } from "./use-home-calendar";
 
 export function TurnLine({
@@ -18,6 +19,7 @@ export function TurnLine({
 }) {
   const t = useTranslations();
   const calendar = useHomeCalendar(groupId, today);
+  const opened = useHomeCardOpened(groupId);
   const [first, ...rest] = calendar?.due ?? [];
   if (!first || !today) return null;
 
@@ -25,6 +27,7 @@ export function TurnLine({
     <Link
       href="/calendar"
       data-testid="home-turn"
+      onClick={() => opened("turn")}
       className="flex items-center gap-2 px-1 text-sm"
     >
       <span
