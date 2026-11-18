@@ -376,17 +376,17 @@ jobs:
       - name: Install emulator and system image
         uses: ./tooling/github/android-sdk
         with:
-          packages: emulator system-images;android-34;google_apis;x86_64
+          packages: cmdline-tools;latest emulator system-images;android-37.0;google_apis;x86_64
 
       # The runner executes every `script` line as a separate `sh -c`, so the
       # install / pre-warm / run / logcat sequence lives in one script file.
       - name: Run Maestro tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: "37.0"
           arch: x86_64
           target: google_apis
-          profile: pixel_7
+          profile: pixel_10
           # Default is 2 of the runner's 4 vCPUs; the software-rendered
           # emulator ANRs the launcher under load with only 2.
           cores: 3

@@ -52,7 +52,7 @@ export const avdmanager = join(
 );
 
 export const IOS_MODEL = "^iPhone [0-9]+ Pro Max$";
-const ANDROID_MODEL = "Pixel 7";
+const ANDROID_MODEL = "pixel_10";
 const BOOT_TIMEOUT_MS = 10 * 60_000;
 
 const note = (log: string, line: string) => appendFileSync(log, `${line}\n`);
@@ -105,7 +105,7 @@ export function androidImage(): string | undefined {
         existsSync(join(images, api, "google_apis", localAndroidAbi)),
     )
     .sort((a, b) => level(a) - level(b));
-  const api = apis.includes("android-34") ? "android-34" : apis.at(-1);
+  const api = apis.includes("android-37.0") ? "android-37.0" : apis.at(-1);
   return api && `system-images;${api};google_apis;${localAndroidAbi}`;
 }
 
@@ -155,7 +155,7 @@ async function throwawayEmulator(
       "--package",
       image,
       "--device",
-      "pixel_7",
+      ANDROID_MODEL,
       "--force",
     ],
     { log: ctx.log, env: { ANDROID_AVD_HOME: avdHome }, input: "no\n" },
