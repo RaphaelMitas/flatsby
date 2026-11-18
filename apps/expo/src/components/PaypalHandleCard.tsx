@@ -24,13 +24,7 @@ import {
   CardTitle,
 } from "~/lib/ui/card";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormMessage,
-  useForm,
-} from "~/lib/ui/form";
+import { Form, FormField, FormMessage, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
@@ -101,19 +95,17 @@ export function PaypalHandleCard() {
               render={({ field }) => (
                 <View className="gap-2">
                   <Label>{t("settings.payment.paypal")}</Label>
-                  <FormControl>
-                    <Input
-                      testID="payment-paypal-input"
-                      value={field.value}
-                      onChangeText={field.onChange}
-                      onBlur={field.onBlur}
-                      placeholder={t("settings.payment.paypalPlaceholder")}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      editable={!mutation.isPending}
-                      error={!!form.formState.errors.paypalHandle}
-                    />
-                  </FormControl>
+                  <Input
+                    testID="payment-paypal-input"
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder={t("settings.payment.paypalPlaceholder")}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!mutation.isPending}
+                    error={!!form.formState.errors.paypalHandle}
+                  />
                   <Text className="text-muted-foreground text-xs">
                     {t("settings.payment.paypalHint")}
                   </Text>

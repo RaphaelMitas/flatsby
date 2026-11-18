@@ -1,19 +1,13 @@
 import type React from "react";
 import { useCallback } from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { Text, View } from "react-native";
 import { useForm, useWatch } from "react-hook-form";
 import { useTranslations } from "use-intl";
 
 import { Button } from "~/lib/ui/button";
+import { CenteredModal } from "~/lib/ui/centered-modal";
 import Icon from "~/lib/ui/custom/icons/Icon";
-import { Form, FormControl, FormField } from "~/lib/ui/form";
+import { Form, FormField } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 
@@ -75,89 +69,71 @@ const DeleteConfirmationModal: React.FC<Props> = ({
   });
 
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={handleClose}
-    >
-      <KeyboardAvoidingView
-        behavior="padding"
-        className="flex-1 items-center justify-center bg-black/50"
-      >
-        <Pressable
-          accessible={false}
-          onPress={Keyboard.dismiss}
-          className="bg-background mx-4 w-full max-w-sm rounded-lg p-6 shadow-lg"
-        >
-          <View className="mb-4 flex-row items-center gap-3">
-            <Icon name="triangle-alert" size={24} color="destructive" />
-            <Text className="text-foreground text-lg font-semibold">
-              {title ?? t("deleteConfirmation.title")}
+    <CenteredModal visible={visible} onClose={handleClose}>
+      <View className="mb-4 flex-row items-center gap-3">
+        <Icon name="triangle-alert" size={24} color="destructive" />
+        <Text className="text-foreground text-lg font-semibold">
+          {title ?? t("deleteConfirmation.title")}
+        </Text>
+      </View>
+
+      <Text className="text-muted-foreground mb-6 text-sm">
+        {description ?? defaultDescription}
+      </Text>
+
+      <Form {...form}>
+        {needsConfirmationInput && (
+          <View className="mb-6 gap-2">
+            <Text className="text-foreground text-sm font-medium">
+              {t("deleteConfirmation.required")}
             </Text>
-          </View>
-
-          <Text className="text-muted-foreground mb-6 text-sm">
-            {description ?? defaultDescription}
-          </Text>
-
-          <Form {...form}>
-            {needsConfirmationInput && (
-              <View className="mb-6 gap-2">
-                <Text className="text-foreground text-sm font-medium">
-                  {t("deleteConfirmation.required")}
-                </Text>
-                <Label className="text-muted-foreground mb-2 text-sm">
-                  {confirmationLabel ?? defaultConfirmationLabel}
-                </Label>
-                <FormField
-                  control={form.control}
-                  name="confirmationInput"
-                  render={({ field }) => (
-                    <FormControl>
-                      <Input
-                        {...field}
-                        testID="delete-confirmation-input"
-                        placeholder={t("deleteConfirmation.placeholder")}
-                        className="w-full"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        spellCheck={false}
-                        returnKeyType="done"
-                        value={field.value}
-                        onChangeText={field.onChange}
-                        onSubmitEditing={() => {
-                          if (isConfirmationValid) handleConfirm();
-                        }}
-                      />
-                    </FormControl>
-                  )}
+            <Label className="text-muted-foreground mb-2 text-sm">
+              {confirmationLabel ?? defaultConfirmationLabel}
+            </Label>
+            <FormField
+              control={form.control}
+              name="confirmationInput"
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  testID="delete-confirmation-input"
+                  placeholder={t("deleteConfirmation.placeholder")}
+                  className="w-full"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  spellCheck={false}
+                  returnKeyType="done"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onSubmitEditing={() => {
+                    if (isConfirmationValid) handleConfirm();
+                  }}
                 />
-              </View>
-            )}
+              )}
+            />
+          </View>
+        )}
 
-            <View className="flex-row gap-3">
-              <Button
-                testID="delete-confirmation-cancel"
-                title={t("cancel")}
-                variant="outline"
-                className="flex-1"
-                onPress={handleClose}
-              />
-              <Button
-                testID="delete-confirmation-confirm"
-                title={t("delete")}
-                variant="destructive"
-                className="flex-1"
-                icon="trash-2"
-                disabled={!isConfirmationValid}
-                onPress={handleConfirm}
-              />
-            </View>
-          </Form>
-        </Pressable>
-      </KeyboardAvoidingView>
-    </Modal>
+        <View className="flex-row gap-3">
+          <Button
+            testID="delete-confirmation-cancel"
+            title={t("cancel")}
+            variant="outline"
+            className="flex-1"
+            onPress={handleClose}
+          />
+          <Button
+            testID="delete-confirmation-confirm"
+            title={t("delete")}
+            variant="destructive"
+            className="flex-1"
+            icon="trash-2"
+            disabled={!isConfirmationValid}
+            onPress={handleConfirm}
+          />
+        </View>
+      </Form>
+    </CenteredModal>
   );
 };
 

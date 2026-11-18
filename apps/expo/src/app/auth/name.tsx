@@ -8,13 +8,7 @@ import { updateUserNameFormSchema } from "@flatsby/validators/user";
 
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormMessage,
-  useForm,
-} from "~/lib/ui/form";
+import { Form, FormField, FormMessage, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { trpc } from "~/utils/api";
 import { useSession } from "~/utils/auth/auth-client";
@@ -72,22 +66,20 @@ export default function NameScreen() {
             control={form.control}
             render={({ field }) => (
               <View className="gap-2">
-                <FormControl>
-                  <Input
-                    testID="name-input"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    onSubmitEditing={() => save()}
-                    placeholder={t("auth.name.placeholder")}
-                    accessibilityLabel={t("auth.name.placeholder")}
-                    autoFocus
-                    autoComplete="name"
-                    textContentType="givenName"
-                    returnKeyType="done"
-                    error={!!form.formState.errors.name}
-                  />
-                </FormControl>
+                <Input
+                  testID="name-input"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  onSubmitEditing={() => save()}
+                  placeholder={t("auth.name.placeholder")}
+                  accessibilityLabel={t("auth.name.placeholder")}
+                  autoFocus
+                  autoComplete="name"
+                  textContentType="givenName"
+                  returnKeyType="done"
+                  error={!!form.formState.errors.name}
+                />
                 <FormMessage />
               </View>
             )}

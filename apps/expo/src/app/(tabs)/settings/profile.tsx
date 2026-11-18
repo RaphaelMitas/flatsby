@@ -23,7 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/lib/ui/card";
-import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
+import { Form, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
@@ -107,16 +107,14 @@ export default function ProfileScreen() {
                   name="name"
                   control={form.control}
                   render={({ field }) => (
-                    <FormControl>
-                      <Input
-                        value={field.value}
-                        onChangeText={field.onChange}
-                        onBlur={field.onBlur}
-                        placeholder={t("settings.profile.namePlaceholder")}
-                        className="w-full"
-                        error={!!form.formState.errors.name}
-                      />
-                    </FormControl>
+                    <Input
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder={t("settings.profile.namePlaceholder")}
+                      className="w-full"
+                      error={!!form.formState.errors.name}
+                    />
                   )}
                 />
               </View>

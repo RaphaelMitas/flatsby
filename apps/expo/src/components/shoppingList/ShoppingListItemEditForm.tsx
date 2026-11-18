@@ -11,13 +11,7 @@ import { editShoppingListItemFormSchema } from "@flatsby/validators/shopping-lis
 
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormMessage,
-  useForm,
-} from "~/lib/ui/form";
+import { Form, FormField, FormMessage, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { shoppingListMutations } from "~/utils/api";
 import { CategoryPicker } from "./ShoppingListCategory";
@@ -67,17 +61,15 @@ export function ShoppingListItemEditForm() {
             name="name"
             render={({ field }) => (
               <>
-                <FormControl>
-                  <Input
-                    {...field}
-                    testID="shopping-list-item-edit-input"
-                    onChangeText={field.onChange}
-                    maxLength={
-                      editShoppingListItemFormSchema.shape.name.maxLength ??
-                      undefined
-                    }
-                  />
-                </FormControl>
+                <Input
+                  {...field}
+                  testID="shopping-list-item-edit-input"
+                  onChangeText={field.onChange}
+                  maxLength={
+                    editShoppingListItemFormSchema.shape.name.maxLength ??
+                    undefined
+                  }
+                />
                 <FormMessage />
               </>
             )}
@@ -87,12 +79,10 @@ export function ShoppingListItemEditForm() {
             name="categoryId"
             render={({ field }) => (
               <>
-                <FormControl>
-                  <CategoryPicker
-                    {...field}
-                    triggerTitle={t("common.selectCategory")}
-                  />
-                </FormControl>
+                <CategoryPicker
+                  {...field}
+                  triggerTitle={t("common.selectCategory")}
+                />
                 <FormMessage />
               </>
             )}
