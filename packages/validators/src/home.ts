@@ -13,7 +13,7 @@ import {
 
 export const homePaceInputSchema = z.object({
   groupId: z.number(),
-  today: calendarDateSchema,
+  today: calendarDateSchema.optional(),
   timeZone: ianaTimeZoneSchema.catch(DEFAULT_TIME_ZONE),
 });
 
@@ -24,10 +24,17 @@ const paceSchema = z.object({
 export type Pace = z.infer<typeof paceSchema>;
 
 export const homePaceSchema = z.object({
+  today: calendarDateSchema,
   spending: paceSchema,
   itemsBought: paceSchema,
   choresDone: paceSchema,
 });
+
+export const homeCardOpenedSchema = z.object({
+  groupId: z.number(),
+  card: z.enum(["expenses", "shopping", "calendar", "turn"]),
+});
+export type HomeCardName = z.infer<typeof homeCardOpenedSchema>["card"];
 
 const dayOfMonth = (date: string) => Number(date.slice(8));
 

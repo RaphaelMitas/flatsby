@@ -11,7 +11,12 @@ import {
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
-import { HomeCard, PaceNumbers, useHomePace } from "./home-card";
+import {
+  HomeCard,
+  PaceNumbers,
+  useHomeCardOpened,
+  useHomePace,
+} from "./home-card";
 import { useHomeCalendar } from "./use-home-calendar";
 
 const DOTS = 3;
@@ -25,7 +30,8 @@ export function CalendarCard({
 }) {
   const t = useTranslations();
   const locale = useLocale();
-  const pace = useHomePace(groupId, today);
+  const { pace, fadeIn } = useHomePace(groupId, today);
+  const opened = useHomeCardOpened(groupId);
   const calendar = useHomeCalendar(groupId, today);
 
   return (
@@ -33,10 +39,12 @@ export function CalendarCard({
       href="/calendar"
       title={t("navigation.calendar")}
       testId="home-card-calendar"
+      onOpen={() => opened("calendar")}
     >
       <PaceNumbers
         pace={pace?.choresDone}
-        today={today}
+        today={pace?.today}
+        fadeIn={fadeIn}
         format={String}
         unit={(count) => t("home.choresDone", { count })}
       />

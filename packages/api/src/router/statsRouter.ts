@@ -20,8 +20,9 @@ import {
   shoppingListItems,
   shoppingLists,
 } from "@flatsby/db/schema";
-import { addDays } from "@flatsby/validators/calendar";
+import { addDays, localDateIn } from "@flatsby/validators/calendar";
 import {
+  homeCardOpenedSchema,
   homePaceInputSchema,
   homePaceSchema,
   monthPace,
@@ -32,6 +33,7 @@ import { getGroupWithAccess } from "../effect/groups";
 import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
 import { getApiResultZod } from "../errors";
+import { captureUserEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 function thirtyDaysAgo(): Date {
@@ -62,7 +64,8 @@ export const statsRouter = createTRPCRouter({
         Effect.gen(function* () {
           const group = yield* getGroupWithAccess(input.groupId);
           const database = yield* Database;
-          const { from, to } = paceWindow(input.today);
+          const today = input.today ?? localDateIn(input.timeZone);
+          const { from, to } = paceWindow(today);
           const after = new Date(addDays(from, -1));
           const before = new Date(addDays(to, 2));
           return yield* database.query("fetch home pace", async (db) => {
@@ -126,14 +129,26 @@ export const statsRouter = createTRPCRouter({
             ]);
 
             return {
-              spending: monthPace(spending, input.today),
-              itemsBought: monthPace(itemsBought, input.today),
-              choresDone: monthPace(choresDone, input.today),
+              today,
+              spending: monthPace(spending, today),
+              itemsBought: monthPace(itemsBought, today),
+              choresDone: monthPace(choresDone, today),
             };
           });
         }),
       ),
     ),
+
+  homeCardOpened: protectedProcedure
+    .input(homeCardOpenedSchema)
+    .mutation(({ ctx, input }) => {
+      captureUserEvent({
+        user: ctx.session.user,
+        event: "home_card_opened",
+        headers: ctx.headers,
+        additionalProperties: input,
+      });
+    }),
 
   /** @deprecated Only app versions with the old home call this. Delete it once they are gone; the home reads getHomePace. */
   getHomeStats: protectedProcedure

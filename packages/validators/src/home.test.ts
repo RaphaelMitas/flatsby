@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { localDateIn } from "./calendar";
 import { monthPace, paceChart, paceSummary, paceWindow } from "./home";
 
 describe("monthPace", () => {
@@ -123,5 +124,14 @@ describe("paceChart", () => {
     expect(
       heights.every((y, i) => i === 0 || y <= (heights[i - 1] ?? y) + 0.001),
     ).toBe(true);
+  });
+});
+
+describe("localDateIn", () => {
+  it("gives the calendar day of that zone, not of the server", () => {
+    const lateEvening = new Date("2026-11-30T23:30:00Z");
+
+    expect(localDateIn("Europe/Berlin", lateEvening)).toBe("2026-12-01");
+    expect(localDateIn("America/Los_Angeles", lateEvening)).toBe("2026-11-30");
   });
 });

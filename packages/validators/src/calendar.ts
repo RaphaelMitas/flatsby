@@ -247,6 +247,14 @@ export const weekdayOf = (date: string): Weekday =>
 export const localDate = (now = new Date()) =>
   [now.getFullYear(), pad(now.getMonth() + 1), pad(now.getDate())].join("-");
 
+export const localDateIn = (timeZone: string, now = new Date()) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+
 export interface ExpandableItem {
   id: number;
   startsOn: string;
