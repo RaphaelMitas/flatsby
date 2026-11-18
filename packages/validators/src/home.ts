@@ -1,3 +1,4 @@
+import { area, curveMonotoneX, line } from "d3-shape";
 import { z } from "zod/v4";
 
 import {
@@ -94,47 +95,10 @@ interface Point {
 
 const round = (value: number) => Math.round(value * 10) / 10;
 
-function slopesAt(points: Point[]) {
-  const steps = points.slice(1).map((point, i) => {
-    const from = points[i] ?? point;
-    const width = point.x - from.x || 1;
-    return { width, rise: (point.y - from.y) / width };
-  });
-  return points.map((_, i) => {
-    const before = steps[i - 1];
-    const after = steps[i];
-    if (!before || !after) return (before ?? after)?.rise ?? 0;
-    if (before.rise * after.rise <= 0) return 0;
-    const mean =
-      (before.rise * after.width + after.rise * before.width) /
-      (before.width + after.width);
-    return (
-      Math.sign(mean) *
-      Math.min(
-        Math.abs(mean),
-        1.5 * Math.abs(before.rise),
-        1.5 * Math.abs(after.rise),
-      )
-    );
-  });
-}
-
-function smoothLine(days: Point[]) {
-  const points = days.filter(
+const daysWithActivity = (days: Point[]) =>
+  days.filter(
     (day, i) => i === 0 || i === days.length - 1 || day.y !== days[i - 1]?.y,
   );
-  const slopes = slopesAt(points);
-  return points
-    .map((point, i) => {
-      const from = points[i - 1];
-      if (!from) return `M${point.x},${point.y}`;
-      const third = (point.x - from.x) / 3;
-      const leave = round(from.y + third * (slopes[i - 1] ?? 0));
-      const arrive = round(point.y - third * (slopes[i] ?? 0));
-      return `C${round(from.x + third)},${leave} ${round(point.x - third)},${arrive} ${point.x},${point.y}`;
-    })
-    .join(" ");
-}
 
 export function paceChart(
   { current, previous }: Pace,
@@ -153,10 +117,19 @@ export function paceChart(
   const nowPoints = now.map(point);
   const beforePoints = before.map(point);
   const end = nowPoints.at(-1) ?? { x: 0, y: height };
+  const curve = line<Point>()
+    .x(({ x }) => x)
+    .y(({ y }) => y)
+    .curve(curveMonotoneX);
+  const fill = area<Point>()
+    .x(({ x }) => x)
+    .y0(height)
+    .y1(({ y }) => y)
+    .curve(curveMonotoneX);
   return {
-    now: smoothLine(nowPoints),
-    before: smoothLine(beforePoints),
-    area: `${smoothLine(nowPoints)} L${end.x},${height} L0,${height} Z`,
+    now: curve(daysWithActivity(nowPoints)) ?? "",
+    before: curve(daysWithActivity(beforePoints)) ?? "",
+    area: fill(daysWithActivity(nowPoints)) ?? "",
     end,
     beforeEnd: beforePoints.at(-1) ?? { x: width, y: height },
   };

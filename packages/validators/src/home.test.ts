@@ -51,6 +51,27 @@ describe("monthPace", () => {
   });
 });
 
+function drawnHeights(path: string) {
+  const heights: number[] = [];
+  for (const [, command, rest = ""] of path.matchAll(/([MLC])([^MLCZ]*)/g)) {
+    const numbers = rest.trim().split(/[ ,]+/).map(Number);
+    const from = heights.at(-1) ?? 0;
+    const [, leave = 0, , arrive = 0, , to = 0] = numbers;
+    if (command !== "C") heights.push(numbers[1] ?? 0);
+    else
+      for (let step = 1; step <= 10; step++) {
+        const t = step / 10;
+        heights.push(
+          (1 - t) ** 3 * from +
+            3 * (1 - t) ** 2 * t * leave +
+            3 * (1 - t) * t ** 2 * arrive +
+            t ** 3 * to,
+        );
+      }
+  }
+  return heights;
+}
+
 describe("paceChart", () => {
   it("ends this month's line on today and scales the days to this month", () => {
     const pace = monthPace(
@@ -82,7 +103,7 @@ describe("paceChart", () => {
       height: 100,
     });
 
-    expect(chart.now).toBe("M0,100 C6.9,100 13.8,100 20.7,100");
+    expect(new Set(drawnHeights(chart.now))).toEqual(new Set([100]));
   });
 
   it("glides between the days something happened without overshooting them", () => {
@@ -96,9 +117,11 @@ describe("paceChart", () => {
     );
 
     const { now } = paceChart(pace, "2026-11-08", { width: 290, height: 100 });
-    const heights = [...now.matchAll(/,(-?[\d.]+)/g)].map(([, y]) => Number(y));
+    const heights = drawnHeights(now);
 
     expect(now).toContain("C");
-    expect(heights).toEqual([...heights].sort((a, b) => b - a));
+    expect(
+      heights.every((y, i) => i === 0 || y <= (heights[i - 1] ?? y) + 0.001),
+    ).toBe(true);
   });
 });
