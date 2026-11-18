@@ -105,7 +105,7 @@ export function androidImage(): string | undefined {
         existsSync(join(images, api, "google_apis", localAndroidAbi)),
     )
     .sort((a, b) => level(a) - level(b));
-  const api = apis.includes("android-34") ? "android-34" : apis.at(-1);
+  const api = apis.includes("android-37.0") ? "android-37.0" : apis.at(-1);
   return api && `system-images;${api};google_apis;${localAndroidAbi}`;
 }
 
