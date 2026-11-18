@@ -11,6 +11,8 @@ const alertVariants = tv({
       destructive: "border-destructive/50 bg-destructive/10",
       info: "border-info/50 bg-info/10",
       success: "border-success/50 bg-success/10",
+      warning: "border-warning/50 bg-warning/10",
+      error: "border-error/50 bg-error/10",
     },
   },
   defaultVariants: {
@@ -42,6 +44,8 @@ const alertTitleVariants = tv({
       success: "text-success",
       destructive: "text-destructive",
       info: "text-info",
+      warning: "text-warning",
+      error: "text-error",
     },
   },
 });
@@ -71,6 +75,8 @@ const alertDescriptionVariants = tv({
       success: "text-success",
       destructive: "text-destructive",
       info: "text-info",
+      warning: "text-warning",
+      error: "text-error",
     },
   },
 });

@@ -11,7 +11,8 @@ import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import Icon from "~/lib/ui/custom/icons/Icon";
 
 interface TimedAlertProps {
-  variant?: "default" | "destructive" | "info" | "success";
+  variant?:
+    "default" | "destructive" | "info" | "success" | "warning" | "error";
   title: string;
   description?: string;
   duration?: number;
@@ -36,7 +37,10 @@ export const TimedAlert: React.FC<TimedAlertProps> = ({
       case "success":
         return "circle-check-big";
       case "destructive":
+      case "error":
         return "circle-alert";
+      case "warning":
+        return "triangle-alert";
       case "info":
         return "info";
       default:
@@ -49,7 +53,10 @@ export const TimedAlert: React.FC<TimedAlertProps> = ({
       case "success":
         return "text-success";
       case "destructive":
+      case "error":
         return "text-destructive";
+      case "warning":
+        return "text-warning";
       case "info":
         return "text-info";
       default:
