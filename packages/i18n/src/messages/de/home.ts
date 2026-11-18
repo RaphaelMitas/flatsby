@@ -19,7 +19,7 @@ export const home = {
   pace: {
     less: "<b>{amount} weniger</b> als um diese Zeit im {month}",
     more: "<b>{amount} mehr</b> als um diese Zeit im {month}",
-    same: "<b>Genauso wie</b> um diese Zeit im {month}",
+    same: "<b>Gleich viel</b> wie um diese Zeit im {month}",
   },
   cat: {
     sitting: "Du schaffst das.",

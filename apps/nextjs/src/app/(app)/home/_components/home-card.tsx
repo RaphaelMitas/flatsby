@@ -2,7 +2,7 @@
 
 import type { Pace } from "@flatsby/validators/home";
 import Link from "next/link";
-import { skipToken, useQuery } from "@tanstack/react-query";
+import { skipToken, useIsMutating, useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -15,11 +15,13 @@ import { useTRPC } from "~/trpc/react";
 
 export function useHomePace(groupId: number, today: string | null) {
   const trpc = useTRPC();
+  const settled = useIsMutating() === 0;
   const { data } = useQuery({
     ...trpc.stats.getHomePace.queryOptions(
       today ? { groupId, today, timeZone: deviceTimeZone() } : skipToken,
     ),
     staleTime: 0,
+    enabled: today !== null && settled,
   });
   return data?.success ? data.data : undefined;
 }

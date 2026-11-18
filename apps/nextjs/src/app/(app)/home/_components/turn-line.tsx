@@ -36,12 +36,8 @@ export function TurnLine({
       <span className="line-clamp-1 font-semibold">{first.item.title}</span>
       <span className="text-muted-foreground shrink-0">
         {t("calendar.yourTurn")}
+        {rest.length > 0 && ` · ${t("home.more", { count: rest.length })}`}
       </span>
-      {rest.length > 0 && (
-        <span className="text-muted-foreground shrink-0">
-          {t("home.more", { count: rest.length })}
-        </span>
-      )}
       <ChevronRight className="text-muted-foreground ml-auto size-4 shrink-0" />
     </Link>
   );

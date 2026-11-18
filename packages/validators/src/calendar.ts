@@ -644,6 +644,9 @@ export interface CalendarItemDetail {
 
 export const monthOf = (date: string) => date.slice(0, 7);
 
+export const daysInMonth = (month: string) =>
+  monthLength(monthIndexOf(toDayNumber(`${month}-01`)));
+
 export const shiftMonth = (month: string, delta: number) => {
   const [year = 1970, monthNumber = 1] = month.split("-").map(Number);
   return new Date(Date.UTC(year, monthNumber - 1 + delta, 1))

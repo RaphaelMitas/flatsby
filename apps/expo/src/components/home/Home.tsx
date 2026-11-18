@@ -7,7 +7,6 @@ import { StatusBar } from "expo-status-bar";
 import {
   keepPreviousData,
   useIsMutating,
-  useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -114,28 +113,27 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const today = localDate(now);
   const meId = group.thisGroupMember.id;
 
-  const [{ data: rangeData }, { data: listsData }, { data: paceData }] =
-    useQueries({
-      queries: [
-        {
-          ...calendarRangeOptions(group.id, listWindow(today, today)),
-          placeholderData: keepPreviousData,
-        },
-        trpc.shoppingList.getShoppingLists.queryOptions({ groupId: group.id }),
-        trpc.stats.getHomePace.queryOptions({
-          groupId: group.id,
-          today,
-          timeZone: deviceTimeZone(),
-        }),
-      ],
-    });
+  const { data: rangeData } = useQuery({
+    ...calendarRangeOptions(group.id, listWindow(today, today)),
+    placeholderData: keepPreviousData,
+  });
+  const { data: listsData } = useQuery(
+    trpc.shoppingList.getShoppingLists.queryOptions({ groupId: group.id }),
+  );
+  const { data: paceData } = useQuery(
+    trpc.stats.getHomePace.queryOptions({
+      groupId: group.id,
+      today,
+      timeZone: deviceTimeZone(),
+    }),
+  );
 
   const settled = useIsMutating() === 0;
   useFocusEffect(
     useCallback(() => {
       if (!settled) return;
       void queryClient.refetchQueries(
-        { ...trpc.stats.getHomePace.pathFilter(), stale: true },
+        { ...trpc.stats.getHomePace.pathFilter(), stale: true, type: "active" },
         { cancelRefetch: false },
       );
     }, [queryClient, settled]),

@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 
 import {
   calendarDateSchema,
+  daysInMonth,
   DEFAULT_TIME_ZONE,
   formatCalendarDate,
   ianaTimeZoneSchema,
@@ -26,16 +27,10 @@ export const homePaceSchema = z.object({
   itemsBought: paceSchema,
   choresDone: paceSchema,
 });
-export type HomePace = z.infer<typeof homePaceSchema>;
 
 const dayOfMonth = (date: string) => Number(date.slice(8));
 
-const daysInMonth = (month: string) => {
-  const [year = 1970, monthNumber = 1] = month.split("-").map(Number);
-  return new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
-};
-
-export const previousMonth = (today: string) => shiftMonth(monthOf(today), -1);
+const previousMonth = (today: string) => shiftMonth(monthOf(today), -1);
 
 export const paceWindow = (today: string) => ({
   from: `${previousMonth(today)}-01`,
