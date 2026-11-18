@@ -28,13 +28,14 @@ import {
   CardHeader,
   CardTitle,
 } from "~/lib/ui/card";
+import { CategoryBadge } from "~/lib/ui/category-badge";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { ErrorMessage } from "~/lib/ui/error-message";
-import { ExpenseCategoryBadge } from "~/lib/ui/expense-category-badge";
 import { Separator } from "~/lib/ui/separator";
 import { trpc } from "~/utils/api";
 import { useCloseScreen } from "~/utils/useCloseScreen";
 import DeleteConfirmationModal from "../DeleteConfirmationModal";
+import { getExpenseCategoryData } from "./ExpenseCategoryConfig";
 import { MemberAvatar } from "./MemberAvatar";
 import { RateInfoButton } from "./RateInfoButton";
 import { useInvalidateExpenses } from "./useInvalidateExpenses";
@@ -237,8 +238,10 @@ export function ExpenseDetailView({
               <Text className="text-muted-foreground mb-1.5 text-sm">
                 {t("common.category")}
               </Text>
-              <ExpenseCategoryBadge
-                subcategoryId={expense.subcategory}
+              <CategoryBadge
+                category={getExpenseCategoryData({
+                  subcategoryId: expense.subcategory,
+                })}
                 className="self-start"
               />
             </View>

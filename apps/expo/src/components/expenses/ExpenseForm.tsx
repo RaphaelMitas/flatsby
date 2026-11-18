@@ -48,7 +48,6 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 import { DatePickerField } from "~/lib/ui/date-picker-field";
 import {
   Form,
-  FormControl,
   FormField,
   FormMessage,
   useForm as useFormHook,
@@ -568,22 +567,20 @@ export function ExpenseForm({ group, expense }: ExpenseFormProps) {
                   control={form.control}
                   name="description"
                   render={({ field }) => (
-                    <FormControl>
-                      <Input
-                        ref={descriptionInput}
-                        testID="expense-form-description"
-                        returnKeyType="done"
-                        placeholder={t("expenses.descriptionPlaceholder")}
-                        value={field.value}
-                        onChangeText={field.onChange}
-                        onBlur={field.onBlur}
-                        maxLength={512}
-                        className={
-                          receiptScan.justApplied ? "border-primary" : undefined
-                        }
-                        accessibilityLabel={t("expenses.description")}
-                      />
-                    </FormControl>
+                    <Input
+                      ref={descriptionInput}
+                      testID="expense-form-description"
+                      returnKeyType="done"
+                      placeholder={t("expenses.descriptionPlaceholder")}
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      maxLength={512}
+                      className={
+                        receiptScan.justApplied ? "border-primary" : undefined
+                      }
+                      accessibilityLabel={t("expenses.description")}
+                    />
                   )}
                 />
 

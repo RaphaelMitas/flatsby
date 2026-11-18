@@ -47,7 +47,7 @@ const buttonTextVariants = tv({
     },
     size: {
       sm: "text-sm",
-      md: "text-md",
+      md: "text-base",
       lg: "text-lg",
     },
   },
@@ -133,4 +133,4 @@ const Button = ({
   );
 };
 
-export { Button, type ButtonProps, buttonVariants };
+export { Button, type ButtonProps };

@@ -2,7 +2,7 @@ import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
-import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, TouchableOpacity, View } from "react-native";
 import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
+import { CenteredModal } from "~/lib/ui/centered-modal";
 import { cn } from "~/lib/utils";
 import { shoppingListMutations } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
@@ -150,58 +151,48 @@ const ShoppingListItem = ({
         </Pressable>
       </ReanimatedSwipeable>
 
-      <Modal
+      <CenteredModal
         visible={showDetails}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDetails(false)}
+        onClose={() => setShowDetails(false)}
       >
+        <View className="flex-row justify-between gap-4">
+          <View className="flex-1">
+            <Text className="text-foreground text-sm font-medium">
+              {item.name}
+            </Text>
+            <Text className="text-muted-foreground text-xs">
+              {item.completed
+                ? t("shoppingList.item.doneBy", {
+                    name:
+                      completedByMember?.user.name ??
+                      t("shoppingList.item.unknownMember"),
+                    date: item.completedAt?.toLocaleDateString(locale) ?? "",
+                  })
+                : t("shoppingList.item.addedBy", {
+                    name:
+                      createdByMember?.user.name ??
+                      t("shoppingList.item.unknownMember"),
+                    date: item.createdAt.toLocaleDateString(locale),
+                  })}
+            </Text>
+          </View>
+
+          <View className="items-center justify-center">
+            <Text className={cn("text-xs font-medium", categoryData.color)}>
+              {t(categoryData.name)}
+            </Text>
+          </View>
+        </View>
+
         <TouchableOpacity
-          className="flex-1 items-center justify-center bg-black/50"
+          className="bg-muted mt-4 rounded p-3"
           onPress={() => setShowDetails(false)}
         >
-          <View className="bg-background mx-4 w-full max-w-sm rounded-lg p-6 shadow-lg">
-            <View className="flex-row justify-between gap-4">
-              <View className="flex-1">
-                <Text className="text-foreground text-sm font-medium">
-                  {item.name}
-                </Text>
-                <Text className="text-muted-foreground text-xs">
-                  {item.completed
-                    ? t("shoppingList.item.doneBy", {
-                        name:
-                          completedByMember?.user.name ??
-                          t("shoppingList.item.unknownMember"),
-                        date:
-                          item.completedAt?.toLocaleDateString(locale) ?? "",
-                      })
-                    : t("shoppingList.item.addedBy", {
-                        name:
-                          createdByMember?.user.name ??
-                          t("shoppingList.item.unknownMember"),
-                        date: item.createdAt.toLocaleDateString(locale),
-                      })}
-                </Text>
-              </View>
-
-              <View className="items-center justify-center">
-                <Text className={cn("text-xs font-medium", categoryData.color)}>
-                  {t(categoryData.name)}
-                </Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              className="bg-muted mt-4 rounded p-3"
-              onPress={() => setShowDetails(false)}
-            >
-              <Text className="text-muted-foreground text-center text-sm">
-                {t("common.close")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text className="text-muted-foreground text-center text-sm">
+            {t("common.close")}
+          </Text>
         </TouchableOpacity>
-      </Modal>
+      </CenteredModal>
 
       <DeleteConfirmationModal
         visible={showDeleteModal}

@@ -12,7 +12,7 @@ import { TimedAlert } from "~/components/TimedAlert";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { Button } from "~/lib/ui/button";
 import { ErrorMessage } from "~/lib/ui/error-message";
-import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
+import { Form, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
@@ -99,19 +99,17 @@ export default function GroupDetailsScreen() {
                 name="name"
                 control={form.control}
                 render={({ field }) => (
-                  <FormControl>
-                    <Input
-                      testID="group-name-input"
-                      value={field.value}
-                      onChangeText={field.onChange}
-                      onBlur={field.onBlur}
-                      placeholder={t("group.namePlaceholder")}
-                      className="w-full"
-                      error={!!form.formState.errors.name}
-                      maxLength={256}
-                      editable={isAdmin && !form.formState.isSubmitting}
-                    />
-                  </FormControl>
+                  <Input
+                    testID="group-name-input"
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder={t("group.namePlaceholder")}
+                    className="w-full"
+                    error={!!form.formState.errors.name}
+                    maxLength={256}
+                    editable={isAdmin && !form.formState.isSubmitting}
+                  />
                 )}
               />
             </View>

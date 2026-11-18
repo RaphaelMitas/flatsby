@@ -6,6 +6,7 @@ import { categoryIds } from "@flatsby/validators/categories";
 
 import { Badge } from "~/lib/ui/badge";
 import { CategoryBadge } from "~/lib/ui/category-badge";
+import { getCategoryData } from "../ShoppingListCategory";
 
 interface CategoryFilterPillsProps {
   counts: Record<string, number | undefined>;
@@ -49,9 +50,9 @@ export function CategoryFilterPills({
           <CategoryBadge
             key={categoryId}
             testID={`category-filter-${categoryId}`}
-            categoryId={categoryId}
+            category={getCategoryData({ categoryId })}
             size="xl"
-            variant={isSelected ? "default" : "outline"}
+            filled={isSelected}
             onPress={() => onSelectCategory(categoryId)}
             count={count > 0 ? count : undefined}
           />

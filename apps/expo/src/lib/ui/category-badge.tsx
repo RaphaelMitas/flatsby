@@ -1,49 +1,54 @@
-import type { CategoryIdWithAiAutoSelect } from "@flatsby/validators/categories";
+import type { MessageKey } from "@flatsby/i18n/message-key";
+import type * as React from "react";
 import { Text } from "react-native";
 import { useTranslations } from "use-intl";
 
 import type { BadgeProps } from "./badge";
-import { getCategoryData } from "~/components/shoppingList/ShoppingListCategory";
 import { cn } from "~/lib/utils";
-import { Badge } from "./badge";
+import { Badge, badgeVariants } from "./badge";
 
-export interface CategoryBadgeProps extends Omit<BadgeProps, "icon" | "label"> {
-  categoryId: CategoryIdWithAiAutoSelect;
-  showLabel?: boolean;
+export interface CategoryBadgeData {
+  name: MessageKey;
+  icon: React.ReactNode;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+}
+
+interface CategoryBadgeProps extends Omit<
+  BadgeProps,
+  "icon" | "label" | "variant" | "children"
+> {
+  category: CategoryBadgeData;
+  filled?: boolean;
 }
 
 export function CategoryBadge({
-  categoryId,
-  showLabel = true,
-  children,
-  variant = "ghost",
+  category,
+  filled = true,
+  size,
   className,
   ...props
 }: CategoryBadgeProps) {
   const t = useTranslations();
-  const categoryData = getCategoryData({
-    categoryId,
-  });
 
   return (
     <Badge
-      icon={categoryData.icon}
-      variant={variant}
+      icon={category.icon}
+      variant="outline"
+      size={size}
       className={cn(
-        categoryData.borderColor,
-        {
-          [categoryData.bgColor]: variant !== "outline",
-        },
+        category.borderColor,
+        filled && category.bgColor,
         className,
       )}
       {...props}
     >
-      {showLabel && (
-        <Text className={cn("text-base", categoryData.color)}>
-          {t(categoryData.name)}
-        </Text>
-      )}
-      {children}
+      <Text
+        className={badgeVariants({ size }).text({ className: category.color })}
+      >
+        {t(category.name)}
+      </Text>
     </Badge>
   );
 }

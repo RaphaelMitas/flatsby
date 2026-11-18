@@ -15,7 +15,7 @@ import {
 } from "~/components/groupDashboard/useCreateGroup";
 import { BottomSheetPickerProvider } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
-import { Form, FormControl, FormField, useForm } from "~/lib/ui/form";
+import { Form, FormField, useForm } from "~/lib/ui/form";
 import { Input } from "~/lib/ui/input";
 import { Label } from "~/lib/ui/label";
 
@@ -55,17 +55,15 @@ export default function CreateGroup() {
               name="name"
               control={form.control}
               render={({ field }) => (
-                <FormControl>
-                  <Input
-                    testID="group-create-name-input"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    placeholder={t("group.create.namePlaceholder")}
-                    className="w-full"
-                    error={!!form.formState.errors.name}
-                  />
-                </FormControl>
+                <Input
+                  testID="group-create-name-input"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder={t("group.create.namePlaceholder")}
+                  className="w-full"
+                  error={!!form.formState.errors.name}
+                />
               )}
             />
             {form.formState.errors.name && (

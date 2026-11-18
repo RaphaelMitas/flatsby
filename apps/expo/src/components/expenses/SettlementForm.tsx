@@ -40,7 +40,7 @@ import {
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { ErrorMessage } from "~/lib/ui/error-message";
-import { Form, FormControl, FormField, FormMessage } from "~/lib/ui/form";
+import { Form, FormField, FormMessage } from "~/lib/ui/form";
 import { Label } from "~/lib/ui/label";
 import { trpc } from "~/utils/api";
 import { CurrencyInput } from "./CurrencyInput";
@@ -578,16 +578,14 @@ export function SettlementForm({
                 render={({ field }) => (
                   <View className="flex-1 gap-2">
                     <Label>{t("debts.settlementAmount")}</Label>
-                    <FormControl>
-                      <CurrencyInput
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="0.00"
-                        min={1}
-                        max={isPrefilled ? amount : undefined}
-                        className="flex-1"
-                      />
-                    </FormControl>
+                    <CurrencyInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="0.00"
+                      min={1}
+                      max={isPrefilled ? amount : undefined}
+                      className="flex-1"
+                    />
                     <FormMessage />
                   </View>
                 )}

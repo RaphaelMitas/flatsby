@@ -75,16 +75,6 @@ const useFormField = () => {
   };
 };
 
-interface FormControlProps {
-  className?: string;
-  children: React.ReactElement;
-}
-
-const FormControl: React.FC<FormControlProps> = ({ children }) => {
-  return children;
-};
-FormControl.displayName = "FormControl";
-
 interface FormMessageProps {
   className?: string;
   children?: React.ReactNode;
@@ -109,4 +99,4 @@ const FormMessage: React.FC<FormMessageProps> = ({ className, children }) => {
 };
 FormMessage.displayName = "FormMessage";
 
-export { Form, FormField, FormControl, FormMessage, useFormField, useForm };
+export { Form, FormField, FormMessage, useForm };
