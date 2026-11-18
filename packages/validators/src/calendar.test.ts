@@ -1027,8 +1027,7 @@ describe("homeAgenda", () => {
     ]);
   });
 
-  it("finds my next turn after today and the next event that hasn't ended", () => {
-    expect(agenda.nextTurn?.occurrence.date).toBe("2026-10-26");
+  it("finds the next event that hasn't ended", () => {
     expect(agenda.nextEvent?.item.title).toBe("Flat dinner");
   });
 

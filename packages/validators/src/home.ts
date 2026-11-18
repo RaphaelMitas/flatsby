@@ -2,6 +2,8 @@ import { z } from "zod/v4";
 
 import {
   calendarDateSchema,
+  DEFAULT_TIME_ZONE,
+  formatCalendarDate,
   ianaTimeZoneSchema,
   monthOf,
   shiftMonth,
@@ -10,7 +12,7 @@ import {
 export const homePaceInputSchema = z.object({
   groupId: z.number(),
   today: calendarDateSchema,
-  timeZone: ianaTimeZoneSchema,
+  timeZone: ianaTimeZoneSchema.catch(DEFAULT_TIME_ZONE),
 });
 
 const paceSchema = z.object({
@@ -63,9 +65,25 @@ const sum = (values: number[]) =>
 
 export function paceSummary({ current, previous }: Pace) {
   const total = sum(current);
+  const difference = total - sum(previous.slice(0, current.length));
+  const direction: "less" | "more" | "same" =
+    difference < 0 ? "less" : difference > 0 ? "more" : "same";
+  return { total, difference, direction };
+}
+
+export function paceLabels(today: string, locale: Intl.LocalesArgument) {
+  const month = monthOf(today);
   return {
-    total,
-    difference: total - sum(previous.slice(0, current.length)),
+    start: formatCalendarDate(`${month}-01`, locale, {
+      day: "numeric",
+      month: "short",
+    }),
+    end: formatCalendarDate(`${month}-${daysInMonth(month)}`, locale, {
+      day: "numeric",
+    }),
+    previousMonth: formatCalendarDate(`${previousMonth(today)}-01`, locale, {
+      month: "long",
+    }),
   };
 }
 
@@ -79,10 +97,11 @@ export function paceChart(
   today: string,
   { width, height }: { width: number; height: number },
 ) {
+  const days = daysInMonth(monthOf(today));
   const now = running(current);
-  const before = running(previous);
+  const before = running(previous.slice(0, days));
   const top = Math.max(now.at(-1) ?? 0, before.at(-1) ?? 0, 1);
-  const lastDay = Math.max(daysInMonth(monthOf(today)), previous.length, 2) - 1;
+  const lastDay = days - 1;
   const round = (value: number) => Math.round(value * 10) / 10;
   const point = (value: number, index: number) => ({
     x: round((index / lastDay) * width),

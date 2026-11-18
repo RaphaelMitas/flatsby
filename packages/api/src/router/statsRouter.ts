@@ -2,7 +2,17 @@ import type { SQLWrapper } from "@flatsby/db";
 import { Effect } from "effect";
 import { z } from "zod/v4";
 
-import { and, between, count, eq, gte, isNotNull, lt, sql } from "@flatsby/db";
+import {
+  and,
+  between,
+  count,
+  eq,
+  gte,
+  isNotNull,
+  lt,
+  ne,
+  sql,
+} from "@flatsby/db";
 import {
   calendarItems,
   calendarOccurrences,
@@ -69,6 +79,7 @@ export const statsRouter = createTRPCRouter({
                     gte(expenses.expenseDate, after),
                     lt(expenses.expenseDate, before),
                     eq(ledgerCurrency, group.currency),
+                    ne(expenses.splitMethod, "settlement"),
                   ),
                 )
                 .groupBy(firstColumn),

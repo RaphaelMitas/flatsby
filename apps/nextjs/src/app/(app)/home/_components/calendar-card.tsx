@@ -1,12 +1,11 @@
 "use client";
 
-import type { CalendarEntry } from "@flatsby/validators/calendar";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { Skeleton } from "@flatsby/ui/skeleton";
 import {
-  describeEventTime,
+  describeNextEvent,
   formatCalendarDate,
   weekDays,
 } from "@flatsby/validators/calendar";
@@ -28,16 +27,6 @@ export function CalendarCard({
   const locale = useLocale();
   const pace = useHomePace(groupId, today);
   const calendar = useHomeCalendar(groupId, today);
-
-  const describeNext = ({ item, occurrence }: CalendarEntry) =>
-    item.days > 1
-      ? describeEventTime(item, t, locale, occurrence.date)
-      : [
-          formatCalendarDate(occurrence.date, locale, { weekday: "short" }),
-          item.time?.start,
-        ]
-          .filter(Boolean)
-          .join(" ");
 
   return (
     <HomeCard
@@ -97,7 +86,7 @@ export function CalendarCard({
             {calendar.nextEvent.item.title}
           </span>
           <span className="text-muted-foreground ml-auto shrink-0">
-            {describeNext(calendar.nextEvent)}
+            {describeNextEvent(calendar.nextEvent, t, locale)}
           </span>
         </div>
       )}

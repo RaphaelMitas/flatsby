@@ -12,8 +12,9 @@ import {
   Svg,
   Text,
 } from "react-native-svg";
+import { useLocale, useTranslations } from "use-intl";
 
-import { paceChart } from "@flatsby/validators/home";
+import { paceChart, paceLabels } from "@flatsby/validators/home";
 
 import { useThemeColors } from "~/lib/utils";
 
@@ -21,25 +22,21 @@ const INSET = 8;
 const LABEL_ROW = 20;
 const LABEL_GAP = 48;
 
-export interface PaceChartLabels {
-  start: string;
-  today: string;
-  end: string;
-  previousMonth: string;
-}
-
 export function PaceChart({
   pace,
   today,
   height,
-  labels,
+  labelled = false,
 }: {
   pace: Pace;
   today: string;
   height: number;
-  labels?: PaceChartLabels;
+  labelled?: boolean;
 }) {
+  const t = useTranslations();
+  const locale = useLocale();
   const { getColor } = useThemeColors();
+  const labels = labelled && paceLabels(today, locale);
   const [width, setWidth] = useState(0);
   const plotWidth = Math.max(width - 2 * INSET, 1);
   const chart = paceChart(pace, today, { width: plotWidth, height });
@@ -113,7 +110,7 @@ export function PaceChart({
                   </Text>
                 )}
                 <Text x={todayX} y={labelY} textAnchor="middle">
-                  {labels.today}
+                  {t("calendar.today")}
                 </Text>
                 {todayX < plotWidth - LABEL_GAP && (
                   <Text x={plotWidth} y={labelY} textAnchor="end">

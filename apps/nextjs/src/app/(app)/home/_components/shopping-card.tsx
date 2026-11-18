@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@flatsby/ui";
 import { getCategoryData } from "@flatsby/ui/categories";
 import { Skeleton } from "@flatsby/ui/skeleton";
-import { categoryIds } from "@flatsby/validators/categories";
+import { topCategories } from "@flatsby/validators/categories";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useTRPC } from "~/trpc/react";
@@ -37,12 +37,10 @@ export function ShoppingCard({
       list ? { groupId, shoppingListId: list.id } : skipToken,
     ),
   );
-  const counts = countsData?.success ? countsData.data.counts : undefined;
-  const stack = categoryIds
-    .map((id) => ({ id, count: counts?.[id] ?? 0 }))
-    .filter(({ count }) => count > 0)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, STACK_SIZE);
+  const stack = topCategories(
+    countsData?.success ? countsData.data.counts : {},
+    STACK_SIZE,
+  );
   const shownList = today ? list : undefined;
 
   return (
@@ -66,7 +64,7 @@ export function ShoppingCard({
         <div className="mt-4 flex items-center gap-3 text-sm">
           {shownList.uncheckedItemLength > 0 && (
             <span className="flex -space-x-2">
-              {stack.map(({ id }) => {
+              {stack.map((id) => {
                 const category = getCategoryData(id);
                 return (
                   <span

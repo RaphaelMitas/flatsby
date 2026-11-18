@@ -8,11 +8,8 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { Card } from "@flatsby/ui/card";
 import { Skeleton } from "@flatsby/ui/skeleton";
-import {
-  deviceTimeZone,
-  formatCalendarDate,
-} from "@flatsby/validators/calendar";
-import { paceSummary, previousMonth } from "@flatsby/validators/home";
+import { deviceTimeZone } from "@flatsby/validators/calendar";
+import { paceLabels, paceSummary } from "@flatsby/validators/home";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -73,8 +70,7 @@ export function PaceNumbers({
       </>
     );
 
-  const { total, difference } = paceSummary(pace);
-  const direction = difference < 0 ? "less" : difference > 0 ? "more" : "same";
+  const { total, difference, direction } = paceSummary(pace);
 
   return (
     <>
@@ -89,9 +85,7 @@ export function PaceNumbers({
       <p className="text-muted-foreground text-sm">
         {t.rich(`home.pace.${direction}`, {
           amount: format(Math.abs(difference)),
-          month: formatCalendarDate(`${previousMonth(today)}-01`, locale, {
-            month: "long",
-          }),
+          month: paceLabels(today, locale).previousMonth,
           b: (chunks) => (
             <b className="text-foreground font-semibold">{chunks}</b>
           ),

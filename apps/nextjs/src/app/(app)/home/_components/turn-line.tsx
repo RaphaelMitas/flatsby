@@ -5,7 +5,6 @@ import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
-import { timesMissed } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 
 import { useHomeCalendar } from "./use-home-calendar";
@@ -36,9 +35,7 @@ export function TurnLine({
       />
       <span className="line-clamp-1 font-semibold">{first.item.title}</span>
       <span className="text-muted-foreground shrink-0">
-        {timesMissed(first, today) > 0
-          ? t("calendar.overdue")
-          : t("calendar.yourTurn")}
+        {t("calendar.yourTurn")}
       </span>
       {rest.length > 0 && (
         <span className="text-muted-foreground shrink-0">

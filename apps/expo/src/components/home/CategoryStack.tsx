@@ -1,7 +1,7 @@
 import type { CategoryId } from "@flatsby/validators/categories";
 import { View } from "react-native";
 
-import { isCategoryId } from "@flatsby/validators/categories";
+import { topCategories } from "@flatsby/validators/categories";
 
 import { getCategoryData } from "~/components/shoppingList/ShoppingListCategory";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -14,16 +14,9 @@ export function CategoryStack({
 }: {
   counts: Partial<Record<CategoryId, number>>;
 }) {
-  const shown = Object.entries(counts)
-    .flatMap(([categoryId, count]) =>
-      isCategoryId(categoryId) && count ? [{ categoryId, count }] : [],
-    )
-    .sort((a, b) => b.count - a.count)
-    .slice(0, MAX_CATEGORIES);
-
   return (
     <View className="flex-row">
-      {shown.map(({ categoryId }, index) => {
+      {topCategories(counts, MAX_CATEGORIES).map((categoryId, index) => {
         const { bgColor, color, iconName } = getCategoryData({ categoryId });
         return (
           <View

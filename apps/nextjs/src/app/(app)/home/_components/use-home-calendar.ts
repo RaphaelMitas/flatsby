@@ -1,10 +1,6 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 
-import {
-  homeAgenda,
-  listAgenda,
-  listWindow,
-} from "@flatsby/validators/calendar";
+import { homeAgenda, listWindow } from "@flatsby/validators/calendar";
 
 import { useTimeOfDay } from "~/app/_components/local-clock";
 import { useTRPC } from "~/trpc/react";
@@ -21,9 +17,5 @@ export function useHomeCalendar(groupId: number, today: string | null) {
     ),
   );
   if (!today || !time || !group?.success || !range?.success) return undefined;
-  const meId = group.data.thisGroupMember.id;
-  return {
-    ...homeAgenda(range.data, today, time, meId),
-    days: listAgenda(range.data, today, today, meId, null).days,
-  };
+  return homeAgenda(range.data, today, time, group.data.thisGroupMember.id);
 }

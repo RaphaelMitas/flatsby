@@ -18,7 +18,11 @@ describe("monthPace", () => {
 
     expect(pace.current).toHaveLength(18);
     expect(pace.previous).toHaveLength(31);
-    expect(paceSummary(pace)).toEqual({ total: 5, difference: 0 });
+    expect(paceSummary(pace)).toEqual({
+      total: 5,
+      difference: 0,
+      direction: "same",
+    });
     expect(pace.previous[30]).toBe(7);
   });
 
@@ -32,7 +36,11 @@ describe("monthPace", () => {
     );
 
     expect(pace.previous).toHaveLength(28);
-    expect(paceSummary(pace)).toEqual({ total: 4, difference: -6 });
+    expect(paceSummary(pace)).toEqual({
+      total: 4,
+      difference: -6,
+      direction: "less",
+    });
   });
 
   it("reaches back across the new year", () => {
@@ -44,19 +52,28 @@ describe("monthPace", () => {
 });
 
 describe("paceChart", () => {
-  it("ends this month's line on today and runs last month's to the edge", () => {
+  it("ends this month's line on today and scales the days to this month", () => {
     const pace = monthPace(
       [
-        { day: "2026-10-01", total: 10 },
-        { day: "2026-11-01", total: 5 },
+        { day: "2026-11-01", total: 10 },
+        { day: "2026-12-01", total: 5 },
       ],
-      "2026-11-16",
+      "2026-12-16",
     );
 
-    const chart = paceChart(pace, "2026-11-16", { width: 300, height: 100 });
+    const chart = paceChart(pace, "2026-12-16", { width: 300, height: 100 });
 
     expect(chart.end).toEqual({ x: 150, y: 50 });
-    expect(chart.before.endsWith("L300,0")).toBe(true);
+    expect(chart.beforeEnd).toEqual({ x: 290, y: 0 });
+  });
+
+  it("leaves out the days last month had and this one does not", () => {
+    const pace = monthPace([{ day: "2026-10-31", total: 10 }], "2026-11-30");
+
+    const chart = paceChart(pace, "2026-11-30", { width: 290, height: 100 });
+
+    expect(chart.end).toEqual({ x: 290, y: 100 });
+    expect(chart.beforeEnd).toEqual({ x: 290, y: 100 });
   });
 
   it("draws a flat line for a month with nothing in it", () => {
@@ -65,6 +82,6 @@ describe("paceChart", () => {
       height: 100,
     });
 
-    expect(chart.now).toBe("M0,100 L10,100 L20,100");
+    expect(chart.now).toBe("M0,100 L10.3,100 L20.7,100");
   });
 });

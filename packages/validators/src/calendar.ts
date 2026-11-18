@@ -502,6 +502,20 @@ export function describeEventTime(
   return `${at(date, time?.start)} – ${at(lastDayOf(date, days), time?.end)}`;
 }
 
+export const describeNextEvent = (
+  { item, occurrence }: CalendarEntry,
+  t: Translate,
+  locale: Intl.LocalesArgument,
+) =>
+  item.days > 1
+    ? describeEventTime(item, t, locale, occurrence.date)
+    : [
+        formatCalendarDate(occurrence.date, locale, { weekday: "short" }),
+        item.time?.start,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
 export function describeRecurrence(
   recurrence: Recurrence | null,
   t: Translate,
@@ -1012,7 +1026,7 @@ export function homeAgenda(
   const mine = myOpenTasks(entries, meId);
   return {
     due: latestOpen(mine, today),
-    nextTurn: mine.find(({ occurrence }) => occurrence.date > today),
+    days: agendaDays(range, weekDays(today), meId),
     nextEvent: entries.find(
       (entry) => entry.item.kind === "event" && notOverYet(entry, today, now),
     ),

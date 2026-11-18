@@ -5,13 +5,7 @@ import { useId } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
-import {
-  addDays,
-  formatCalendarDate,
-  monthOf,
-  shiftMonth,
-} from "@flatsby/validators/calendar";
-import { paceChart, previousMonth } from "@flatsby/validators/home";
+import { paceChart, paceLabels } from "@flatsby/validators/home";
 
 const SIZE = { width: 100, height: 100 };
 
@@ -30,8 +24,7 @@ export function PaceChart({
   const locale = useLocale();
   const gradient = useId();
   const { now, before, area, end, beforeEnd } = paceChart(pace, today, SIZE);
-  const month = monthOf(today);
-  const lastDay = addDays(`${shiftMonth(month, 1)}-01`, -1);
+  const labels = paceLabels(today, locale);
 
   return (
     <div className="mt-2 flex flex-col" aria-hidden>
@@ -88,21 +81,14 @@ export function PaceChart({
             )}
             style={{ top: `${beforeEnd.y}%` }}
           >
-            {formatCalendarDate(`${previousMonth(today)}-01`, locale, {
-              month: "long",
-            })}
+            {labels.previousMonth}
           </span>
         )}
       </div>
       {labelled && (
         <div className="text-muted-foreground relative mt-2 h-4 text-xs">
           {end.x > 20 && (
-            <span className="absolute left-0">
-              {formatCalendarDate(`${month}-01`, locale, {
-                day: "numeric",
-                month: "short",
-              })}
-            </span>
+            <span className="absolute left-0">{labels.start}</span>
           )}
           <span
             className={cn(
@@ -115,11 +101,7 @@ export function PaceChart({
           >
             {t("calendar.today")}
           </span>
-          {end.x < 80 && (
-            <span className="absolute right-0">
-              {formatCalendarDate(lastDay, locale, { day: "numeric" })}
-            </span>
-          )}
+          {end.x < 80 && <span className="absolute right-0">{labels.end}</span>}
         </div>
       )}
     </div>

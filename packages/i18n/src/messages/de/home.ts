@@ -17,9 +17,9 @@ export const home = {
   choresDone:
     "{count, plural, one {Aufgabe erledigt} other {Aufgaben erledigt}}",
   pace: {
-    less: "<b>{amount} weniger</b> als zu dieser Zeit im {month}",
-    more: "<b>{amount} mehr</b> als zu dieser Zeit im {month}",
-    same: "<b>Genauso viel</b> wie zu dieser Zeit im {month}",
+    less: "<b>{amount} weniger</b> als um diese Zeit im {month}",
+    more: "<b>{amount} mehr</b> als um diese Zeit im {month}",
+    same: "<b>Genauso wie</b> um diese Zeit im {month}",
   },
   cat: {
     sitting: "Du schaffst das.",

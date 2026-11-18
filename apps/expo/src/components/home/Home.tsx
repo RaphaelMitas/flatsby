@@ -1,32 +1,27 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import type { Pace } from "@flatsby/validators/home";
+import type { CalendarRange } from "@flatsby/validators/calendar";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useFocusEffect, useIsFocused, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
+  keepPreviousData,
+  useIsMutating,
+  useQueries,
   useQuery,
   useQueryClient,
-  useSuspenseQueries,
 } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
-  addDays,
-  describeEventTime,
+  describeNextEvent,
   deviceTimeZone,
-  formatCalendarDate,
   homeAgenda,
-  listAgenda,
   listWindow,
   localDate,
-  monthOf,
-  shiftMonth,
-  timesMissed,
 } from "@flatsby/validators/calendar";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import { paceSummary, previousMonth } from "@flatsby/validators/home";
 
 import type { CatPose } from "./HomeCat";
 import { AnalyticsPrompt } from "~/components/analytics/AnalyticsPrompt";
@@ -74,6 +69,8 @@ const greetingShadow = home && {
 
 const POSES: CatPose[] = ["asleep", "peeking", "sitting"];
 
+const NOTHING_PLANNED: CalendarRange = { items: [], occurrences: [] };
+
 function StatusBarSky({ color }: { color: string }) {
   const isFocused = useIsFocused();
 
@@ -118,9 +115,12 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
   const meId = group.thisGroupMember.id;
 
   const [{ data: rangeData }, { data: listsData }, { data: paceData }] =
-    useSuspenseQueries({
+    useQueries({
       queries: [
-        calendarRangeOptions(group.id, listWindow(today, today)),
+        {
+          ...calendarRangeOptions(group.id, listWindow(today, today)),
+          placeholderData: keepPreviousData,
+        },
         trpc.shoppingList.getShoppingLists.queryOptions({ groupId: group.id }),
         trpc.stats.getHomePace.queryOptions({
           groupId: group.id,
@@ -130,26 +130,28 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       ],
     });
 
+  const settled = useIsMutating() === 0;
   useFocusEffect(
     useCallback(() => {
+      if (!settled) return;
       void queryClient.refetchQueries(
         { ...trpc.stats.getHomePace.pathFilter(), stale: true },
         { cancelRefetch: false },
       );
-    }, [queryClient]),
+    }, [queryClient, settled]),
   );
 
-  const agenda = rangeData.success
-    ? homeAgenda(rangeData.data, today, fromPickerTime(now), meId)
-    : { due: [], nextEvent: undefined };
-  const week = rangeData.success
-    ? listAgenda(rangeData.data, today, today, meId, null).days
-    : [];
-  const lists = listsData.success ? listsData.data : [];
+  const { due, days, nextEvent } = homeAgenda(
+    rangeData?.success ? rangeData.data : NOTHING_PLANNED,
+    today,
+    fromPickerTime(now),
+    meId,
+  );
+  const lists = listsData?.success ? listsData.data : [];
   const lastList =
     lists.find(({ id }) => id === selectedShoppingListId) ?? lists[0];
   const openCount = lastList?.uncheckedItemLength ?? 0;
-  const pace = paceData.success ? paceData.data : undefined;
+  const pace = paceData?.success ? paceData.data : undefined;
 
   const { data: countsData } = useQuery({
     ...trpc.shoppingList.getCategoryCounts.queryOptions({
@@ -185,33 +187,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
     }
     router.navigate("/(tabs)/shoppingList");
   };
-  const dayAndTime = (date: string, start?: string) =>
-    [formatCalendarDate(date, locale, { weekday: "short" }), start]
-      .filter(Boolean)
-      .join(" ");
 
-  const month = monthOf(today);
-  const lastMonthName = formatCalendarDate(
-    `${previousMonth(today)}-01`,
-    locale,
-    { month: "long" },
-  );
-  const money = (cents: number) =>
-    formatCurrencyFromCents({ cents, currency: group.currency, locale });
-  const comparison = (values: Pace, format: (amount: number) => string) => {
-    const { total, difference } = paceSummary(values);
-    return {
-      total,
-      difference,
-      amount: format(Math.abs(difference)),
-      month: lastMonthName,
-    };
-  };
-  const spending = pace && comparison(pace.spending, money);
-  const itemsBought = pace && comparison(pace.itemsBought, String);
-  const choresDone = pace && comparison(pace.choresDone, String);
-
-  const { due, nextEvent } = agenda;
   const firstDue = due[0];
   const pose = POSES[Math.min(due.length, 2)] ?? "asleep";
   const firstName = group.thisGroupMember.user.name.split(" ")[0] ?? "";
@@ -281,9 +257,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
                 )}
                 style={greetingShadow}
               >
-                {timesMissed(firstDue, today) > 0
-                  ? t("calendar.overdue")
-                  : t("calendar.yourTurn")}
+                {t("calendar.yourTurn")}
                 {due.length > 1 &&
                   ` · ${t("home.more", { count: due.length - 1 })}`}
               </Text>
@@ -296,34 +270,33 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
           )}
         </View>
 
-        <View>
+        <View className="gap-4 pt-16">
           <HomeCat pose={pose} onPress={() => say(t(`home.cat.${pose}`))} />
+          <InviteFlatmatesCard groupId={group.id} />
+          <AnalyticsPrompt />
           <HomeCard
             testID="home-card-expenses"
             title={t("navigation.expenses")}
             onPress={() => router.navigate("/(tabs)/expenses")}
-            className="mt-16"
           >
-            {pace && spending && (
+            {pace && (
               <>
-                <PaceHeadline {...spending} value={money(spending.total)} />
+                <PaceHeadline
+                  pace={pace.spending}
+                  today={today}
+                  format={(cents) =>
+                    formatCurrencyFromCents({
+                      cents,
+                      currency: group.currency,
+                      locale,
+                    })
+                  }
+                />
                 <PaceChart
                   pace={pace.spending}
                   today={today}
                   height={80}
-                  labels={{
-                    start: formatCalendarDate(`${month}-01`, locale, {
-                      day: "numeric",
-                      month: "short",
-                    }),
-                    today: t("calendar.today"),
-                    end: formatCalendarDate(
-                      addDays(`${shiftMonth(month, 1)}-01`, -1),
-                      locale,
-                      { day: "numeric" },
-                    ),
-                    previousMonth: lastMonthName,
-                  }}
+                  labelled
                 />
               </>
             )}
@@ -331,21 +304,19 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
           <CatOverlay pose={pose} speech={speech} />
         </View>
 
-        <InviteFlatmatesCard groupId={group.id} className="mt-4" />
-        <AnalyticsPrompt className="mt-4" />
-
         <HomeCard
           testID="home-card-shopping"
           title={t("navigation.shopping")}
           onPress={openShopping}
           className="mt-4"
         >
-          {pace && itemsBought && (
+          {pace && (
             <>
               <PaceHeadline
-                {...itemsBought}
-                value={String(itemsBought.total)}
-                unit={t("home.itemsBought", { count: itemsBought.total })}
+                pace={pace.itemsBought}
+                today={today}
+                format={String}
+                unit={(count) => t("home.itemsBought", { count })}
               />
               <PaceChart pace={pace.itemsBought} today={today} height={44} />
             </>
@@ -374,14 +345,15 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
           onPress={() => openCalendar()}
           className="mt-4"
         >
-          {choresDone && (
+          {pace && (
             <PaceHeadline
-              {...choresDone}
-              value={String(choresDone.total)}
-              unit={t("home.choresDone", { count: choresDone.total })}
+              pace={pace.choresDone}
+              today={today}
+              format={String}
+              unit={(count) => t("home.choresDone", { count })}
             />
           )}
-          <WeekStrip days={week} today={today} />
+          <WeekStrip days={days} today={today} />
           {nextEvent && (
             <View className="mt-4 flex-row items-center gap-2">
               <View
@@ -397,17 +369,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
                 {nextEvent.item.title}
               </Text>
               <Text className="text-muted-foreground text-sm">
-                {nextEvent.item.days > 1
-                  ? describeEventTime(
-                      nextEvent.item,
-                      t,
-                      locale,
-                      nextEvent.occurrence.date,
-                    )
-                  : dayAndTime(
-                      nextEvent.occurrence.date,
-                      nextEvent.item.time?.start,
-                    )}
+                {describeNextEvent(nextEvent, t, locale)}
               </Text>
             </View>
           )}
