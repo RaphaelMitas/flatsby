@@ -24,8 +24,15 @@ runs:
         if [ "$NDK" = "true" ]; then
           pkgs+=("ndk;$(sed -nE 's/^ndkVersion = "(.*)"/\1/p' node_modules/react-native/gradle/libs.versions.toml)")
         fi
+        tools="$ANDROID_HOME/cmdline-tools"
         for attempt in 1 2 3; do
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "${pkgs[@]}" > /dev/null && exit 0
+          if "$tools/latest/bin/sdkmanager" --install "${pkgs[@]}" > /dev/null; then
+            if [ -d "$tools/latest-2" ]; then
+              rm -rf "$tools/latest"
+              mv "$tools/latest-2" "$tools/latest"
+            fi
+            exit 0
+          fi
           echo "sdkmanager attempt $attempt failed"
           sleep 15
         done

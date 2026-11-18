@@ -376,7 +376,7 @@ jobs:
       - name: Install emulator and system image
         uses: ./tooling/github/android-sdk
         with:
-          packages: emulator system-images;android-37.0;google_apis;x86_64
+          packages: cmdline-tools;latest emulator system-images;android-37.0;google_apis;x86_64
 
       # The runner executes every `script` line as a separate `sh -c`, so the
       # install / pre-warm / run / logcat sequence lives in one script file.
