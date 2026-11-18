@@ -87,6 +87,55 @@ const running = (values: number[]) => {
   return values.map((value) => (total += value));
 };
 
+interface Point {
+  x: number;
+  y: number;
+}
+
+const round = (value: number) => Math.round(value * 10) / 10;
+
+function slopesAt(points: Point[]) {
+  const steps = points.slice(1).map((point, i) => {
+    const from = points[i] ?? point;
+    const width = point.x - from.x || 1;
+    return { width, rise: (point.y - from.y) / width };
+  });
+  return points.map((_, i) => {
+    const before = steps[i - 1];
+    const after = steps[i];
+    if (!before || !after) return (before ?? after)?.rise ?? 0;
+    if (before.rise * after.rise <= 0) return 0;
+    const mean =
+      (before.rise * after.width + after.rise * before.width) /
+      (before.width + after.width);
+    return (
+      Math.sign(mean) *
+      Math.min(
+        Math.abs(mean),
+        1.5 * Math.abs(before.rise),
+        1.5 * Math.abs(after.rise),
+      )
+    );
+  });
+}
+
+function smoothLine(days: Point[]) {
+  const points = days.filter(
+    (day, i) => i === 0 || i === days.length - 1 || day.y !== days[i - 1]?.y,
+  );
+  const slopes = slopesAt(points);
+  return points
+    .map((point, i) => {
+      const from = points[i - 1];
+      if (!from) return `M${point.x},${point.y}`;
+      const third = (point.x - from.x) / 3;
+      const leave = round(from.y + third * (slopes[i - 1] ?? 0));
+      const arrive = round(point.y - third * (slopes[i] ?? 0));
+      return `C${round(from.x + third)},${leave} ${round(point.x - third)},${arrive} ${point.x},${point.y}`;
+    })
+    .join(" ");
+}
+
 export function paceChart(
   { current, previous }: Pace,
   today: string,
@@ -97,20 +146,17 @@ export function paceChart(
   const before = running(previous.slice(0, days));
   const top = Math.max(now.at(-1) ?? 0, before.at(-1) ?? 0, 1);
   const lastDay = days - 1;
-  const round = (value: number) => Math.round(value * 10) / 10;
   const point = (value: number, index: number) => ({
     x: round((index / lastDay) * width),
     y: round(height - (value / top) * height),
   });
-  const line = (points: { x: number; y: number }[]) =>
-    points.map(({ x, y }, i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
   const nowPoints = now.map(point);
   const beforePoints = before.map(point);
   const end = nowPoints.at(-1) ?? { x: 0, y: height };
   return {
-    now: line(nowPoints),
-    before: line(beforePoints),
-    area: `${line(nowPoints)} L${end.x},${height} L0,${height} Z`,
+    now: smoothLine(nowPoints),
+    before: smoothLine(beforePoints),
+    area: `${smoothLine(nowPoints)} L${end.x},${height} L0,${height} Z`,
     end,
     beforeEnd: beforePoints.at(-1) ?? { x: width, y: height },
   };

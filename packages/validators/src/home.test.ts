@@ -82,6 +82,23 @@ describe("paceChart", () => {
       height: 100,
     });
 
-    expect(chart.now).toBe("M0,100 L10.3,100 L20.7,100");
+    expect(chart.now).toBe("M0,100 C6.9,100 13.8,100 20.7,100");
+  });
+
+  it("glides between the days something happened without overshooting them", () => {
+    const pace = monthPace(
+      [
+        { day: "2026-11-02", total: 40 },
+        { day: "2026-11-03", total: 5 },
+        { day: "2026-11-06", total: 55 },
+      ],
+      "2026-11-08",
+    );
+
+    const { now } = paceChart(pace, "2026-11-08", { width: 290, height: 100 });
+    const heights = [...now.matchAll(/,(-?[\d.]+)/g)].map(([, y]) => Number(y));
+
+    expect(now).toContain("C");
+    expect(heights).toEqual([...heights].sort((a, b) => b - a));
   });
 });

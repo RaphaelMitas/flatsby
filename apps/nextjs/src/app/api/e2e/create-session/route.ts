@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Locale } from "@flatsby/i18n/locale";
+import type { CategoryId } from "@flatsby/validators/categories";
 import { NextResponse } from "next/server";
 import { and, eq, inArray, like, lt, or } from "drizzle-orm";
 
@@ -83,6 +84,71 @@ function thirds(totalCents: number): [number, number, number] {
   return [totalCents - 2 * base, base, base];
 }
 
+const STORE_BOUGHT_CATEGORIES = [
+  "produce",
+  "dairy",
+  "dairy",
+  "pantry",
+  "beverages",
+  "produce",
+  "dairy",
+  "pantry",
+  "pantry",
+  "household",
+  "household",
+  "dairy",
+  "produce",
+  "beverages",
+] satisfies CategoryId[];
+
+const STORE_HISTORY = [
+  [
+    {
+      key: "market",
+      amountInCents: 2760,
+      category: "food-drinks",
+      subcategory: "groceries",
+    },
+    {
+      key: "bulk",
+      amountInCents: 6300,
+      category: "food-drinks",
+      subcategory: "groceries",
+    },
+    {
+      key: "pizza",
+      amountInCents: 3840,
+      category: "food-drinks",
+      subcategory: "restaurant",
+    },
+  ],
+  [
+    {
+      key: "drugstore",
+      amountInCents: 1470,
+      category: "health",
+      subcategory: "pharmacy",
+    },
+    {
+      key: "coffee",
+      amountInCents: 930,
+      category: "food-drinks",
+      subcategory: "coffee",
+    },
+    {
+      key: "drinks",
+      amountInCents: 1299,
+      category: "food-drinks",
+      subcategory: "bar",
+    },
+  ],
+] satisfies {
+  key: keyof (typeof STORE_COPY)["en"]["history"];
+  amountInCents: number;
+  category: string;
+  subcategory: string;
+}[][];
+
 const STORE_COPY = {
   en: {
     group: "Sunset Villa",
@@ -93,10 +159,34 @@ const STORE_COPY = {
       bread: "Sourdough Bread",
       paperTowels: "Paper Towels",
     },
+    bought: [
+      "Tomatoes",
+      "Eggs",
+      "Butter",
+      "Pasta",
+      "Coffee",
+      "Bananas",
+      "Yogurt",
+      "Rice",
+      "Olive Oil",
+      "Toilet Paper",
+      "Dish Soap",
+      "Cheese",
+      "Onions",
+      "Orange Juice",
+    ],
     expenses: {
       shopping: "Weekly shopping",
       internet: "Internet bill",
       cleaning: "Cleaning supplies",
+    },
+    history: {
+      market: "Farmers market",
+      bulk: "Bulk buy",
+      pizza: "Pizza night",
+      drugstore: "Drugstore",
+      coffee: "Coffee and cake",
+      drinks: "Drinks",
     },
     calendar: {
       bins: "Take out bins",
@@ -116,10 +206,34 @@ const STORE_COPY = {
       bread: "Sauerteigbrot",
       paperTowels: "Küchenrolle",
     },
+    bought: [
+      "Tomaten",
+      "Eier",
+      "Butter",
+      "Nudeln",
+      "Kaffee",
+      "Bananen",
+      "Joghurt",
+      "Reis",
+      "Olivenöl",
+      "Toilettenpapier",
+      "Spülmittel",
+      "Käse",
+      "Zwiebeln",
+      "Orangensaft",
+    ],
     expenses: {
       shopping: "Wocheneinkauf",
       internet: "Internetrechnung",
       cleaning: "Putzmittel",
+    },
+    history: {
+      market: "Wochenmarkt",
+      bulk: "Großeinkauf",
+      pizza: "Pizzaabend",
+      drugstore: "Drogerie",
+      coffee: "Kaffee und Kuchen",
+      drinks: "Getränke",
     },
     calendar: {
       bins: "Müll rausbringen",
@@ -208,6 +322,45 @@ async function seedStoreScenario(
   ]);
 
   const dayMs = 24 * 60 * 60 * 1000;
+  const members = [alexMember.id, annaMember.id, tomMember.id];
+
+  await db.insert(shoppingListItems).values(
+    Array.from({ length: 2 * copy.bought.length }, (_, i) => {
+      const buyer = members[i % members.length] ?? alexMember.id;
+      return {
+        shoppingListId: list.id,
+        name: copy.bought[i % copy.bought.length] ?? "",
+        categoryId:
+          STORE_BOUGHT_CATEGORIES[i % STORE_BOUGHT_CATEGORIES.length] ??
+          "other",
+        createdByGroupMemberId: buyer,
+        completed: true,
+        completedByGroupMemberId: buyer,
+        completedAt: new Date(
+          Date.now() - (1 + 2 * i + 3 * Math.floor(i / 8)) * dayMs,
+        ),
+      };
+    }),
+  );
+
+  const history = Array.from({ length: 6 }, (_, round) => round).flatMap(
+    (round) =>
+      members.flatMap((paidBy, payer) => {
+        const entry = STORE_HISTORY[round % 2]?.[(payer + round) % 3];
+        if (!entry) return [];
+        return [
+          {
+            ...entry,
+            description: copy.history[entry.key],
+            paidBy,
+            expenseDate: new Date(
+              Date.now() - (5 + 3 * (3 * round + payer)) * dayMs,
+            ),
+          },
+        ];
+      }),
+  );
+
   const seedExpenses = [
     {
       description: copy.expenses.shopping,
@@ -234,7 +387,7 @@ async function seedStoreScenario(
       expenseDate: new Date(Date.now() - 3 * dayMs),
     },
   ];
-  for (const seed of seedExpenses) {
+  for (const seed of [...seedExpenses, ...history]) {
     const [expense] = await db
       .insert(expenses)
       .values({
@@ -252,9 +405,7 @@ async function seedStoreScenario(
       .returning({ id: expenses.id });
     if (!expense) throw new Error("Failed to create seeded expense");
     const [payerShare, ...otherShares] = thirds(seed.amountInCents);
-    const otherMembers = [alexMember.id, annaMember.id, tomMember.id].filter(
-      (id) => id !== seed.paidBy,
-    );
+    const otherMembers = members.filter((id) => id !== seed.paidBy);
     await db.insert(expenseSplits).values([
       {
         expenseId: expense.id,
@@ -277,6 +428,9 @@ async function seedStoreScenario(
 
   return { group };
 }
+
+const BATHROOM_WEEKS = 8;
+const PLANT_TURNS = 19;
 
 async function seedStoreCalendar(
   groupId: number,
@@ -301,7 +455,7 @@ async function seedStoreCalendar(
         kind: "task",
         title: titles.bathroom,
         color: "cyan",
-        startsOn: addDays(today, -14),
+        startsOn: addDays(today, -7 * BATHROOM_WEEKS),
         recurrence: { type: "weekly", interval: 1, days: [weekdayOf(today)] },
         createdByGroupMemberId: anna,
       },
@@ -310,7 +464,7 @@ async function seedStoreCalendar(
         kind: "task",
         title: titles.plants,
         color: "yellow",
-        startsOn: addDays(today, -21),
+        startsOn: addDays(today, -3 * PLANT_TURNS),
         recurrence: { type: "daily", interval: 3 },
         createdByGroupMemberId: tom,
       },
@@ -364,12 +518,22 @@ async function seedStoreCalendar(
     })),
     { itemId: bathroom.id, groupMemberId: anna, position: 0 },
   ]);
-  await db.insert(calendarOccurrences).values({
-    itemId: bathroom.id,
-    date: today,
-    completedByGroupMemberId: anna,
-    completedAt: new Date(),
-  });
+  await db.insert(calendarOccurrences).values([
+    ...Array.from({ length: BATHROOM_WEEKS + 1 }, (_, week) => ({
+      itemId: bathroom.id,
+      date: addDays(today, -7 * week),
+      completedByGroupMemberId: anna,
+      completedAt: new Date(),
+    })),
+    ...Array.from({ length: PLANT_TURNS }, (_, turn) => turn)
+      .filter((turn) => turn % 5 !== 4)
+      .map((turn) => ({
+        itemId: plants.id,
+        date: addDays(today, -3 * (turn + 1)),
+        completedByGroupMemberId: tom,
+        completedAt: new Date(),
+      })),
+  ]);
 }
 
 async function seedDebtsScenario(groupId: number, you: number) {
