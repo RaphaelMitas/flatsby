@@ -4,9 +4,7 @@ import Animated, {
   FadeOut,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
   withSpring,
-  withTiming,
   ZoomIn,
 } from "react-native-reanimated";
 import { useIsFocused } from "expo-router";
@@ -15,8 +13,8 @@ import { useTranslations } from "use-intl";
 import { season } from "~/lib/seasonal/season";
 import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
 import { useThemeColors } from "~/lib/utils";
-import { CAT_SIZE, useCatTap } from "../dashboard/useCatTap";
 import { Snores } from "./Snores";
+import { CAT_SIZE, useCatTap } from "./useCatTap";
 
 export type CatPose = "sitting" | "peeking" | "asleep";
 
@@ -28,11 +26,9 @@ const SINK_BELOW_CARD: Record<CatPose, number> = {
 
 export function HomeCat({
   pose,
-  stretchKey,
   onPress,
 }: {
   pose: CatPose;
-  stretchKey: number;
   onPress: () => void;
 }) {
   const t = useTranslations("home");
@@ -40,29 +36,15 @@ export function HomeCat({
   const isFocused = useIsFocused();
   const sink = useSharedValue(CAT_SIZE);
   const { hop, tap } = useCatTap();
-  const stretch = useSharedValue(0);
 
   useEffect(() => {
-    sink.value = isFocused
-      ? withSpring(SINK_BELOW_CARD[pose], { damping: 14 })
-      : CAT_SIZE;
+    sink.set(
+      isFocused ? withSpring(SINK_BELOW_CARD[pose], { damping: 14 }) : CAT_SIZE,
+    );
   }, [isFocused, pose, sink]);
 
-  useEffect(() => {
-    if (stretchKey === 0) return;
-    stretch.value = withSequence(
-      withTiming(1, { duration: 300 }),
-      withTiming(-0.4, { duration: 220 }),
-      withSpring(0, { damping: 10 }),
-    );
-  }, [stretchKey, stretch]);
-
   const catStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: sink.value + hop.value - stretch.value * 9 },
-      { scaleX: 1 - stretch.value * 0.08 },
-      { scaleY: 1 + stretch.value * 0.16 },
-    ],
+    transform: [{ translateY: sink.get() + hop.get() }],
   }));
 
   const handlePress = () => {

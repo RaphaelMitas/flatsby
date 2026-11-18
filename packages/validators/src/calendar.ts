@@ -84,12 +84,12 @@ const isTimeZone = (zone: string) => {
   }
 };
 
-const timeZoneSchema = z
+export const ianaTimeZoneSchema = z
   .string()
   .max(MAX_TIME_ZONE_LENGTH)
-  .refine(isTimeZone)
-  .optional()
-  .catch(undefined);
+  .refine(isTimeZone);
+
+const timeZoneSchema = ianaTimeZoneSchema.optional().catch(undefined);
 
 export const deviceTimeZone = () =>
   Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -502,6 +502,20 @@ export function describeEventTime(
   return `${at(date, time?.start)} – ${at(lastDayOf(date, days), time?.end)}`;
 }
 
+export const describeNextEvent = (
+  { item, occurrence }: CalendarEntry,
+  t: Translate,
+  locale: Intl.LocalesArgument,
+) =>
+  item.days > 1
+    ? describeEventTime(item, t, locale, occurrence.date)
+    : [
+        formatCalendarDate(occurrence.date, locale, { weekday: "short" }),
+        item.time?.start,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
 export function describeRecurrence(
   recurrence: Recurrence | null,
   t: Translate,
@@ -629,6 +643,9 @@ export interface CalendarItemDetail {
 }
 
 export const monthOf = (date: string) => date.slice(0, 7);
+
+export const daysInMonth = (month: string) =>
+  monthLength(monthIndexOf(toDayNumber(`${month}-01`)));
 
 export const shiftMonth = (month: string, delta: number) => {
   const [year = 1970, monthNumber = 1] = month.split("-").map(Number);
@@ -1012,7 +1029,7 @@ export function homeAgenda(
   const mine = myOpenTasks(entries, meId);
   return {
     due: latestOpen(mine, today),
-    nextTurn: mine.find(({ occurrence }) => occurrence.date > today),
+    days: agendaDays(range, weekDays(today), meId),
     nextEvent: entries.find(
       (entry) => entry.item.kind === "event" && notOverYet(entry, today, now),
     ),

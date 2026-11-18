@@ -29,6 +29,15 @@ export function isCategoryIdWithAiAutoSelect(
 
 export type CategoryId = (typeof categoryIds)[number];
 
+export const topCategories = (
+  counts: Partial<Record<CategoryId, number>>,
+  limit: number,
+) =>
+  categoryIds
+    .filter((id) => (counts[id] ?? 0) > 0)
+    .sort((a, b) => (counts[b] ?? 0) - (counts[a] ?? 0))
+    .slice(0, limit);
+
 export const categorysIdWithAiAutoSelect = [
   ...categoryIds,
   "ai-auto-select",

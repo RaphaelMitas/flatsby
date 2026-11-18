@@ -194,7 +194,7 @@ tags:
 - runFlow:
     file: ../../subflows/relaunch.yaml
     env:
-      MARKER_ID: "dashboard-group-picker"
+      MARKER_ID: "home-group-picker"
 - runFlow:
     file: ../../subflows/tap-tab.yaml
     env:
@@ -220,11 +220,11 @@ tags:
       TAB_ID: "tab-home"
       TAB_LABEL: "Home"
       TAB_X: "10%"
-      MARKER_ID: "dashboard-group-settings"
+      MARKER_ID: "home-group-settings"
 - runFlow:
     file: ../../subflows/tap-until.yaml
     env:
-      TARGET_ID: "dashboard-group-settings"
+      TARGET_ID: "home-group-settings"
       MARKER_ID: "group-settings-members"
 - tapOn:
     id: "group-settings-members"
@@ -236,7 +236,7 @@ tags:
 - runFlow:
     file: ../../subflows/relaunch.yaml
     env:
-      MARKER_ID: "dashboard-group-picker"
+      MARKER_ID: "home-group-picker"
 - runFlow:
     file: ../../subflows/tap-tab.yaml
     env:

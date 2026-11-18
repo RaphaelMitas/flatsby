@@ -3,11 +3,8 @@ import type {
   CategoryIdWithAiAutoSelect,
 } from "@flatsby/validators/categories";
 import type { CreateShoppingListItemFormValues } from "@flatsby/validators/shopping-list";
-import type { ComponentRef } from "react";
-import type { TextInput } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ScrollView, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslations } from "use-intl";
 
 import { useShoppingListSuggestions } from "@flatsby/api/hooks/useShoppingListSuggestions";
@@ -33,15 +30,6 @@ export const ShoppingListItemAddForm = ({
   const [categoryId, setCategoryId] =
     useState<CategoryIdWithAiAutoSelect>("ai-auto-select");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
-  const router = useRouter();
-  const { focus } = useLocalSearchParams<{ focus?: string }>();
-
-  useEffect(() => {
-    if (!focus) return;
-    inputRef.current?.focus();
-    router.setParams({ focus: undefined });
-  }, [focus, router]);
 
   const { suggestionItems, showSuggestions } = useShoppingListSuggestions(
     (input) => trpc.shoppingList.suggestItems.queryOptions(input),
@@ -100,7 +88,6 @@ export const ShoppingListItemAddForm = ({
       )}
       <View className="flex-row items-center gap-3">
         <Input
-          ref={inputRef}
           testID="shopping-list-item-input"
           className="flex-1"
           placeholder={t("addPlaceholder")}

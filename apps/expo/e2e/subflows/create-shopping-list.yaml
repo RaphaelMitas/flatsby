@@ -6,7 +6,7 @@ appId: ${APP_ID}
     id: "group-select-button"
 - extendedWaitUntil:
     visible:
-      id: "dashboard-group-picker"
+      id: "home-group-picker"
     timeout: 15000
 - runFlow:
     file: tap-tab.yaml

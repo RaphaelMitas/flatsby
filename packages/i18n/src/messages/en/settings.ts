@@ -10,9 +10,6 @@ export const settings = {
     legal: "Legal",
   },
   items: {
-    home: "Home screen",
-    homeClassic: "Classic",
-    homeNew: "New",
     theme: "Theme",
     changeGroup: "Change Group",
     profileSubtitle: "Your name and PayPal.me",
