@@ -78,7 +78,7 @@ appId: ${APP_ID}
       id: "list-switcher"
     timeout: 20000
 
-# Expenses tab with the three seeded expenses.
+# Expenses tab with the three newest seeded expenses.
 - runFlow:
     file: ../subflows/tap-tab.yaml
     env:
