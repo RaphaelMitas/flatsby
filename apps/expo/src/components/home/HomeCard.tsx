@@ -65,11 +65,19 @@ export function PaceHeadline({
       <View className="mt-2">
         <View className="justify-center">
           <Text className="text-4xl font-extrabold opacity-0">0</Text>
-          <Skeleton className="absolute" size="xl" width="lg" />
+          <Skeleton
+            className="bg-foreground/10 absolute"
+            size="xl"
+            width="lg"
+          />
         </View>
         <View className="justify-center">
           <Text className="text-sm opacity-0">0</Text>
-          <Skeleton className="absolute" size="xs" width="2xl" />
+          <Skeleton
+            className="bg-foreground/10 absolute"
+            size="xs"
+            width="2xl"
+          />
         </View>
       </View>
     );

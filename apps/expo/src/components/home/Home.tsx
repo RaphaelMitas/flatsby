@@ -337,7 +337,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             drawIn={startedEmpty}
           />
           {lastList && (
-            <View className="mt-4 flex-row items-center gap-3">
+            <View className="mt-4 min-h-9 flex-row items-center gap-3">
               {openCount > 0 && <CategoryStack counts={categoryCounts} />}
               <Text
                 numberOfLines={1}

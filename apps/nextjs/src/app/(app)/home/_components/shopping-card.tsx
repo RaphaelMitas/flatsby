@@ -73,8 +73,8 @@ export function ShoppingCard({
       ) : (
         <Skeleton className="mt-2 h-12" />
       )}
-      {shownList && (
-        <div className="mt-4 flex items-center gap-3 text-sm">
+      {shownList ? (
+        <div className="mt-4 flex min-h-8 items-center gap-3 text-sm">
           {shownList.uncheckedItemLength > 0 && (
             <span className="flex -space-x-2">
               {stack.map((id) => {
@@ -104,6 +104,8 @@ export function ShoppingCard({
               : t("home.nothingToBuy")}
           </span>
         </div>
+      ) : (
+        !today && <Skeleton className="mt-4 h-8" />
       )}
     </HomeCard>
   );

@@ -1,5 +1,6 @@
 import type { Pace } from "@flatsby/validators/home";
-import { useEffect, useState } from "react";
+import type { ComponentRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -45,7 +46,7 @@ export function PaceChart({
   if (!pace || !today)
     return (
       <Skeleton
-        className="mt-3 rounded-xl"
+        className="bg-foreground/10 mt-3 rounded-xl"
         style={{ height: heightOf(size.height, size.labelled ?? false) }}
       />
     );
@@ -69,12 +70,16 @@ function DrawnPaceChart({
   const locale = useLocale();
   const { getColor } = useThemeColors();
   const labels = labelled && paceLabels(today, locale);
+  const box = useRef<ComponentRef<typeof View>>(null);
   const [width, setWidth] = useState(0);
+  useLayoutEffect(() => {
+    setWidth(box.current?.getBoundingClientRect().width ?? 0);
+  }, []);
   const drawn = useSharedValue(drawIn ? 0 : 1);
   useEffect(() => {
     if (width > 0) drawn.set(withTiming(1, { duration: 600 }));
   }, [drawn, width]);
-  const reveal = useAnimatedStyle(() => ({ width: drawn.get() * width }));
+  const reveal = useAnimatedStyle(() => ({ width: `${drawn.get() * 100}%` }));
   const plotWidth = Math.max(width - 2 * INSET, 1);
   const chart = paceChart(pace, today, { width: plotWidth, height });
   const foreground = getColor("foreground");
@@ -89,6 +94,7 @@ function DrawnPaceChart({
 
   return (
     <View
+      ref={box}
       className="mt-3"
       style={{ height: totalHeight }}
       onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
