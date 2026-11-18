@@ -14,7 +14,7 @@ tags:
 
 # Change group name via group settings
 - tapOn:
-    id: "dashboard-group-settings"
+    id: "home-group-settings"
 - extendedWaitUntil:
     visible:
       id: "group-settings-details"
@@ -45,9 +45,9 @@ tags:
       TAB_ID: "tab-home"
       TAB_LABEL: "Home"
       TAB_X: "10%"
-      MARKER_ID: "dashboard-group-picker"
+      MARKER_ID: "home-group-picker"
 - tapOn:
-    id: "dashboard-group-picker"
+    id: "home-group-picker"
 - extendedWaitUntil:
     visible:
       id: "group-switcher"

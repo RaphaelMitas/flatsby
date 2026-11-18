@@ -40,7 +40,7 @@ function Snore({
   index: number;
   textClassName: string;
 }) {
-  const t = useTranslations("home.new.cat");
+  const t = useTranslations("home.cat");
   const progress = useSharedValue(0);
 
   useEffect(() => {

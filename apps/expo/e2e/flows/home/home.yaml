@@ -1,0 +1,43 @@
+appId: ${APP_ID}
+tags:
+  - home
+---
+# The home shows one card per tab, and a card opens its tab.
+- runFlow: ../../subflows/e2e-login.yaml
+- tapOn:
+    id: "group-select-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-group-picker"
+    timeout: 15000
+# A relaunch opens the home on the selected group
+- runFlow:
+    file: ../../subflows/relaunch.yaml
+    env:
+      MARKER_ID: "home-group-picker"
+- extendedWaitUntil:
+    visible:
+      id: "home-card-expenses"
+    timeout: 15000
+- assertVisible:
+    id: "home-group-settings"
+# A fresh group has no chores, so there is no turn line
+- assertNotVisible:
+    id: "home-turn"
+- scrollUntilVisible:
+    element:
+      id: "home-card-shopping"
+    direction: DOWN
+- scrollUntilVisible:
+    element:
+      id: "home-card-calendar"
+    direction: DOWN
+- scrollUntilVisible:
+    element:
+      id: "home-card-expenses"
+    direction: UP
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "home-card-expenses"
+      MARKER_ID: "expense-heading"

@@ -16,7 +16,6 @@ import { useTheme } from "~/lib/ui/theme";
 import { useAnalyticsConsent } from "~/utils/analytics/consent";
 import { trpc } from "~/utils/api";
 import { signOut } from "~/utils/auth/auth-client";
-import { useHomeVersion } from "~/utils/home-version";
 import { useLocalePreference } from "~/utils/intl-provider";
 import { useShoppingStore } from "~/utils/shopping-store";
 import {
@@ -34,8 +33,6 @@ export default function SettingsIndex() {
   const analyticsConsent = useAnalyticsConsent();
   const { clearSelectedGroup } = useShoppingStore();
   const { group: currentGroup, name: groupName } = useSelectedGroup();
-  const { version: homeVersion, switchTo: switchHome } = useHomeVersion();
-  const home = homeVersion === "new" ? "new" : "classic";
   const updateNudge = updateNudgeFrequency.useValue();
   const updateNudgeChoices = useUpdateNudgeChoices();
 
@@ -53,10 +50,6 @@ export default function SettingsIndex() {
     light: t("settings.theme.light"),
     dark: t("settings.theme.dark"),
   } satisfies Record<Theme, string>;
-  const homeLabels = {
-    classic: t("settings.items.homeClassic"),
-    new: t("settings.items.homeNew"),
-  };
 
   return (
     <SafeAreaView>
@@ -114,17 +107,6 @@ export default function SettingsIndex() {
             choices={[
               { value: "system", label: t("settings.language.system") },
               ...locales.map((value) => ({ value, label: localeNames[value] })),
-            ]}
-          />
-          <SettingsChoiceItem
-            title={t("settings.items.home")}
-            value={homeLabels[home]}
-            iconName="house"
-            selected={home}
-            onSelect={(value) => switchHome(value, "settings")}
-            choices={[
-              { value: "classic", label: homeLabels.classic },
-              { value: "new", label: homeLabels.new },
             ]}
           />
           <EveningReminderItem />

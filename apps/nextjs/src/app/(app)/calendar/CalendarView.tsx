@@ -7,14 +7,7 @@ import type {
   CalendarPosition,
   CreateCalendarItemInput,
 } from "@flatsby/validators/calendar";
-import {
-  useEffect,
-  useEffectEvent,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import {
   usePrefetchQuery,
   useQuery,
@@ -46,7 +39,6 @@ import {
   agendaAt,
   describeListRange,
   formatCalendarDate,
-  localDate,
   newEntryDate,
   otherView,
   positionWindow,
@@ -62,6 +54,7 @@ import {
 } from "@flatsby/validators/calendar";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
+import { useToday } from "~/app/_components/local-clock";
 import { useTRPC } from "~/trpc/react";
 import { CalendarItemDetail } from "./CalendarItemDetail";
 import { CalendarItemForm } from "./CalendarItemForm";
@@ -76,22 +69,13 @@ type Panel =
   | { type: "detail"; entry: AgendaEntry }
   | { type: "form"; item?: CalendarItemView; date?: string };
 
-const onReturn = (notify: () => void) => {
-  document.addEventListener("visibilitychange", notify);
-  window.addEventListener("focus", notify);
-  return () => {
-    document.removeEventListener("visibilitychange", notify);
-    window.removeEventListener("focus", notify);
-  };
-};
-
 export function CalendarView() {
   const trpc = useTRPC();
   const { currentGroup } = useGroupContext();
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: currentGroup?.id ?? 0 }),
   );
-  const today = useSyncExternalStore(onReturn, localDate, () => null);
+  const today = useToday();
 
   if (!groupData.success) return null;
   if (!today)
