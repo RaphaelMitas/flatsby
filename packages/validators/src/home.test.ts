@@ -99,11 +99,11 @@ describe("paceChart", () => {
 
   it("draws a flat line for a month with nothing in it", () => {
     const chart = paceChart(monthPace([], "2026-11-03"), "2026-11-03", {
-      width: 300,
+      width: 290,
       height: 100,
     });
 
-    expect(new Set(drawnHeights(chart.now))).toEqual(new Set([100]));
+    expect(chart.now).toBe("M0,100L20,100");
   });
 
   it("glides between the days something happened without overshooting them", () => {

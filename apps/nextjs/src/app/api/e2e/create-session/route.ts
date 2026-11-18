@@ -84,22 +84,22 @@ function thirds(totalCents: number): [number, number, number] {
   return [totalCents - 2 * base, base, base];
 }
 
-const STORE_BOUGHT_CATEGORIES = [
-  "produce",
-  "dairy",
-  "dairy",
-  "pantry",
-  "beverages",
-  "produce",
-  "dairy",
-  "pantry",
-  "pantry",
-  "household",
-  "household",
-  "dairy",
-  "produce",
-  "beverages",
-] satisfies CategoryId[];
+const STORE_BOUGHT = [
+  ["tomatoes", "produce"],
+  ["eggs", "dairy"],
+  ["butter", "dairy"],
+  ["pasta", "pantry"],
+  ["coffee", "beverages"],
+  ["bananas", "produce"],
+  ["yogurt", "dairy"],
+  ["rice", "pantry"],
+  ["oliveOil", "pantry"],
+  ["toiletPaper", "household"],
+  ["dishSoap", "household"],
+  ["cheese", "dairy"],
+  ["onions", "produce"],
+  ["orangeJuice", "beverages"],
+] satisfies [keyof (typeof STORE_COPY)["en"]["bought"], CategoryId][];
 
 const STORE_HISTORY = [
   [
@@ -159,22 +159,22 @@ const STORE_COPY = {
       bread: "Sourdough Bread",
       paperTowels: "Paper Towels",
     },
-    bought: [
-      "Tomatoes",
-      "Eggs",
-      "Butter",
-      "Pasta",
-      "Coffee",
-      "Bananas",
-      "Yogurt",
-      "Rice",
-      "Olive Oil",
-      "Toilet Paper",
-      "Dish Soap",
-      "Cheese",
-      "Onions",
-      "Orange Juice",
-    ],
+    bought: {
+      tomatoes: "Tomatoes",
+      eggs: "Eggs",
+      butter: "Butter",
+      pasta: "Pasta",
+      coffee: "Coffee",
+      bananas: "Bananas",
+      yogurt: "Yogurt",
+      rice: "Rice",
+      oliveOil: "Olive Oil",
+      toiletPaper: "Toilet Paper",
+      dishSoap: "Dish Soap",
+      cheese: "Cheese",
+      onions: "Onions",
+      orangeJuice: "Orange Juice",
+    },
     expenses: {
       shopping: "Weekly shopping",
       internet: "Internet bill",
@@ -206,22 +206,22 @@ const STORE_COPY = {
       bread: "Sauerteigbrot",
       paperTowels: "Küchenrolle",
     },
-    bought: [
-      "Tomaten",
-      "Eier",
-      "Butter",
-      "Nudeln",
-      "Kaffee",
-      "Bananen",
-      "Joghurt",
-      "Reis",
-      "Olivenöl",
-      "Toilettenpapier",
-      "Spülmittel",
-      "Käse",
-      "Zwiebeln",
-      "Orangensaft",
-    ],
+    bought: {
+      tomatoes: "Tomaten",
+      eggs: "Eier",
+      butter: "Butter",
+      pasta: "Nudeln",
+      coffee: "Kaffee",
+      bananas: "Bananen",
+      yogurt: "Joghurt",
+      rice: "Reis",
+      oliveOil: "Olivenöl",
+      toiletPaper: "Toilettenpapier",
+      dishSoap: "Spülmittel",
+      cheese: "Käse",
+      onions: "Zwiebeln",
+      orangeJuice: "Orangensaft",
+    },
     expenses: {
       shopping: "Wocheneinkauf",
       internet: "Internetrechnung",
@@ -322,17 +322,19 @@ async function seedStoreScenario(
   ]);
 
   const dayMs = 24 * 60 * 60 * 1000;
-  const members = [alexMember.id, annaMember.id, tomMember.id];
+  const members: [number, number, number] = [
+    alexMember.id,
+    annaMember.id,
+    tomMember.id,
+  ];
 
   await db.insert(shoppingListItems).values(
-    Array.from({ length: 2 * copy.bought.length }, (_, i) => {
+    [...STORE_BOUGHT, ...STORE_BOUGHT].map(([key, categoryId], i) => {
       const buyer = members[i % members.length] ?? alexMember.id;
       return {
         shoppingListId: list.id,
-        name: copy.bought[i % copy.bought.length] ?? "",
-        categoryId:
-          STORE_BOUGHT_CATEGORIES[i % STORE_BOUGHT_CATEGORIES.length] ??
-          "other",
+        name: copy.bought[key],
+        categoryId,
         createdByGroupMemberId: buyer,
         completed: true,
         completedByGroupMemberId: buyer,
@@ -343,22 +345,21 @@ async function seedStoreScenario(
     }),
   );
 
-  const history = Array.from({ length: 6 }, (_, round) => round).flatMap(
-    (round) =>
-      members.flatMap((paidBy, payer) => {
-        const entry = STORE_HISTORY[round % 2]?.[(payer + round) % 3];
-        if (!entry) return [];
-        return [
-          {
-            ...entry,
-            description: copy.history[entry.key],
-            paidBy,
-            expenseDate: new Date(
-              Date.now() - (5 + 3 * (3 * round + payer)) * dayMs,
-            ),
-          },
-        ];
-      }),
+  const history = [0, 1, 2, 3, 4, 5].flatMap((round) =>
+    members.flatMap((paidBy, payer) => {
+      const entry = STORE_HISTORY[round % 2]?.[(payer + round) % 3];
+      if (!entry) return [];
+      return [
+        {
+          ...entry,
+          description: copy.history[entry.key],
+          paidBy,
+          expenseDate: new Date(
+            Date.now() - (5 + 3 * (3 * round + payer)) * dayMs,
+          ),
+        },
+      ];
+    }),
   );
 
   const seedExpenses = [
@@ -420,11 +421,7 @@ async function seedStoreScenario(
     ]);
   }
 
-  await seedStoreCalendar(
-    group.id,
-    [alexMember.id, annaMember.id, tomMember.id],
-    copy.calendar,
-  );
+  await seedStoreCalendar(group.id, members, copy.calendar);
 
   return { group };
 }
@@ -525,14 +522,12 @@ async function seedStoreCalendar(
       completedByGroupMemberId: anna,
       completedAt: new Date(),
     })),
-    ...Array.from({ length: PLANT_TURNS }, (_, turn) => turn)
-      .filter((turn) => turn % 5 !== 4)
-      .map((turn) => ({
-        itemId: plants.id,
-        date: addDays(today, -3 * (turn + 1)),
-        completedByGroupMemberId: tom,
-        completedAt: new Date(),
-      })),
+    ...Array.from({ length: PLANT_TURNS }, (_, turn) => ({
+      itemId: plants.id,
+      date: addDays(today, -3 * (turn + 1)),
+      completedByGroupMemberId: tom,
+      completedAt: new Date(),
+    })),
   ]);
 }
 

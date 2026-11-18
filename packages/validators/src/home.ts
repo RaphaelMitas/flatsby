@@ -93,8 +93,6 @@ interface Point {
   y: number;
 }
 
-const round = (value: number) => Math.round(value * 10) / 10;
-
 const daysWithActivity = (days: Point[]) =>
   days.filter(
     (day, i) => i === 0 || i === days.length - 1 || day.y !== days[i - 1]?.y,
@@ -111,8 +109,8 @@ export function paceChart(
   const top = Math.max(now.at(-1) ?? 0, before.at(-1) ?? 0, 1);
   const lastDay = days - 1;
   const point = (value: number, index: number) => ({
-    x: round((index / lastDay) * width),
-    y: round(height - (value / top) * height),
+    x: (index / lastDay) * width,
+    y: height - (value / top) * height,
   });
   const nowPoints = now.map(point);
   const beforePoints = before.map(point);
