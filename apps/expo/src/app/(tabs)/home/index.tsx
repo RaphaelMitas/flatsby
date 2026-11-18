@@ -1,16 +1,13 @@
 import { useEffect } from "react";
 import { Text, View } from "react-native";
-import { usePostHog } from "posthog-react-native";
 import { useTranslations } from "use-intl";
 
 import { isUnauthorizedError } from "@flatsby/api/trpcFailure";
 
-import { Dashboard } from "~/components/dashboard/Dashboard";
-import { NewHome } from "~/components/home/NewHome";
+import { Home } from "~/components/home/Home";
 import { Button } from "~/lib/ui/button";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { authClient, signOut } from "~/utils/auth/auth-client";
-import { useHomeVersion } from "~/utils/home-version";
 
 export function ErrorBoundary({
   error,
@@ -54,20 +51,14 @@ export function ErrorBoundary({
 
 export default function Index() {
   const { data: session } = authClient.useSession();
-  const { version } = useHomeVersion();
-  const posthog = usePostHog();
 
-  useEffect(() => {
-    if (version) void posthog.register({ home_version: version });
-  }, [posthog, version]);
-
-  if (!session || !version) {
+  if (!session) {
     return null;
   }
 
   return (
     <SafeAreaView>
-      {version === "new" ? <NewHome /> : <Dashboard />}
+      <Home />
     </SafeAreaView>
   );
 }

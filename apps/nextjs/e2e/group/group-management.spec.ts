@@ -367,6 +367,16 @@ test.describe("Group Management", () => {
     await expect(switcher).not.toContainText(groupName);
   });
 
+  test("home cards open their tabs", async ({ authPage }) => {
+    await authPage.goto("/home");
+    await expect(authPage.getByTestId("home-card-shopping")).toBeVisible();
+    await expect(authPage.getByTestId("home-card-calendar")).toBeVisible();
+    const expenses = authPage.getByTestId("home-card-expenses");
+    await waitForHydration(expenses);
+    await expenses.click();
+    await authPage.waitForURL(/\/expenses$/);
+  });
+
   test("change group name", async ({ authPage }) => {
     const groupName = uniqueGroupName();
     const newName = `${groupName} Updated`;

@@ -84,12 +84,12 @@ const isTimeZone = (zone: string) => {
   }
 };
 
-const timeZoneSchema = z
+export const ianaTimeZoneSchema = z
   .string()
   .max(MAX_TIME_ZONE_LENGTH)
-  .refine(isTimeZone)
-  .optional()
-  .catch(undefined);
+  .refine(isTimeZone);
+
+const timeZoneSchema = ianaTimeZoneSchema.optional().catch(undefined);
 
 export const deviceTimeZone = () =>
   Intl.DateTimeFormat().resolvedOptions().timeZone;

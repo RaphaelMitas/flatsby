@@ -100,6 +100,7 @@ export const getCategoryData = ({
     bgColor,
     borderColor,
     colorKey: config.colorKey,
+    iconName: config.iconName,
     icon: <Icon name={config.iconName} size={iconSize} className={color} />,
     description: msg(`shoppingCategories.descriptions.${categoryId}`),
   };

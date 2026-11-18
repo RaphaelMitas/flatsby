@@ -12,7 +12,7 @@ tags:
       GROUP_NAME: "Delete Me Group"
 # Creating selected the group, so reach the group list through its settings
 - tapOn:
-    id: "dashboard-group-settings"
+    id: "home-group-settings"
 - extendedWaitUntil:
     visible:
       id: "group-settings-change-group"
@@ -68,11 +68,11 @@ tags:
       TAB_ID: "tab-home"
       TAB_LABEL: "Home"
       TAB_X: "41%"
-      MARKER_ID: "dashboard-group-settings"
+      MARKER_ID: "home-group-settings"
 - runFlow:
     file: ../../subflows/tap-until.yaml
     env:
-      TARGET_ID: "dashboard-group-settings"
+      TARGET_ID: "home-group-settings"
       MARKER_ID: "group-settings-details"
 # Centered, or the tap can land on the iOS tab bar floating over the row
 - scrollUntilVisible:

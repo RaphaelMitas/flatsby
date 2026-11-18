@@ -37,7 +37,7 @@ appId: ${APP_ID}
     file: ../subflows/tap-until.yaml
     env:
       TARGET_ID: "group-select-button"
-      MARKER_ID: "dashboard-group-picker"
+      MARKER_ID: "home-group-picker"
 - runFlow:
     file: ../subflows/tap-tab.yaml
     env:
@@ -239,11 +239,11 @@ appId: ${APP_ID}
       TAB_ID: "tab-home"
       TAB_LABEL: ${output.store.tabHome}
       TAB_X: "12%"
-      MARKER_ID: "dashboard-group-settings"
+      MARKER_ID: "home-group-settings"
 - runFlow:
     file: ../subflows/tap-until.yaml
     env:
-      TARGET_ID: "dashboard-group-settings"
+      TARGET_ID: "home-group-settings"
       MARKER_ID: "group-settings-members"
 - runFlow:
     file: ../subflows/tap-until.yaml
@@ -257,61 +257,21 @@ appId: ${APP_ID}
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/05-add-member
 
-# Home root: the stats dashboard with the seeded totals.
+# Home root: the three cards with the seeded household.
 - runFlow:
     file: ../subflows/tap-tab.yaml
     env:
       TAB_ID: "tab-home"
       TAB_LABEL: ${output.store.tabHome}
       TAB_X: "12%"
-      MARKER_ID: "dashboard-group-picker"
+      MARKER_ID: "home-group-picker"
 - extendedWaitUntil:
     visible:
-      id: "dashboard-group-picker"
+      id: "home-card-expenses"
     timeout: 45000
-# The README shows the new home, the store screenshots the classic one;
-# switching back from the new home also retires the invite to it.
-- runFlow:
-    when:
-      visible:
-        id: "home-invite-try"
-    commands:
-      - tapOn:
-          id: "home-invite-try"
-      - extendedWaitUntil:
-          visible:
-            id: "home-rows"
-          timeout: 45000
-      - extendedWaitUntil:
-          visible:
-            id: "home-for-you"
-          timeout: 45000
-      - waitForAnimationToEnd
-      - takeScreenshot: e2e/results/screenshots/${output.locale}/07-new-home
-      - scrollUntilVisible:
-          element:
-            id: "home-switch-back"
-          direction: DOWN
-      - tapOn:
-          id: "home-switch-back"
-      - tapOn:
-          id: "picker-item-no_reason"
-      - extendedWaitUntil:
-          visible:
-            id: "dashboard-group-picker"
-          timeout: 20000
-- retry:
-    maxRetries: 2
-    commands:
-      - swipe:
-          start: "50%, 40%"
-          end: "50%, 85%"
-      - extendedWaitUntil:
-          visible: ".*142.69.*"
-          timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: "home-card-shopping"
+    timeout: 45000
 - waitForAnimationToEnd
 - takeScreenshot: e2e/results/screenshots/${output.locale}/01-home
-- takeScreenshot:
-    path: e2e/results/screenshots/${output.locale}/crop-balance
-    cropOn:
-      id: "home-stat-balance"

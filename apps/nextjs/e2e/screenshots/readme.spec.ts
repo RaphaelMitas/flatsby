@@ -24,7 +24,7 @@ test("captures README screenshots", async ({ page, baseURL }) => {
   );
   await page.goto("/home");
   await expect(page.getByText("Sunset Villa").first()).toBeVisible();
-  await expect(page.getByText("€142.69").first()).toBeVisible();
+  await expect(page.getByTestId("home-card-expenses")).toBeVisible();
   await settle(page);
   await page.screenshot({ path: `${OUT}/web-home.png` });
 

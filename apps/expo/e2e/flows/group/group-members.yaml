@@ -9,12 +9,12 @@ tags:
     id: "group-select-button"
 - extendedWaitUntil:
     visible:
-      id: "dashboard-group-picker"
+      id: "home-group-picker"
     timeout: 15000
 
 # Open group settings -> members -> invite
 - tapOn:
-    id: "dashboard-group-settings"
+    id: "home-group-settings"
 - extendedWaitUntil:
     visible:
       id: "group-settings-members"
@@ -88,12 +88,12 @@ tags:
     id: "join-invite-button"
 - extendedWaitUntil:
     visible:
-      id: "dashboard-group-picker"
+      id: "home-group-picker"
     timeout: 20000
 
 # The claim takes over Anna's row, so she leaves the placeholder list
 - tapOn:
-    id: "dashboard-group-settings"
+    id: "home-group-settings"
 - extendedWaitUntil:
     visible:
       id: "group-settings-members"

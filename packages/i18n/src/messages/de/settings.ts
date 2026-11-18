@@ -13,9 +13,6 @@ export const settings = {
     legal: "Rechtliches",
   },
   items: {
-    home: "Startseite",
-    homeClassic: "Klassisch",
-    homeNew: "Neu",
     theme: "Design",
     changeGroup: "Gruppe wechseln",
     profileSubtitle: "Dein Name und PayPal.me",

@@ -72,7 +72,7 @@ onFlowComplete:
       - runFlow:
           file: ../../subflows/relaunch.yaml
           env:
-            MARKER_ID: "dashboard-group-picker"
+            MARKER_ID: "home-group-picker"
       - runFlow:
           file: ../../subflows/tap-tab.yaml
           env:

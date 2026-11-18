@@ -8,7 +8,7 @@ tags:
     id: "group-select-button"
 - extendedWaitUntil:
     visible:
-      id: "dashboard-group-picker"
+      id: "home-group-picker"
     timeout: 15000
 - runFlow:
     file: ../../subflows/tap-tab.yaml
