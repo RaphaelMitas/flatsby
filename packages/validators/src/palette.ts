@@ -36,62 +36,37 @@ export function parsePalette(stored: string | null | undefined): Palette {
 export const colorModes = ["light", "dark"] as const;
 export type ColorMode = (typeof colorModes)[number];
 
-const paletteTokenNames = [
-  "background",
-  "foreground",
-  "card",
-  "card-foreground",
-  "popover",
-  "popover-foreground",
-  "primary",
-  "primary-foreground",
-  "secondary",
-  "secondary-foreground",
-  "muted",
-  "muted-foreground",
-  "accent",
-  "accent-foreground",
-  "border",
-  "input",
-  "ring",
-  "cat-detail",
-  "sidebar",
-  "sidebar-foreground",
-  "sidebar-accent",
-  "sidebar-accent-foreground",
-  "sidebar-border",
-  "sidebar-ring",
-] as const;
-export type PaletteTokenName = (typeof paletteTokenNames)[number];
-export type PaletteTokens = Record<PaletteTokenName, string>;
+const defaultLight = {
+  background: "#ffffff",
+  foreground: "#09090b",
+  card: "#ffffff",
+  "card-foreground": "#09090b",
+  popover: "#ffffff",
+  "popover-foreground": "#09090b",
+  primary: "#18181b",
+  "primary-foreground": "#fafafa",
+  secondary: "#f4f4f5",
+  "secondary-foreground": "#18181b",
+  muted: "#f4f4f5",
+  "muted-foreground": "#71717a",
+  accent: "#f4f4f5",
+  "accent-foreground": "#18181b",
+  border: "#e4e4e7",
+  input: "#e4e4e7",
+  ring: "#18181b",
+  "cat-detail": "#ffffff",
+  sidebar: "#fafafa",
+  "sidebar-foreground": "#3f3f46",
+  "sidebar-accent": "#f4f4f5",
+  "sidebar-accent-foreground": "#18181b",
+  "sidebar-border": "#e5e7eb",
+  "sidebar-ring": "#3b82f6",
+};
+export type PaletteTokens = typeof defaultLight;
+export type PaletteTokenName = keyof PaletteTokens;
 
 const defaultTokens: Record<ColorMode, PaletteTokens> = {
-  light: {
-    background: "#ffffff",
-    foreground: "#09090b",
-    card: "#ffffff",
-    "card-foreground": "#09090b",
-    popover: "#ffffff",
-    "popover-foreground": "#09090b",
-    primary: "#18181b",
-    "primary-foreground": "#fafafa",
-    secondary: "#f4f4f5",
-    "secondary-foreground": "#18181b",
-    muted: "#f4f4f5",
-    "muted-foreground": "#71717a",
-    accent: "#f4f4f5",
-    "accent-foreground": "#18181b",
-    border: "#e4e4e7",
-    input: "#e4e4e7",
-    ring: "#18181b",
-    "cat-detail": "#ffffff",
-    sidebar: "#fafafa",
-    "sidebar-foreground": "#3f3f46",
-    "sidebar-accent": "#f4f4f5",
-    "sidebar-accent-foreground": "#18181b",
-    "sidebar-border": "#e5e7eb",
-    "sidebar-ring": "#3b82f6",
-  },
+  light: defaultLight,
   dark: {
     background: "#09090b",
     foreground: "#fafafa",
@@ -140,10 +115,10 @@ type Accent = Record<ColorMode, { fill: Oklch; text: Oklch }>;
 
 const WHITE: Oklch = [1, 0, 0];
 
-function hueAccent(hue: number): Accent {
+function accent(light: Oklch, dark: Oklch): Accent {
   return {
-    light: { fill: [0.5, 0.15, hue], text: WHITE },
-    dark: { fill: [0.8, 0.11, hue], text: [0.2, 0.04, hue] },
+    light: { fill: light, text: WHITE },
+    dark: { fill: dark, text: [0.2, 0.04, dark[2]] },
   };
 }
 
@@ -153,34 +128,10 @@ const presets: Record<
   Exclude<PaletteId, "default" | "custom">,
   { hue: number; accent: Accent }
 > = {
-  sand: {
-    hue: 70,
-    accent: {
-      light: { fill: [0.52, 0.13, 45], text: WHITE },
-      dark: { fill: [0.8, 0.11, 60], text: [0.2, 0.04, 60] },
-    },
-  },
-  forest: {
-    hue: 155,
-    accent: {
-      light: { fill: [0.44, 0.09, 155], text: WHITE },
-      dark: { fill: [0.8, 0.12, 155], text: [0.2, 0.04, 155] },
-    },
-  },
-  ocean: {
-    hue: 255,
-    accent: {
-      light: { fill: [0.5, 0.17, 258], text: WHITE },
-      dark: { fill: [0.78, 0.11, 250], text: [0.2, 0.04, 250] },
-    },
-  },
-  blossom: {
-    hue: 0,
-    accent: {
-      light: { fill: [0.53, 0.19, 5], text: WHITE },
-      dark: { fill: [0.8, 0.11, 355], text: [0.2, 0.04, 355] },
-    },
-  },
+  sand: { hue: 70, accent: accent([0.52, 0.13, 45], [0.8, 0.11, 60]) },
+  forest: { hue: 155, accent: accent([0.44, 0.09, 155], [0.8, 0.12, 155]) },
+  ocean: { hue: 255, accent: accent([0.5, 0.17, 258], [0.78, 0.11, 250]) },
+  blossom: { hue: 0, accent: accent([0.53, 0.19, 5], [0.8, 0.11, 355]) },
 };
 
 function linearSrgb([lightness, chroma, hue]: Oklch) {
@@ -300,7 +251,7 @@ export function paletteTokens(
     return derivedTokens(
       palette.hue,
       palette.tint,
-      hueAccent(palette.hue),
+      accent([0.5, 0.15, palette.hue], [0.8, 0.11, palette.hue]),
       mode,
     );
   }
@@ -310,7 +261,8 @@ export function paletteTokens(
 
 export function paletteVariables(tokens: PaletteTokens) {
   const variables: Record<`--${string}`, string> = {};
-  for (const name of paletteTokenNames) variables[`--${name}`] = tokens[name];
+  for (const [name, value] of Object.entries(tokens))
+    variables[`--${name}`] = value;
   return variables;
 }
 

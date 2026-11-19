@@ -37,13 +37,13 @@ export const SettingsItem = ({
       <View className="flex-1 flex-row items-center gap-3">
         <View
           className={`h-8 w-8 items-center justify-center rounded-full ${
-            isDestructive ? "bg-destructive/20" : "bg-primary/10"
+            isDestructive ? "bg-destructive/20" : "bg-muted"
           }`}
         >
           <Icon
             name={iconName}
             size={16}
-            color={isDestructive ? "destructive" : "primary"}
+            color={isDestructive ? "destructive" : "foreground"}
           />
         </View>
         <View className="flex-1">
