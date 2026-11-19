@@ -31,7 +31,7 @@ export type CategoryId = (typeof categoryIds)[number];
 
 export const topCategories = (
   counts: Partial<Record<CategoryId, number>>,
-  limit: number,
+  limit?: number,
 ) =>
   categoryIds
     .filter((id) => (counts[id] ?? 0) > 0)

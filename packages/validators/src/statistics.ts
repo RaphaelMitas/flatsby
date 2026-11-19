@@ -13,18 +13,13 @@ import {
   monthOf,
   shiftMonth,
 } from "./calendar";
-import {
-  categoryIds,
-  categoryIdSchema,
-  isCategoryId,
-  topCategories,
-} from "./categories";
+import { categoryIdSchema, isCategoryId, topCategories } from "./categories";
 import {
   expenseCategoryGroups,
   getSubcategoryGroup,
 } from "./expenses/categories";
 import { inLedgerCurrency } from "./expenses/conversion";
-import { monthPace, paceSchema } from "./home";
+import { monthPace, paceSchema, sum } from "./home";
 
 export const statisticsRanges = [
   "thisMonth",
@@ -46,7 +41,7 @@ const totalSchema = { total: z.number() };
 const spendingTotalsSchema = { share: z.number(), household: z.number() };
 
 export const statisticsSchema = z.object({
-  today: calendarDateSchema,
+  wholeMonth: z.boolean(),
   from: calendarDateSchema,
   to: calendarDateSchema,
   spending: z.object({
@@ -90,7 +85,7 @@ interface Period {
 }
 
 export interface StatisticsPeriod extends Period {
-  pace: boolean;
+  pace: "toDate" | "wholeMonth" | null;
 }
 
 const firstOf = (month: string) => `${month}-01`;
@@ -112,17 +107,21 @@ export function statisticsPeriod(
   const month = monthOf(today);
   switch (range) {
     case "thisMonth":
-      return { from: firstOf(month), to: today, pace: true };
+      return { from: firstOf(month), to: today, pace: "toDate" };
     case "lastMonth": {
       const previous = shiftMonth(month, -1);
-      return { from: firstOf(previous), to: lastOf(previous), pace: true };
+      return {
+        from: firstOf(previous),
+        to: lastOf(previous),
+        pace: "wholeMonth",
+      };
     }
     case "last3Months":
-      return { from: firstOf(shiftMonth(month, -2)), to: today, pace: false };
+      return { from: firstOf(shiftMonth(month, -2)), to: today, pace: null };
     case "thisYear":
-      return { from: `${today.slice(0, 4)}-01-01`, to: today, pace: false };
+      return { from: `${today.slice(0, 4)}-01-01`, to: today, pace: null };
     case "sinceJoined":
-      return { from: earlier(joinedOn, today), to: today, pace: false };
+      return { from: earlier(joinedOn, today), to: today, pace: null };
   }
 }
 
@@ -148,9 +147,6 @@ const within = <Row extends { day: string }>(
   { from, to }: Period,
 ) => rows.filter(({ day }) => day >= from && day <= to);
 
-const sumOf = <Row>(rows: Row[], value: (row: Row) => number) =>
-  rows.reduce((total, row) => total + value(row), 0);
-
 const byMonth = <Row extends { day: string }, Totals>(
   rows: Row[],
   to: string,
@@ -165,7 +161,7 @@ const paceOf = (period: StatisticsPeriod, days: CountDay[]) =>
   period.pace ? monthPace(days, period.to) : null;
 
 const countTotals = (rows: CountDay[]) => ({
-  total: sumOf(rows, ({ total }) => total),
+  total: sum(rows.map(({ total }) => total)),
 });
 
 export interface SpendingDay {
@@ -176,8 +172,8 @@ export interface SpendingDay {
 }
 
 const spendingTotals = (rows: SpendingDay[]) => ({
-  share: sumOf(rows, ({ share }) => share),
-  household: sumOf(rows, ({ household }) => household),
+  share: sum(rows.map(({ share }) => share)),
+  household: sum(rows.map(({ household }) => household)),
 });
 
 export const convertedShares = (
@@ -250,7 +246,7 @@ export function shoppingStatistics(
     ...countTotals(inRange),
     pace: paceOf(period, shown),
     months: byMonth(shown, period.to, countTotals),
-    categories: topCategories(counts, categoryIds.length).map((category) => ({
+    categories: topCategories(counts).map((category) => ({
       category,
       total: counts[category] ?? 0,
     })),
@@ -286,6 +282,15 @@ export function choreStatistics(
       .slice(0, MAX_CHORE_TITLES),
   };
 }
+
+export const isStatisticsEmpty = ({ spending, shopping, chores }: Statistics) =>
+  spending.household === 0 &&
+  shopping.total === 0 &&
+  chores.total === 0 &&
+  spending.months.every(
+    ({ share, household }) => share === 0 && household === 0,
+  ) &&
+  [...shopping.months, ...chores.months].every(({ total }) => total === 0);
 
 export const barHeights = (values: number[], height: number) => {
   const top = Math.max(0, ...values);

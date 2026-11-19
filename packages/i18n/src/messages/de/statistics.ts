@@ -11,20 +11,20 @@ export const statistics = {
     sinceJoined: "Seit deinem Einzug",
   },
   yourShare: "Dein Anteil",
-  ofHousehold: "von insgesamt <b>{amount}</b> im Haushalt.",
+  ofHousehold: "von <b>{amount}</b>, die der Haushalt ausgegeben hat",
   wholeMonth: {
     less: "<b>{amount} weniger</b> als im {month}",
     more: "<b>{amount} mehr</b> als im {month}",
     same: "<b>Gleich viel</b> wie im {month}",
   },
   whereItWent: "Wofür",
-  householdAmount: "{amount} Haushalt",
+  householdAmount: "{amount} im Haushalt",
   monthByMonth: "Monat für Monat",
   you: "du",
   household: "Haushalt",
   chores: "Aufgaben",
   daysOnList:
-    "Meist innerhalb von <b>{count, plural, one {# Tag} other {# Tagen}}</b> gekauft, nachdem es auf der Liste stand",
+    "Steht meist <b>{count, plural, one {# Tag} other {# Tage}}</b> auf der Liste, bis es gekauft wird",
   times: "{count}×",
   empty: {
     title: "Noch nichts zu sehen",

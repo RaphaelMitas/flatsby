@@ -5,6 +5,7 @@ import type { ExpenseCategoryGroup } from "./categories";
 import type { PersonMember } from "./formatting";
 import {
   addDays,
+  calendarDateSchema,
   formatCalendarDate,
   monthOf,
   pickerDate,
@@ -220,3 +221,20 @@ export function filterChipLabels(
     range: choice.range && dayRangeLabel(choice.range, today, locale, t),
   };
 }
+
+export const expenseLinkSchema = z.object({
+  category: z.enum(expenseCategoryGroups),
+  from: calendarDateSchema,
+  to: calendarDateSchema,
+});
+export type ExpenseLink = z.infer<typeof expenseLinkSchema>;
+
+export const linkedFilterChoice = (
+  { category, from, to }: ExpenseLink,
+  memberId: number,
+): ExpenseFilterChoice => ({
+  memberId,
+  memberRole: "split",
+  category,
+  range: { from, to },
+});

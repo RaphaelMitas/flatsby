@@ -56,12 +56,38 @@ function thirtyDaysAgo(): Date {
   return date;
 }
 
+interface Days {
+  from: string;
+  to: string;
+}
+
 const ledgerAmount = sql<number>`coalesce(${expenses.convertedAmountInCents}, ${expenses.amountInCents})`;
 const ledgerCurrency = sql<string>`coalesce(${expenses.convertedCurrency}, ${expenses.currency})`;
 
 const localDay = (column: SQLWrapper, timeZone: string) =>
   sql<string>`to_char(${column} at time zone 'UTC' at time zone ${timeZone}, 'YYYY-MM-DD')`;
 const firstColumn = sql`1`;
+
+const aroundDays = (column: SQLWrapper, { from, to }: Days) =>
+  and(
+    gte(column, new Date(addDays(from, -1))),
+    lt(column, new Date(addDays(to, 2))),
+  );
+
+const spentIn = (groupId: number, currency: string, days: Days) =>
+  and(
+    eq(expenses.groupId, groupId),
+    aroundDays(expenses.expenseDate, days),
+    eq(ledgerCurrency, currency),
+    ne(expenses.splitMethod, "settlement"),
+  );
+
+const boughtIn = (groupId: number, days: Days) =>
+  and(
+    eq(shoppingLists.groupId, groupId),
+    eq(shoppingListItems.completed, true),
+    aroundDays(shoppingListItems.completedAt, days),
+  );
 
 const homeStatsInputSchema = z.object({
   groupId: z.number(),
@@ -79,8 +105,6 @@ export const statsRouter = createTRPCRouter({
           const database = yield* Database;
           const today = input.today ?? localDateIn(input.timeZone);
           const { from, to } = paceWindow(today);
-          const after = new Date(addDays(from, -1));
-          const before = new Date(addDays(to, 2));
           return yield* database.query("fetch home pace", async (db) => {
             const [spending, itemsBought, choresDone] = await Promise.all([
               db
@@ -89,15 +113,7 @@ export const statsRouter = createTRPCRouter({
                   total: sql`sum(${ledgerAmount})`.mapWith(Number),
                 })
                 .from(expenses)
-                .where(
-                  and(
-                    eq(expenses.groupId, input.groupId),
-                    gte(expenses.expenseDate, after),
-                    lt(expenses.expenseDate, before),
-                    eq(ledgerCurrency, group.currency),
-                    ne(expenses.splitMethod, "settlement"),
-                  ),
-                )
+                .where(spentIn(input.groupId, group.currency, { from, to }))
                 .groupBy(firstColumn),
 
               db
@@ -110,14 +126,7 @@ export const statsRouter = createTRPCRouter({
                   shoppingLists,
                   eq(shoppingListItems.shoppingListId, shoppingLists.id),
                 )
-                .where(
-                  and(
-                    eq(shoppingLists.groupId, input.groupId),
-                    eq(shoppingListItems.completed, true),
-                    gte(shoppingListItems.completedAt, after),
-                    lt(shoppingListItems.completedAt, before),
-                  ),
-                )
+                .where(boughtIn(input.groupId, { from, to }))
                 .groupBy(firstColumn),
 
               db
@@ -169,21 +178,9 @@ export const statsRouter = createTRPCRouter({
             localDateIn(input.timeZone, member.joinedOn),
           );
           const window = statisticsWindow(period);
-          const after = new Date(addDays(window.from, -1));
-          const before = new Date(addDays(window.to, 2));
-          const spent = and(
-            eq(expenses.groupId, input.groupId),
-            gte(expenses.expenseDate, after),
-            lt(expenses.expenseDate, before),
-            eq(ledgerCurrency, group.currency),
-            ne(expenses.splitMethod, "settlement"),
-          );
-          const bought = and(
-            eq(shoppingLists.groupId, input.groupId),
-            eq(shoppingListItems.completed, true),
-            gte(shoppingListItems.completedAt, after),
-            lt(shoppingListItems.completedAt, before),
-          );
+          const spent = spentIn(input.groupId, group.currency, window);
+          const bought = boughtIn(input.groupId, window);
+          const spentOn = localDay(expenses.expenseDate, input.timeZone);
           const boughtOn = localDay(
             shoppingListItems.completedAt,
             input.timeZone,
@@ -197,7 +194,7 @@ export const statsRouter = createTRPCRouter({
               await Promise.all([
                 db
                   .select({
-                    day: localDay(expenses.expenseDate, input.timeZone),
+                    day: spentOn,
                     subcategory: expenses.subcategory,
                     household: sql`sum(${ledgerAmount})`.mapWith(Number),
                     share:
@@ -226,9 +223,7 @@ export const statsRouter = createTRPCRouter({
                     convertedCurrency: true,
                   },
                   extras: {
-                    day: localDay(expenses.expenseDate, input.timeZone).as(
-                      "day",
-                    ),
+                    day: spentOn.as("day"),
                   },
                   with: {
                     expenseSplits: {
@@ -298,7 +293,7 @@ export const statsRouter = createTRPCRouter({
               ]);
 
             return {
-              today,
+              wholeMonth: period.pace === "wholeMonth",
               from: period.from,
               to: period.to,
               spending: spendingStatistics(
