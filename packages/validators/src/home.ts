@@ -17,7 +17,7 @@ export const homePaceInputSchema = z.object({
   timeZone: ianaTimeZoneSchema.catch(DEFAULT_TIME_ZONE),
 });
 
-const paceSchema = z.object({
+export const paceSchema = z.object({
   current: z.array(z.number()),
   previous: z.array(z.number()),
 });
@@ -32,7 +32,7 @@ export const homePaceSchema = z.object({
 
 export const homeCardOpenedSchema = z.object({
   groupId: z.number(),
-  card: z.enum(["expenses", "shopping", "calendar", "turn"]),
+  card: z.enum(["expenses", "shopping", "calendar", "turn", "statistics"]),
 });
 export type HomeCardName = z.infer<typeof homeCardOpenedSchema>["card"];
 
