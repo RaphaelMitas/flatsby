@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import type { ReactNode } from "react";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
@@ -44,6 +45,7 @@ export function Switcher({
   actions,
   settings,
   className,
+  children,
 }: {
   barTestID: string;
   sheetTestID: string;
@@ -58,6 +60,7 @@ export function Switcher({
   actions: SwitcherAction[];
   settings: SwitcherSettings;
   className?: string;
+  children?: ReactNode;
 }) {
   const sheetRef = useRef<BottomSheetModal>(null);
   const [picked, setPicked] = useState<number | null>(null);
@@ -95,15 +98,8 @@ export function Switcher({
             <Icon name="chevrons-up-down" size={16} color="foreground" />
           </View>
         </Pressable>
-        <Pressable
-          testID={settings.testID}
-          accessibilityRole="button"
-          accessibilityLabel={settings.label}
-          onPress={settings.onPress}
-          className="border-border bg-card active:bg-muted aspect-square items-center justify-center rounded-2xl border shadow-sm"
-        >
-          <Icon name="settings" size={20} color="foreground" />
-        </Pressable>
+        {children}
+        <SwitcherButton icon="settings" {...settings} />
       </View>
       <SheetModal ref={sheetRef} snapPoints={SNAP_POINTS}>
         <ScrollView
@@ -195,5 +191,24 @@ export function Switcher({
         </ScrollView>
       </SheetModal>
     </>
+  );
+}
+
+export function SwitcherButton({
+  testID,
+  icon,
+  label,
+  onPress,
+}: SwitcherSettings & { icon: IconProps["name"] }) {
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      className="border-border bg-card active:bg-muted aspect-square items-center justify-center rounded-2xl border shadow-sm"
+    >
+      <Icon name={icon} size={20} color="foreground" />
+    </Pressable>
   );
 }

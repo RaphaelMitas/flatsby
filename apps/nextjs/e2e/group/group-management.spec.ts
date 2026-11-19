@@ -377,6 +377,17 @@ test.describe("Group Management", () => {
     await authPage.waitForURL(/\/expenses$/);
   });
 
+  test("home opens the statistics", async ({ authPage }) => {
+    await createAndSelectGroup(authPage, uniqueGroupName());
+    await createTestExpense(authPage);
+    await authPage.goto("/home");
+    const statistics = authPage.getByTestId("home-statistics");
+    await waitForHydration(statistics);
+    await statistics.click();
+    await authPage.waitForURL(/\/home\/statistics$/);
+    await expect(authPage.getByTestId("statistics-share")).toBeVisible();
+  });
+
   test("change group name", async ({ authPage }) => {
     const groupName = uniqueGroupName();
     const newName = `${groupName} Updated`;

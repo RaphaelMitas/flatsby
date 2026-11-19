@@ -1,7 +1,7 @@
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
 import type { ExpenseListFilter } from "@flatsby/validators/expenses/list-filter";
 import type { Href } from "expo-router";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useEffectEvent, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
@@ -16,6 +16,8 @@ import {
   expenseSearchView,
   useExpenseFilters,
 } from "@flatsby/api/hooks/useExpenseFilters";
+import { calendarDateSchema } from "@flatsby/validators/calendar";
+import { isExpenseCategoryGroup } from "@flatsby/validators/expenses/categories";
 import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { withMonthHeaders } from "@flatsby/validators/expenses/formatting";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
@@ -65,7 +67,12 @@ function ExpenseList() {
   const { selectedGroupId } = useShoppingStore();
   const groupId = selectedGroupId ?? -1;
   const isLargeScreen = useMediaQuery("md");
-  const { expenseId } = useGlobalSearchParams<{ expenseId?: string }>();
+  const { expenseId, category, from, to } = useGlobalSearchParams<{
+    expenseId?: string;
+    category?: string;
+    from?: string;
+    to?: string;
+  }>();
   const pathname = usePathname();
   const inPane = isLargeScreen && pathname !== "/expenses";
   const open = (href: Href) =>
@@ -80,6 +87,27 @@ function ExpenseList() {
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
+
+  const onLinkedFilter = useEffectEvent(
+    (link: { category: string; from: string; to: string }) => {
+      if (
+        groupData.success &&
+        isExpenseCategoryGroup(link.category) &&
+        calendarDateSchema.safeParse(link.from).success &&
+        calendarDateSchema.safeParse(link.to).success
+      )
+        filters.choose({
+          category: link.category,
+          memberId: groupData.data.thisGroupMember.id,
+          memberRole: "split",
+          range: { from: link.from, to: link.to },
+        });
+      router.setParams({ category: undefined, from: undefined, to: undefined });
+    },
+  );
+  useEffect(() => {
+    if (category && from && to) onLinkedFilter({ category, from, to });
+  }, [category, from, to]);
 
   const listOptions = (filter: ExpenseListFilter) =>
     trpc.expense.getGroupExpenses.infiniteQueryOptions(

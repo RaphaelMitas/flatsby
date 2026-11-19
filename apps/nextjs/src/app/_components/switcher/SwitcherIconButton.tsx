@@ -1,21 +1,23 @@
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { Settings } from "lucide-react";
 
 const className =
   "bg-card hover:bg-muted flex aspect-square shrink-0 items-center justify-center rounded-2xl border shadow-sm transition-colors";
 
-export function SwitcherSettingsButton({
+export function SwitcherIconButton({
   testId,
   label,
+  icon: Icon,
   ...target
-}: { testId: string; label: string } & (
-  { href: string } | { onClick: () => void }
+}: { testId: string; label: string; icon: LucideIcon } & (
+  { href: string; onClick?: () => void } | { onClick: () => void }
 )) {
-  const icon = <Settings className="size-5" />;
+  const icon = <Icon className="size-5" />;
 
   return "href" in target ? (
     <Link
       href={target.href}
+      onClick={target.onClick}
       data-testid={testId}
       aria-label={label}
       className={className}

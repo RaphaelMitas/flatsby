@@ -24,6 +24,14 @@ export default function HomeLayout() {
           }}
         />
         <Stack.Screen
+          name="statistics"
+          options={{
+            title: t("statistics.title"),
+            headerTitle: "",
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen
           name="create-group"
           options={{
             title: t("navigation.createGroup"),

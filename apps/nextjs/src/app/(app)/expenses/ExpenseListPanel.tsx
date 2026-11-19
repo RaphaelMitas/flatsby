@@ -1,7 +1,8 @@
 "use client";
 
 import type { ExpenseListFilter } from "@flatsby/validators/expenses/list-filter";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   keepPreviousData,
   useInfiniteQuery,
@@ -28,6 +29,7 @@ import { useTRPC } from "~/trpc/react";
 import { ExpenseCard } from "./ExpenseCard";
 import { ExpenseDebtCard } from "./ExpenseDebtCard";
 import { ExpenseFilterBar } from "./ExpenseFilterBar";
+import { expenseFilterChoice } from "./expenseFilterParams";
 
 interface ExpenseListPanelProps {
   selectedExpenseId: number | null;
@@ -47,6 +49,12 @@ export function ExpenseListPanel({
 
   const groupId = currentGroup?.id ?? 0;
   const filters = useExpenseFilters(groupId);
+  const searchParams = useSearchParams();
+  const [seed, setSeed] = useState(() => expenseFilterChoice(searchParams));
+  if (seed) {
+    setSeed(undefined);
+    filters.choose(seed);
+  }
 
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
