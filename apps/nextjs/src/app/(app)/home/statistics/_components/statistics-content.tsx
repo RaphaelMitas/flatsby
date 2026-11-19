@@ -227,12 +227,7 @@ function StatisticsBody({
         isPlaceholderData && "opacity-50",
       )}
     >
-      <ShareHero
-        stats={stats}
-        money={money}
-        fadeIn={fadeIn}
-        onScrub={() => onUsed("scrub")}
-      />
+      <ShareHero stats={stats} money={money} onScrub={() => onUsed("scrub")} />
       {spending.categories.length > 0 && (
         <CategoriesCard
           spending={spending}
@@ -260,12 +255,10 @@ function StatisticsBody({
 function ShareHero({
   stats: { spending, to, wholeMonth },
   money,
-  fadeIn,
   onScrub,
 }: {
   stats: Statistics;
   money: (cents: number) => string;
-  fadeIn: boolean;
   onScrub: () => void;
 }) {
   const t = useTranslations();
@@ -322,7 +315,7 @@ function ShareHero({
             className="h-28"
             labelled
             wholeMonth={wholeMonth}
-            fadeIn={fadeIn}
+            fadeIn={false}
             scrub={{
               point,
               onMove: (x) => {

@@ -30,6 +30,7 @@ export function MonthBars({
   height,
   format,
   details,
+  describe,
   picker: { range, period, onPick },
   tint,
 }: {
@@ -37,6 +38,7 @@ export function MonthBars({
   height: number;
   format: (value: number) => string;
   details: (month: Month) => { label: string; value: string }[];
+  describe: (month: Month) => string;
   picker: MonthPicker;
   tint?: string;
 }) {
@@ -67,7 +69,7 @@ export function MonthBars({
               <button
                 type="button"
                 aria-pressed={picked}
-                aria-label={`${name}: ${rows.map(({ label, value }) => `${label} ${value}`).join(", ")}`}
+                aria-label={`${name}: ${describe(entry)}`}
                 onClick={() => onPick(month)}
                 className={cn(
                   "hover:bg-muted text-muted-foreground flex flex-1 flex-col items-center gap-1 rounded-xl py-1.5 text-xs font-medium tabular-nums transition-colors",

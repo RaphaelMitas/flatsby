@@ -98,7 +98,10 @@ export function CategoriesCard({
               onClick={onOpen}
               onPointerEnter={() => setLit(category)}
               onPointerLeave={() => setLit(null)}
-              onFocus={() => setLit(category)}
+              onFocus={(event) => {
+                if (event.currentTarget.matches(":focus-visible"))
+                  setLit(category);
+              }}
               onBlur={() => setLit(null)}
               className={cn(
                 "hover:bg-muted -mx-2 flex items-center gap-3 rounded-xl p-2 transition-[background-color,opacity]",
@@ -168,6 +171,9 @@ export function MonthByMonthCard({
           { label: t("statistics.you"), value: money(share) },
           { label: t("statistics.household"), value: money(total) },
         ]}
+        describe={({ total, share = 0 }) =>
+          `${t("statistics.you")} ${money(share)}, ${t("statistics.household")} ${money(total)}`
+        }
         picker={picker}
       />
     </TitledCard>
@@ -241,10 +247,13 @@ export function ShoppingStatsCard({
                 onClick={() => toggle(key)}
                 onPointerEnter={() => setHovered(key)}
                 onPointerLeave={() => setHovered(null)}
-                onFocus={() => setHovered(key)}
+                onFocus={(event) => {
+                  if (event.currentTarget.matches(":focus-visible"))
+                    setHovered(key);
+                }}
                 onBlur={() => setHovered(null)}
                 className={cn(
-                  "hover:text-foreground flex items-center gap-1.5 transition-[color,opacity]",
+                  "hover:text-foreground -my-1 flex items-center gap-1.5 py-1 transition-[color,opacity]",
                   filtered?.key === key && "text-foreground",
                   lit !== null && lit !== key && "opacity-40",
                 )}
@@ -366,6 +375,9 @@ function CountCard({
             value: String(month.total),
           },
         ]}
+        describe={({ total: count }) =>
+          `${count} ${only?.label ?? unit(count)}`
+        }
         picker={picker}
         tint={only?.tint}
       />

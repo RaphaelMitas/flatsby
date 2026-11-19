@@ -36,7 +36,9 @@ export function SplitBar({
                 onClick={() => onPick(key)}
                 onPointerEnter={() => onLit(key)}
                 onPointerLeave={() => onLit(null)}
-                onFocus={() => onLit(key)}
+                onFocus={(event) => {
+                  if (event.currentTarget.matches(":focus-visible")) onLit(key);
+                }}
                 onBlur={() => onLit(null)}
                 className={cn(
                   "h-3 transition-[flex-grow,opacity,scale] duration-300 ease-out first:rounded-l-md last:rounded-r-md motion-reduce:transition-none",

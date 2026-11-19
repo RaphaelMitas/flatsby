@@ -1,6 +1,6 @@
 "use client";
 
-import type { Pace, paceAt } from "@flatsby/validators/home";
+import type { Pace, PacePoint } from "@flatsby/validators/home";
 import { useId } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -10,7 +10,7 @@ import { paceChart, paceLabels } from "@flatsby/validators/home";
 export const PACE_SIZE = { width: 100, height: 100 };
 
 export interface PaceScrub {
-  point: ReturnType<typeof paceAt> | null;
+  point: PacePoint | null;
   onMove: (x: number | null) => void;
 }
 

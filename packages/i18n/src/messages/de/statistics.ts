@@ -30,7 +30,7 @@ export const statistics = {
     "von {count, plural, one {# gekauften Artikel} other {# gekauften Artikeln}}",
   householdAmount: "{amount} im Haushalt",
   monthByMonth: "Monat für Monat",
-  you: "du",
+  you: "Du",
   household: "Haushalt",
   chores: "Aufgaben",
   daysOnList:
