@@ -460,7 +460,7 @@ export const pins = createTable(
       .references(() => groups.id, { onDelete: "cascade" }),
     title: varchar("title", { length: MAX_PIN_TITLE_LENGTH }).notNull(),
     body: text("body").notNull(),
-    icon: varchar("icon", { length: 16 }).$type<PinIcon>().notNull(),
+    icon: varchar("icon", { length: 64 }).$type<PinIcon>().notNull(),
     wifi: jsonb("wifi").$type<PinWifi>(),
     createdByGroupMemberId: integer("created_by_group_member_id").references(
       () => groupMembers.id,

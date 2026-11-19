@@ -4,7 +4,7 @@ import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, ChevronDown } from "lucide-react";
+import { ChevronDown, CircleExclamationPoint } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -291,7 +291,7 @@ export const MemberCard = ({
       </div>
       {removeFailure && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <CircleExclamationPoint className="h-4 w-4" />
           <AlertTitle>{t("common.error")}</AlertTitle>
           <AlertDescription>{removeFailure}</AlertDescription>
         </Alert>
@@ -299,13 +299,13 @@ export const MemberCard = ({
       {removeGroupMemberMutation.isSuccess &&
         removeGroupMemberMutation.data.success === true && (
           <Alert variant="success">
-            <AlertCircle className="h-4 w-4" />
+            <CircleExclamationPoint className="h-4 w-4" />
             <AlertTitle>{t("group.members.removed")}</AlertTitle>
           </Alert>
         )}
       {roleUpdateFailure && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <CircleExclamationPoint className="h-4 w-4" />
           <AlertTitle>{t("common.error")}</AlertTitle>
           <AlertDescription>{roleUpdateFailure}</AlertDescription>
         </Alert>
@@ -313,7 +313,7 @@ export const MemberCard = ({
       {updateMemberRoleMutation.isSuccess &&
         updateMemberRoleMutation.data.success === true && (
           <Alert variant="success">
-            <AlertCircle className="h-4 w-4" />
+            <CircleExclamationPoint className="h-4 w-4" />
             <AlertTitle>{t("group.members.roleUpdated")}</AlertTitle>
           </Alert>
         )}

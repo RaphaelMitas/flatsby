@@ -15,7 +15,7 @@ export const pinIcons = [
   "wifi",
   "key-round",
   "phone",
-  "trash-2",
+  "trash",
   "scroll-text",
   "washing-machine",
   "zap",
@@ -126,7 +126,7 @@ export type Pin = z.infer<typeof pinSchema>;
 export const pinStarters = [
   { icon: "wifi", title: msg("pinboard.starters.wifi") },
   { icon: "key-round", title: msg("pinboard.starters.landlord") },
-  { icon: "trash-2", title: msg("pinboard.starters.bins") },
+  { icon: "trash", title: msg("pinboard.starters.bins") },
   { icon: "scroll-text", title: msg("pinboard.starters.houseRules") },
 ] as const satisfies readonly { icon: PinIcon; title: string }[];
 

@@ -1132,7 +1132,7 @@
         },
         "icon": {
           "name": "icon",
-          "type": "varchar(16)",
+          "type": "varchar(64)",
           "primaryKey": false,
           "notNull": true
         },

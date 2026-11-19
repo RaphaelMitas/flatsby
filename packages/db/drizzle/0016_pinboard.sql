@@ -3,7 +3,7 @@ CREATE TABLE "flat-cove_pin" (
 	"group_id" integer NOT NULL,
 	"title" varchar(60) NOT NULL,
 	"body" text NOT NULL,
-	"icon" varchar(16) NOT NULL,
+	"icon" varchar(64) NOT NULL,
 	"wifi" jsonb,
 	"created_by_group_member_id" integer,
 	"created_at" timestamp DEFAULT now() NOT NULL

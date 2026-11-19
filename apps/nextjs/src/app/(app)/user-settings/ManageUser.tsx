@@ -8,8 +8,8 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import {
-  AlertCircle,
   CircleCheckBig,
+  CircleExclamationPoint,
   LoaderCircle,
   Upload,
 } from "lucide-react";
@@ -133,7 +133,7 @@ const UserDetails = () => {
             </Form>
             {form.formState.errors.name && (
               <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
+                <CircleExclamationPoint className="h-4 w-4" />
                 <AlertTitle>{t("common.error")}</AlertTitle>
                 <AlertDescription>
                   {translateIfKey(t, form.formState.errors.name.message ?? "")}

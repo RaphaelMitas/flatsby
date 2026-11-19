@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CircleCheckBig } from "lucide-react";
+import { CircleCheckBig, CircleExclamationPoint } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
@@ -20,7 +20,7 @@ export function UpdateGroupAlert({
   if (failure !== undefined) {
     return (
       <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
+        <CircleExclamationPoint className="h-4 w-4" />
         <AlertTitle>{t("common.error")}</AlertTitle>
         <AlertDescription>{failure}</AlertDescription>
       </Alert>

@@ -46,7 +46,7 @@ export const pinboard = {
     wifi: "WiFi",
     "key-round": "Key",
     phone: "Phone",
-    "trash-2": "Bin",
+    trash: "Bin",
     "scroll-text": "Rules",
     "washing-machine": "Washing machine",
     zap: "Electricity",
