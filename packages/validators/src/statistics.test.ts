@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Statistics } from "./statistics";
+import { paceSummary } from "./home";
 import {
   barHeights,
   convertedShares,
@@ -76,14 +77,30 @@ describe("convertedShares", () => {
 describe("spendingStatistics", () => {
   const period = statisticsPeriod("thisMonth", "2026-11-19", "2020-01-01");
 
-  it("lists a category the member has no share in", () => {
+  it("counts a category the member has no share in for the household only", () => {
     const spending = spendingStatistics(
       [{ day: "2026-11-04", subcategory: "rent", household: 800, share: 0 }],
       period,
     );
-    expect(spending.categories).toEqual([
-      { category: "housing", share: 0, household: 800 },
-    ]);
+    expect(spending.household).toBe(800);
+    expect(spending.categories).toEqual([]);
+  });
+
+  it("compares a whole month with the whole longer month before", () => {
+    const { pace } = spendingStatistics(
+      [
+        { day: "2027-01-31", subcategory: "rent", household: 6, share: 6 },
+        { day: "2027-02-10", subcategory: "rent", household: 4, share: 4 },
+      ],
+      statisticsPeriod("lastMonth", "2027-03-05", "2020-01-01"),
+    );
+
+    expect(pace?.previous).toHaveLength(28);
+    expect(pace && paceSummary(pace)).toEqual({
+      total: 4,
+      difference: -2,
+      direction: "less",
+    });
   });
 
   it("zero-fills six months ending with the range and leaves out later days", () => {

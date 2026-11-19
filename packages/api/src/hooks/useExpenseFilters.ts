@@ -9,7 +9,9 @@ import { useDebouncedValue } from "@tanstack/react-pacer";
 import { localDate } from "@flatsby/validators/calendar";
 import {
   dayRangeFilter,
+  expenseLinkSchema,
   isExpenseFilterActive,
+  linkedFilterChoice,
   presetRange,
   visibleExpenses,
 } from "@flatsby/validators/expenses/list-filter";
@@ -58,7 +60,11 @@ export function useExpenseFilters(groupId: number) {
       ? undefined
       : current.choice.range,
     reset: () => setState(fresh),
-    replace: (choice: ExpenseFilterChoice) => setState({ ...fresh, choice }),
+    applyLink: (params: unknown, memberId: number) => {
+      const link = expenseLinkSchema.safeParse(params);
+      if (link.success)
+        setState({ ...fresh, choice: linkedFilterChoice(link.data, memberId) });
+    },
     live,
     query,
     isActive: isExpenseFilterActive(live),
