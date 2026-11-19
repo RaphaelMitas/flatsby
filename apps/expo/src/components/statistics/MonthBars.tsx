@@ -37,6 +37,7 @@ export function MonthBars({
   bars,
   height,
   format,
+  describe,
   picker,
   tint,
   barTestID,
@@ -44,6 +45,7 @@ export function MonthBars({
   bars: MonthBar[] | undefined;
   height: number;
   format: (value: number) => string;
+  describe: (bar: MonthBar) => string;
   picker: MonthPicker | undefined;
   tint?: string;
   barTestID: string;
@@ -65,7 +67,8 @@ export function MonthBars({
 
   return (
     <View className="mt-4 flex-row">
-      {bars.map(({ month, total, filled }, index) => {
+      {bars.map((bar, index) => {
+        const { month, total, filled } = bar;
         const picked = coversMonth(month, picker.range, picker.period);
         const barHeight = heights[index] ?? 0;
         const filledHeight =
@@ -82,7 +85,7 @@ export function MonthBars({
             testID={`${barTestID}-${month}`}
             accessibilityRole="button"
             accessibilityState={{ selected: picked }}
-            accessibilityLabel={`${formatCalendarDate(`${month}-01`, locale, { month: "long" })}: ${format(total)}`}
+            accessibilityLabel={`${formatCalendarDate(`${month}-01`, locale, { month: "long" })}: ${describe(bar)}`}
             onPress={() => picker.onPick(month)}
             className="flex-1 items-center active:opacity-70"
           >

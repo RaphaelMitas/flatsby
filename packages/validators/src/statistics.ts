@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import type { CalendarColor } from "./calendar";
 import type { CategoryId } from "./categories";
 import type { ConvertibleExpense } from "./expenses/conversion";
-import type { Pace } from "./home";
+import type { Pace, PacePoint } from "./home";
 import {
   calendarColorSchema,
   calendarDateSchema,
@@ -20,7 +20,7 @@ import {
   getSubcategoryGroup,
 } from "./expenses/categories";
 import { inLedgerCurrency } from "./expenses/conversion";
-import { monthPace, paceSchema, sum } from "./home";
+import { directionOf, monthPace, paceSchema, sum } from "./home";
 
 export const statisticsPresets = [
   "last3Months",
@@ -350,6 +350,25 @@ export function choreStatistics(
       }))
       .sort((a, b) => b.total - a.total)
       .slice(0, MAX_CHORE_TITLES),
+  };
+}
+
+export function scrubbedShare(
+  { household }: NonNullable<Statistics["spending"]["pace"]>,
+  { index, now, before }: PacePoint,
+) {
+  if (!before) return null;
+  const difference = now ? now.total - before.total : before.total;
+  const comparison: "less" | "more" | "same" | "before" = now
+    ? directionOf(difference)
+    : "before";
+  return {
+    by: now?.date,
+    share: now?.total,
+    household: now && sum(household.slice(0, index + 1)),
+    comparison,
+    amount: Math.abs(difference),
+    before: before.date,
   };
 }
 

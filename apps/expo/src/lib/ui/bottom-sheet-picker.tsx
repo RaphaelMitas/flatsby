@@ -214,7 +214,11 @@ export const BottomSheetPickerTrigger: React.FC<
 
   if (trigger) {
     return (
-      <Pressable testID={testID} onPress={handleOpen}>
+      <Pressable
+        testID={testID}
+        accessibilityRole="button"
+        onPress={handleOpen}
+      >
         {trigger}
       </Pressable>
     );

@@ -98,6 +98,8 @@ export function CategoriesCard({
               onClick={onOpen}
               onPointerEnter={() => setLit(category)}
               onPointerLeave={() => setLit(null)}
+              onFocus={() => setLit(category)}
+              onBlur={() => setLit(null)}
               className={cn(
                 "hover:bg-muted -mx-2 flex items-center gap-3 rounded-xl p-2 transition-[background-color,opacity]",
                 lit === category && "bg-muted",
@@ -226,6 +228,7 @@ export function ShoppingStatsCard({
               className: cn("bg-current", tint),
             }))}
             lit={lit}
+            pressed={filtered?.key ?? null}
             onLit={setHovered}
             onPick={toggle}
           />
@@ -238,6 +241,8 @@ export function ShoppingStatsCard({
                 onClick={() => toggle(key)}
                 onPointerEnter={() => setHovered(key)}
                 onPointerLeave={() => setHovered(null)}
+                onFocus={() => setHovered(key)}
+                onBlur={() => setHovered(null)}
                 className={cn(
                   "hover:text-foreground flex items-center gap-1.5 transition-[color,opacity]",
                   filtered?.key === key && "text-foreground",

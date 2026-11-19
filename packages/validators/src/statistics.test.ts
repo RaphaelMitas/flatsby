@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import type { Statistics } from "./statistics";
-import { paceSummary } from "./home";
+import { paceAt, paceSummary } from "./home";
 import {
   barHeights,
   convertedShares,
   daysOnList,
   isStatisticsEmpty,
+  scrubbedShare,
   spendingStatistics,
   statisticsPeriod,
   statisticsWindow,
@@ -156,6 +157,39 @@ describe("spendingStatistics", () => {
       { month: "2026-11", share: 0, household: 0 },
     ]);
     expect(spending.household).toBe(0);
+  });
+});
+
+describe("scrubbing a picked month", () => {
+  const size = { width: 270, height: 100 };
+  const { pace } = spendingStatistics(
+    [
+      { day: "2026-01-30", subcategory: "rent", household: 9000, share: 5000 },
+      { day: "2026-02-10", subcategory: "rent", household: 300, share: 100 },
+    ],
+    month("2026-02", "2026-03-10"),
+  );
+  if (!pace) throw new Error("a month has a pace");
+  const at = (day: number) =>
+    scrubbedShare(pace, paceAt(pace, "2026-02-28", size, (day - 1) * 10));
+
+  it("compares a day with the same day of the month before", () => {
+    expect(at(27)).toMatchObject({
+      by: "2026-02-27",
+      share: 100,
+      household: 300,
+      comparison: "more",
+      amount: 100,
+      before: "2026-01-27",
+    });
+  });
+
+  it("names the end of the longer month before on the last day", () => {
+    expect(at(28)).toMatchObject({
+      comparison: "less",
+      amount: 4900,
+      before: "2026-01-31",
+    });
   });
 });
 

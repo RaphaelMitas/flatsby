@@ -33,11 +33,13 @@ import {
   monthOf,
 } from "@flatsby/validators/calendar";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
-import { paceAt, sum } from "@flatsby/validators/home";
+import { paceAt } from "@flatsby/validators/home";
 import {
   isStatisticsEmpty,
   presetOf,
+  scrubbedShare,
   statisticsChoices,
+  statisticsPeriod,
 } from "@flatsby/validators/statistics";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -58,7 +60,12 @@ export function StatisticsContent() {
   const today = useToday();
   const trpc = useTRPC();
   const [chosen, setChosen] = useState<StatisticsRange>();
-  const range = chosen ?? (today ? monthOf(today) : undefined);
+  const range =
+    today === null
+      ? undefined
+      : chosen && statisticsPeriod(chosen, today, today)
+        ? chosen
+        : monthOf(today);
   const used = useMutation(trpc.stats.statisticsUsed.mutationOptions());
   const count = (action: StatisticsAction, counted = range) => {
     if (currentGroup && counted)
@@ -268,59 +275,45 @@ function ShareHero({
   const { pace } = spending;
   const point =
     pace && scrubX !== null ? paceAt(pace, to, PACE_SIZE, scrubX) : null;
-  const now = point?.now;
-  const before = point?.before;
+  const scrubbed = pace && point && scrubbedShare(pace, point);
   const date = (day: string) =>
     formatCalendarDate(day, locale, { day: "numeric", month: "short" });
 
   return (
     <section className="mb-2">
       <p className="text-muted-foreground text-sm font-semibold">
-        {now
-          ? t("statistics.yourShareBy", { date: date(now.date) })
+        {scrubbed?.by
+          ? t("statistics.yourShareBy", { date: date(scrubbed.by) })
           : t("statistics.yourShare")}
       </p>
       <p
         data-testid="statistics-share"
         className="mt-1 text-5xl font-extrabold tracking-tight tabular-nums"
       >
-        {money(now ? now.total : share)}
+        {money(scrubbed?.share ?? share)}
       </p>
       <p className="text-muted-foreground mt-2 text-balance">
         {t.rich("statistics.ofHousehold", {
-          amount: money(
-            pace && now
-              ? sum(pace.household.slice(0, point.index + 1))
-              : spending.household,
-          ),
+          amount: money(scrubbed?.household ?? spending.household),
           b: bold,
         })}
       </p>
       {pace && (
         <>
           <p className="text-muted-foreground text-balance">
-            {!before ? (
+            {scrubbed ? (
+              t.rich(`statistics.byDay.${scrubbed.comparison}`, {
+                amount: money(scrubbed.amount),
+                date: date(scrubbed.before),
+                b: bold,
+              })
+            ) : (
               <PaceComparison
                 pace={pace}
                 today={to}
                 format={money}
                 wholeMonth={wholeMonth}
               />
-            ) : now ? (
-              t.rich(
-                `statistics.byDay.${now.total < before.total ? "less" : now.total > before.total ? "more" : "same"}`,
-                {
-                  amount: money(Math.abs(now.total - before.total)),
-                  date: date(before.date),
-                  b: bold,
-                },
-              )
-            ) : (
-              t.rich("statistics.byDay.before", {
-                amount: money(before.total),
-                date: date(before.date),
-                b: bold,
-              })
             )}
           </p>
           <PaceChart

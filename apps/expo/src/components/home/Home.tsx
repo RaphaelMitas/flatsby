@@ -36,7 +36,10 @@ import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useNow } from "~/utils/useNow";
-import { useRefetchStaleOnFocus } from "~/utils/useRefetchStaleOnFocus";
+import {
+  usageEvent,
+  useRefetchStaleOnFocus,
+} from "~/utils/useRefetchStaleOnFocus";
 import { CategoryStack } from "./CategoryStack";
 import { HomeCard, PaceHeadline } from "./HomeCard";
 import { CatOverlay, HomeCat } from "./HomeCat";
@@ -128,7 +131,9 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       timeZone: deviceTimeZone(),
     }),
   );
-  const opened = useMutation(trpc.stats.homeCardOpened.mutationOptions());
+  const opened = useMutation(
+    trpc.stats.homeCardOpened.mutationOptions({ meta: usageEvent }),
+  );
   const count = (card: HomeCardName) =>
     opened.mutate({ groupId: group.id, card });
 

@@ -22,6 +22,7 @@ export function SplitBar({
           key={key}
           accessibilityRole="button"
           accessibilityLabel={label}
+          accessibilityState={{ selected: lit === key }}
           disabled={disabled}
           onPress={() => onPick(key)}
           className="py-3"

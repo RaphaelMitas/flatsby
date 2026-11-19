@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@flatsby/ui/tooltip";
 export function SplitBar({
   segments,
   lit,
+  pressed,
   onLit,
   onPick,
 }: {
@@ -15,6 +16,7 @@ export function SplitBar({
     tooltip?: React.ReactNode;
   }[];
   lit: string | null;
+  pressed?: string | null;
   onLit: (key: string | null) => void;
   onPick: (key: string) => void;
 }) {
@@ -28,9 +30,14 @@ export function SplitBar({
               <button
                 type="button"
                 aria-label={label}
+                aria-pressed={
+                  pressed === undefined ? undefined : pressed === key
+                }
                 onClick={() => onPick(key)}
                 onPointerEnter={() => onLit(key)}
                 onPointerLeave={() => onLit(null)}
+                onFocus={() => onLit(key)}
+                onBlur={() => onLit(null)}
                 className={cn(
                   "h-3 transition-[flex-grow,opacity,scale] duration-300 ease-out first:rounded-l-md last:rounded-r-md motion-reduce:transition-none",
                   className,

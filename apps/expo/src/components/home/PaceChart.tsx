@@ -1,4 +1,4 @@
-import type { Pace } from "@flatsby/validators/home";
+import type { Pace, PacePoint } from "@flatsby/validators/home";
 import type { ComponentRef } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { View } from "react-native";
@@ -37,8 +37,6 @@ const NOT_SCRUBBED = -1;
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedLine = Animated.createAnimatedComponent(Line);
-
-export type PacePoint = ReturnType<typeof paceAt>;
 
 const heightOf = (height: number, labelled: boolean) =>
   height + 2 * INSET + (labelled ? LABEL_ROW : 0);

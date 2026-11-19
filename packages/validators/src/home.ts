@@ -66,12 +66,13 @@ export function monthPace(
 export const sum = (values: number[]) =>
   values.reduce((total, value) => total + value, 0);
 
+export const directionOf = (difference: number): "less" | "more" | "same" =>
+  difference < 0 ? "less" : difference > 0 ? "more" : "same";
+
 export function paceSummary({ current, previous }: Pace) {
   const total = sum(current);
   const difference = total - sum(previous.slice(0, current.length));
-  const direction: "less" | "more" | "same" =
-    difference < 0 ? "less" : difference > 0 ? "more" : "same";
-  return { total, difference, direction };
+  return { total, difference, direction: directionOf(difference) };
 }
 
 export function paceLabels(today: string, locale: Intl.LocalesArgument) {
@@ -185,13 +186,16 @@ export function paceAt(pace: Pace, today: string, size: Size, x: number) {
     lastDay,
     Math.max(0, Math.round((x / size.width) * lastDay)),
   );
-  const on = (totals: number[], month: string) => {
+  const beforeMonth = previousMonth(today);
+  const cutShort = pace.previous.length > before.length;
+  const on = (totals: number[], month: string, lastDate = totals.length) => {
     const day = Math.min(index, totals.length - 1);
     const total = totals[day];
     if (total === undefined) return null;
     const { x: dayX } = point(total, day);
+    const date = day === totals.length - 1 ? lastDate : day + 1;
     return {
-      date: `${month}-${String(day + 1).padStart(2, "0")}`,
+      date: `${month}-${String(date).padStart(2, "0")}`,
       total,
       x: dayX,
       y: curveMonotoneY(daysWithActivity(totals.map(point)), dayX),
@@ -201,9 +205,14 @@ export function paceAt(pace: Pace, today: string, size: Size, x: number) {
     index,
     x: point(0, index).x,
     now: index < now.length ? on(now, monthOf(today)) : null,
-    before: on(before, previousMonth(today)),
+    before: on(
+      before,
+      beforeMonth,
+      cutShort ? before.length : daysInMonth(beforeMonth),
+    ),
   };
 }
+export type PacePoint = ReturnType<typeof paceAt>;
 
 export function paceChart(pace: Pace, today: string, size: Size) {
   const { now, before, point } = paceScale(pace, today, size);

@@ -1,5 +1,5 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import type { Pace } from "@flatsby/validators/home";
+import type { Pace, PacePoint } from "@flatsby/validators/home";
 import type {
   Statistics,
   StatisticsAction,
@@ -28,15 +28,15 @@ import {
   formatCurrencyFromCents,
   formatWholeAmountFromCents,
 } from "@flatsby/validators/expenses/formatting";
-import { sum } from "@flatsby/validators/home";
 import {
   isStatisticsEmpty,
   presetOf,
+  scrubbedShare,
   statisticsChoices,
+  statisticsPeriod,
 } from "@flatsby/validators/statistics";
 
 import type { MonthPicker } from "./MonthBars";
-import type { PacePoint } from "~/components/home/PaceChart";
 import { getExpenseCategoryData } from "~/components/expenses/ExpenseCategoryConfig";
 import { GroupGate } from "~/components/GroupGate";
 import {
@@ -59,7 +59,10 @@ import Icon from "~/lib/ui/custom/icons/Icon";
 import { Skeleton } from "~/lib/ui/skeleton";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
-import { useRefetchStaleOnFocus } from "~/utils/useRefetchStaleOnFocus";
+import {
+  usageEvent,
+  useRefetchStaleOnFocus,
+} from "~/utils/useRefetchStaleOnFocus";
 import { MonthBars } from "./MonthBars";
 import { SplitBar } from "./SplitBar";
 
@@ -92,7 +95,8 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
   const locale = useLocale();
   const today = localDate();
   const [chosen, setChosen] = useState<StatisticsRange>();
-  const range = chosen ?? monthOf(today);
+  const range =
+    chosen && statisticsPeriod(chosen, today, today) ? chosen : monthOf(today);
   const query = useQuery({
     ...trpc.stats.getStatistics.queryOptions({
       groupId: group.id,
@@ -107,7 +111,9 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
   const failed = !data && (query.isError || query.data?.success === false);
   const stale = query.isPlaceholderData;
   const preset = presetOf(range);
-  const used = useMutation(trpc.stats.statisticsUsed.mutationOptions());
+  const used = useMutation(
+    trpc.stats.statisticsUsed.mutationOptions({ meta: usageEvent }),
+  );
   const count = (action: StatisticsAction, counted = range) =>
     used.mutate({ groupId: group.id, action, range: counted });
   const choose = (action: StatisticsAction, next: StatisticsRange) => {
@@ -207,6 +213,9 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
                 )}
                 height={SPENDING_BARS_HEIGHT}
                 format={(cents) => formatWholeAmountFromCents(cents, locale)}
+                describe={({ total, filled = 0 }) =>
+                  `${t("statistics.you")} ${money(filled)}, ${t("statistics.household")} ${money(total)}`
+                }
                 picker={picker}
                 barTestID="statistics-spending"
               />
@@ -326,39 +335,42 @@ function ShareHero({
   const [point, setPoint] = useState<PacePoint | null>(null);
   const share = useCountUp(spending.share);
   const { pace } = spending;
-  const now = point?.now;
-  const before = point?.before;
+  const scrubbed = pace && point && scrubbedShare(pace, point);
   const date = (day: string) =>
     formatCalendarDate(day, locale, { day: "numeric", month: "short" });
 
   return (
     <View className="mt-8">
       <Text className="text-muted-foreground text-sm font-semibold">
-        {now
-          ? t("statistics.yourShareBy", { date: date(now.date) })
+        {scrubbed?.by
+          ? t("statistics.yourShareBy", { date: date(scrubbed.by) })
           : t("statistics.yourShare")}
       </Text>
       <Text
         testID="statistics-share"
         className="text-foreground mt-1 text-5xl font-extrabold tracking-tight"
       >
-        {money(now ? now.total : share)}
+        {money(scrubbed?.share ?? share)}
       </Text>
       <View className="mt-2">
         <Text className="text-muted-foreground text-base">
           {t.rich("statistics.ofHousehold", {
-            amount: money(
-              pace && point?.now
-                ? sum(pace.household.slice(0, point.index + 1))
-                : spending.household,
-            ),
+            amount: money(scrubbed?.household ?? spending.household),
             b: bold,
           })}
         </Text>
         {showsPace &&
           (!pace ? (
             <TextSkeleton className="text-base" size="sm" width="2xl" />
-          ) : !before ? (
+          ) : scrubbed ? (
+            <Text className="text-muted-foreground text-base">
+              {t.rich(`statistics.byDay.${scrubbed.comparison}`, {
+                amount: money(scrubbed.amount),
+                date: date(scrubbed.before),
+                b: bold,
+              })}
+            </Text>
+          ) : (
             <PaceComparison
               pace={pace}
               today={to}
@@ -366,23 +378,6 @@ function ShareHero({
               wholeMonth={wholeMonth}
               className="text-muted-foreground text-base"
             />
-          ) : (
-            <Text className="text-muted-foreground text-base">
-              {now
-                ? t.rich(
-                    `statistics.byDay.${now.total < before.total ? "less" : now.total > before.total ? "more" : "same"}`,
-                    {
-                      amount: money(Math.abs(now.total - before.total)),
-                      date: date(before.date),
-                      b: bold,
-                    },
-                  )
-                : t.rich("statistics.byDay.before", {
-                    amount: money(before.total),
-                    date: date(before.date),
-                    b: bold,
-                  })}
-            </Text>
           ))}
       </View>
       {showsPace && (
@@ -571,6 +566,7 @@ function CountCard({
         bars={counts?.months}
         height={COUNT_BARS_HEIGHT}
         format={String}
+        describe={({ total }) => `${total} ${only?.label ?? unit(total)}`}
         picker={picker}
         tint={only?.fill}
         barTestID={barTestID}
@@ -633,13 +629,13 @@ function ShoppingCard({
   const shown = (shopping?.categories ?? []).map(({ category, total }) => {
     const { colorKey, name } = getCategoryData({ categoryId: category });
     return {
-      category,
-      total,
+      key: category,
+      value: total,
       label: t(name),
       fill: categoryFillColorMap[colorKey],
     };
   });
-  const filtered = shown.find(({ category }) => category === picked);
+  const filtered = shown.find(({ key }) => key === picked);
   const toggle = (category: string) => {
     if (picked !== category) onFilter();
     setPicked(picked === category ? null : category);
@@ -650,11 +646,11 @@ function ShoppingCard({
       title={t("navigation.shopping")}
       counts={
         shopping && {
-          total: filtered?.total ?? shopping.total,
+          total: filtered?.value ?? shopping.total,
           pace: shopping.pace,
           months: shopping.months.map(({ month, total, categories }) => ({
             month,
-            total: filtered ? (categories[filtered.category] ?? 0) : total,
+            total: filtered ? (categories[filtered.key] ?? 0) : total,
           })),
         }
       }
@@ -676,33 +672,20 @@ function ShoppingCard({
         <>
           {shown.length > 0 && (
             <>
-              <SplitBar
-                segments={shown.map(({ category, total, label, fill }) => ({
-                  key: category,
-                  value: total,
-                  label,
-                  fill,
-                }))}
-                lit={filtered?.category}
-                onPick={toggle}
-              />
+              <SplitBar segments={shown} lit={filtered?.key} onPick={toggle} />
               <View className="mt-1.5 flex-row flex-wrap gap-x-3">
-                {shown.map(({ category, total, label, fill }) => (
+                {shown.map(({ key, value, label, fill }) => (
                   <Pressable
-                    key={category}
+                    key={key}
                     accessibilityRole="button"
-                    accessibilityState={{
-                      selected: filtered?.category === category,
-                    }}
-                    onPress={() => toggle(category)}
+                    accessibilityState={{ selected: filtered?.key === key }}
+                    onPress={() => toggle(key)}
                     className={cn(
                       "py-1",
-                      filtered &&
-                        filtered.category !== category &&
-                        "opacity-40",
+                      filtered && filtered.key !== key && "opacity-40",
                     )}
                   >
-                    <LegendKey fill={fill} label={label} count={total} />
+                    <LegendKey fill={fill} label={label} count={value} />
                   </Pressable>
                 ))}
               </View>
