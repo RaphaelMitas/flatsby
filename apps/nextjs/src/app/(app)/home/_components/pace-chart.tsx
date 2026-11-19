@@ -1,13 +1,18 @@
 "use client";
 
-import type { Pace } from "@flatsby/validators/home";
+import type { Pace, paceAt } from "@flatsby/validators/home";
 import { useId } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { paceChart, paceLabels } from "@flatsby/validators/home";
 
-const SIZE = { width: 100, height: 100 };
+export const PACE_SIZE = { width: 100, height: 100 };
+
+export interface PaceScrub {
+  point: ReturnType<typeof paceAt> | null;
+  onMove: (x: number | null) => void;
+}
 
 export function PaceChart({
   pace,
@@ -16,6 +21,7 @@ export function PaceChart({
   labelled = false,
   wholeMonth = false,
   fadeIn,
+  scrub,
 }: {
   pace: Pace;
   today: string;
@@ -23,11 +29,16 @@ export function PaceChart({
   labelled?: boolean;
   wholeMonth?: boolean;
   fadeIn: boolean;
+  scrub?: PaceScrub;
 }) {
   const t = useTranslations();
   const locale = useLocale();
   const gradient = useId();
-  const { now, before, area, end, beforeEnd } = paceChart(pace, today, SIZE);
+  const { now, before, area, end, beforeEnd } = paceChart(
+    pace,
+    today,
+    PACE_SIZE,
+  );
   const labels = paceLabels(today, locale);
 
   return (
@@ -38,9 +49,26 @@ export function PaceChart({
       )}
       aria-hidden
     >
-      <div className={cn("text-foreground relative", className)}>
+      <div
+        className={cn(
+          "text-foreground relative",
+          scrub && "cursor-crosshair touch-pan-y",
+          className,
+        )}
+        onPointerMove={
+          scrub &&
+          ((event) => {
+            const box = event.currentTarget.getBoundingClientRect();
+            scrub.onMove(
+              ((event.clientX - box.left) / box.width) * PACE_SIZE.width,
+            );
+          })
+        }
+        onPointerLeave={scrub && (() => scrub.onMove(null))}
+        onPointerCancel={scrub && (() => scrub.onMove(null))}
+      >
         <svg
-          viewBox={`0 0 ${SIZE.width} ${SIZE.height}`}
+          viewBox={`0 0 ${PACE_SIZE.width} ${PACE_SIZE.height}`}
           preserveAspectRatio="none"
           aria-hidden
           className="size-full overflow-visible"
@@ -53,9 +81,9 @@ export function PaceChart({
           </defs>
           <line
             x1="0"
-            y1={SIZE.height}
-            x2={SIZE.width}
-            y2={SIZE.height}
+            y1={PACE_SIZE.height}
+            x2={PACE_SIZE.width}
+            y2={PACE_SIZE.height}
             vectorEffect="non-scaling-stroke"
             className="stroke-border"
           />
@@ -80,9 +108,38 @@ export function PaceChart({
           />
         </svg>
         <span
-          className="bg-foreground ring-card absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-3"
+          className={cn(
+            "bg-foreground ring-card absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-3 transition-opacity",
+            scrub?.point && "opacity-25",
+          )}
           style={{ left: `${end.x}%`, top: `${end.y}%` }}
         />
+        {scrub?.point && (
+          <>
+            <span
+              className="bg-border absolute inset-y-0 w-px"
+              style={{ left: `${scrub.point.x}%` }}
+            />
+            {scrub.point.before && (
+              <span
+                className="bg-card ring-muted-foreground absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2"
+                style={{
+                  left: `${scrub.point.before.x}%`,
+                  top: `${scrub.point.before.y}%`,
+                }}
+              />
+            )}
+            {scrub.point.now && (
+              <span
+                className="bg-foreground ring-card absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-3"
+                style={{
+                  left: `${scrub.point.now.x}%`,
+                  top: `${scrub.point.now.y}%`,
+                }}
+              />
+            )}
+          </>
+        )}
         {labelled && (
           <span
             className={cn(

@@ -387,6 +387,16 @@ test.describe("Group Management", () => {
     await authPage.waitForURL(/\/home\/statistics$/);
     await expect(authPage.getByTestId("statistics-share")).toBeVisible();
 
+    const title = authPage.getByTestId("statistics-range");
+    const thisMonth = await title.innerText();
+    const bars = authPage.getByRole("button", { name: /: you / });
+    await waitForHydration(bars.nth(4));
+    await bars.nth(4).click();
+    await expect(bars.nth(4)).toHaveAttribute("aria-pressed", "true");
+    await expect(title).not.toHaveText(thisMonth);
+    await bars.nth(5).click();
+    await expect(title).toHaveText(thisMonth);
+
     const category = authPage.getByTestId(/^statistics-category-/);
     await waitForHydration(category);
     await category.click();

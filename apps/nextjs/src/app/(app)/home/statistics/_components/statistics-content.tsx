@@ -1,12 +1,16 @@
 "use client";
 
-import type { StatisticsRange } from "@flatsby/validators/statistics";
+import type {
+  Statistics,
+  StatisticsRange,
+} from "@flatsby/validators/statistics";
 import { useState } from "react";
 import Link from "next/link";
 import { keepPreviousData, skipToken, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check, ChevronDown } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useCountUp } from "@flatsby/api/hooks/useCountUp";
 import { cn } from "@flatsby/ui";
 import { Button } from "@flatsby/ui/button";
 import {
@@ -20,19 +24,21 @@ import { Skeleton } from "@flatsby/ui/skeleton";
 import {
   deviceTimeZone,
   formatCalendarDate,
+  monthOf,
 } from "@flatsby/validators/calendar";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
+import { paceAt, sum } from "@flatsby/validators/home";
 import {
   isStatisticsEmpty,
-  statisticsMonth,
-  statisticsRanges,
+  presetOf,
+  statisticsChoices,
 } from "@flatsby/validators/statistics";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { useToday } from "~/app/_components/local-clock";
 import { useTRPC } from "~/trpc/react";
 import { bold, PaceComparison } from "../../_components/home-card";
-import { PaceChart } from "../../_components/pace-chart";
+import { PACE_SIZE, PaceChart } from "../../_components/pace-chart";
 import {
   CategoriesCard,
   ChoresStatsCard,
@@ -44,7 +50,8 @@ export function StatisticsContent() {
   const t = useTranslations();
   const { currentGroup } = useGroupContext();
   const today = useToday();
-  const [range, setRange] = useState<StatisticsRange>("thisMonth");
+  const [chosen, setChosen] = useState<StatisticsRange>();
+  const range = chosen ?? (today ? monthOf(today) : undefined);
 
   return (
     <div className="mx-auto flex w-full max-w-prose flex-col gap-6 p-4">
@@ -55,7 +62,7 @@ export function StatisticsContent() {
             {t("common.back")}
           </Link>
         </Button>
-        <RangeTitle range={range} today={today} onChange={setRange} />
+        <RangeTitle range={range} today={today} onChange={setChosen} />
         <p className="text-muted-foreground mt-1">{currentGroup?.name}</p>
       </div>
 
@@ -64,7 +71,7 @@ export function StatisticsContent() {
           key={currentGroup.id}
           groupId={currentGroup.id}
           range={range}
-          today={today}
+          onRange={setChosen}
         />
       )}
     </div>
@@ -76,13 +83,13 @@ function RangeTitle({
   today,
   onChange,
 }: {
-  range: StatisticsRange;
+  range: StatisticsRange | undefined;
   today: string | null;
   onChange: (range: StatisticsRange) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
-  const month = today && statisticsMonth(range, today);
+  const preset = range && presetOf(range);
 
   return (
     <DropdownMenu>
@@ -90,31 +97,32 @@ function RangeTitle({
         data-testid="statistics-range"
         className="hover:bg-muted data-[state=open]:bg-muted mt-3 -ml-2 flex items-center gap-2 rounded-xl px-2 py-1 text-left text-3xl font-extrabold tracking-tight transition-colors"
       >
-        {today === null ? (
+        {range === undefined ? (
           <Skeleton className="h-9 w-40" />
-        ) : month ? (
-          formatCalendarDate(`${month}-01`, locale, { month: "long" })
+        ) : preset ? (
+          t(`statistics.ranges.${preset}`)
         ) : (
-          t(`statistics.ranges.${range}`)
+          formatCalendarDate(`${range}-01`, locale, { month: "long" })
         )}
         <ChevronDown className="text-muted-foreground size-6" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-64 rounded-2xl p-2">
         <DropdownMenuLabel>{t("statistics.ranges.title")}</DropdownMenuLabel>
-        {statisticsRanges.map((option) => (
-          <DropdownMenuItem
-            key={option}
-            data-testid={`statistics-range-${option}`}
-            onSelect={() => onChange(option)}
-            className={cn(
-              "justify-between rounded-xl p-2",
-              option === range && "font-semibold",
-            )}
-          >
-            {t(`statistics.ranges.${option}`)}
-            {option === range && <Check className="size-4" />}
-          </DropdownMenuItem>
-        ))}
+        {today &&
+          statisticsChoices(today).map(({ key, range: option }) => (
+            <DropdownMenuItem
+              key={key}
+              data-testid={`statistics-range-${key}`}
+              onSelect={() => onChange(option)}
+              className={cn(
+                "justify-between rounded-xl p-2",
+                option === range && "font-semibold",
+              )}
+            >
+              {t(`statistics.ranges.${key}`)}
+              {option === range && <Check className="size-4" />}
+            </DropdownMenuItem>
+          ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -123,11 +131,11 @@ function RangeTitle({
 function StatisticsBody({
   groupId,
   range,
-  today,
+  onRange,
 }: {
   groupId: number;
-  range: StatisticsRange;
-  today: string | null;
+  range: StatisticsRange | undefined;
+  onRange: (range: StatisticsRange) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -137,7 +145,7 @@ function StatisticsBody({
   );
   const { data, isError, isFetching, isPlaceholderData, refetch } = useQuery({
     ...trpc.stats.getStatistics.queryOptions(
-      today ? { groupId, range, timeZone: deviceTimeZone() } : skipToken,
+      range ? { groupId, range, timeZone: deviceTimeZone() } : skipToken,
     ),
     staleTime: 0,
     placeholderData: keepPreviousData,
@@ -146,7 +154,7 @@ function StatisticsBody({
   const [fadeIn] = useState(stats === undefined);
   const currency = group?.success ? group.data.currency : undefined;
 
-  if (!stats || currency === undefined) {
+  if (!stats || currency === undefined || range === undefined) {
     if (isError || data?.success === false)
       return (
         <div className="flex flex-col items-center gap-3 py-12 text-center">
@@ -178,6 +186,7 @@ function StatisticsBody({
   const money = (cents: number) =>
     formatCurrencyFromCents({ cents, currency, locale });
   const { spending } = stats;
+  const picker = { range, period: stats, onPick: onRange };
 
   return (
     <div
@@ -188,56 +197,109 @@ function StatisticsBody({
         isPlaceholderData && "opacity-50",
       )}
     >
-      <section className="mb-2">
-        <p className="text-muted-foreground text-sm font-semibold">
-          {t("statistics.yourShare")}
-        </p>
-        <p
-          data-testid="statistics-share"
-          className="mt-1 text-5xl font-extrabold tracking-tight tabular-nums"
-        >
-          {money(spending.share)}
-        </p>
-        <p className="text-muted-foreground mt-2 text-balance">
-          {t.rich("statistics.ofHousehold", {
-            amount: money(spending.household),
-            b: bold,
-          })}
-        </p>
-        {spending.pace && (
-          <>
-            <p className="text-muted-foreground text-balance">
-              <PaceComparison
-                pace={spending.pace}
-                today={stats.to}
-                format={money}
-                wholeMonth={stats.wholeMonth}
-              />
-            </p>
-            <PaceChart
-              pace={spending.pace}
-              today={stats.to}
-              className="h-28"
-              labelled
-              wholeMonth={stats.wholeMonth}
-              fadeIn={fadeIn}
-            />
-          </>
-        )}
-      </section>
-
+      <ShareHero stats={stats} money={money} fadeIn={fadeIn} />
       {spending.categories.length > 0 && (
         <CategoriesCard
-          categories={spending.categories}
+          spending={spending}
           from={stats.from}
           to={stats.to}
           money={money}
         />
       )}
-      <MonthByMonthCard months={spending.months} />
-      <ShoppingStatsCard stats={stats} />
-      <ChoresStatsCard stats={stats} />
+      <MonthByMonthCard
+        months={spending.months}
+        picker={picker}
+        money={money}
+      />
+      <ShoppingStatsCard stats={stats} picker={picker} />
+      <ChoresStatsCard stats={stats} picker={picker} />
     </div>
+  );
+}
+
+function ShareHero({
+  stats: { spending, to, wholeMonth },
+  money,
+  fadeIn,
+}: {
+  stats: Statistics;
+  money: (cents: number) => string;
+  fadeIn: boolean;
+}) {
+  const t = useTranslations();
+  const locale = useLocale();
+  const [scrubX, setScrubX] = useState<number | null>(null);
+  const share = useCountUp(spending.share);
+  const { pace } = spending;
+  const point =
+    pace && scrubX !== null ? paceAt(pace, to, PACE_SIZE, scrubX) : null;
+  const now = point?.now;
+  const before = point?.before;
+  const date = (day: string) =>
+    formatCalendarDate(day, locale, { day: "numeric", month: "short" });
+
+  return (
+    <section className="mb-2">
+      <p className="text-muted-foreground text-sm font-semibold">
+        {now
+          ? t("statistics.yourShareBy", { date: date(now.date) })
+          : t("statistics.yourShare")}
+      </p>
+      <p
+        data-testid="statistics-share"
+        className="mt-1 text-5xl font-extrabold tracking-tight tabular-nums"
+      >
+        {money(now ? now.total : share)}
+      </p>
+      <p className="text-muted-foreground mt-2 text-balance">
+        {t.rich("statistics.ofHousehold", {
+          amount: money(
+            pace && now
+              ? sum(pace.household.slice(0, point.index + 1))
+              : spending.household,
+          ),
+          b: bold,
+        })}
+      </p>
+      {pace && (
+        <>
+          <p className="text-muted-foreground text-balance">
+            {!before ? (
+              <PaceComparison
+                pace={pace}
+                today={to}
+                format={money}
+                wholeMonth={wholeMonth}
+              />
+            ) : now ? (
+              t.rich(
+                `statistics.byDay.${now.total < before.total ? "less" : now.total > before.total ? "more" : "same"}`,
+                {
+                  amount: money(Math.abs(now.total - before.total)),
+                  date: date(before.date),
+                  b: bold,
+                },
+              )
+            ) : (
+              t.rich("statistics.byDay.before", {
+                amount: money(before.total),
+                date: date(before.date),
+                b: bold,
+              })
+            )}
+          </p>
+          <PaceChart
+            pace={pace}
+            today={to}
+            className="h-28"
+            labelled
+            wholeMonth={wholeMonth}
+            fadeIn={fadeIn}
+            scrub={{ point, onMove: setScrubX }}
+          />
+        </>
+      )}
+    </section>
   );
 }
 

@@ -96,6 +96,38 @@ tags:
     env:
       TARGET_ID: "home-statistics"
       MARKER_ID: "statistics-share"
+# Last month's bar picks that month, this month's bar picks it again
+- copyTextFrom:
+    id: "statistics-range"
+- evalScript: ${output.thisMonth = maestro.copiedText}
+- scrollUntilVisible:
+    element:
+      id: "statistics-spending-.*"
+    direction: DOWN
+- tapOn:
+    id: "statistics-spending-.*"
+    index: 4
+- scrollUntilVisible:
+    element:
+      id: "statistics-range"
+    direction: UP
+- assertNotVisible:
+    id: "statistics-range"
+    text: ${output.thisMonth}
+- scrollUntilVisible:
+    element:
+      id: "statistics-spending-.*"
+    direction: DOWN
+- tapOn:
+    id: "statistics-spending-.*"
+    index: 5
+- scrollUntilVisible:
+    element:
+      id: "statistics-range"
+    direction: UP
+- assertVisible:
+    id: "statistics-range"
+    text: ${output.thisMonth}
 - scrollUntilVisible:
     element:
       id: "statistics-category-food-drinks"

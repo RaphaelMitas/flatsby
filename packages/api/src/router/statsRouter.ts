@@ -45,7 +45,7 @@ import {
 import { getGroupWithAccess } from "../effect/groups";
 import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
-import { getApiResultZod } from "../errors";
+import { fail, getApiResultZod } from "../errors";
 import { captureUserEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -177,6 +177,7 @@ export const statsRouter = createTRPCRouter({
             today,
             localDateIn(input.timeZone, member.joinedOn),
           );
+          if (!period) return yield* fail.validation("errors.monthNotShown");
           const window = statisticsWindow(period);
           const spent = spentIn(input.groupId, group.currency, window);
           const bought = boughtIn(input.groupId, window);

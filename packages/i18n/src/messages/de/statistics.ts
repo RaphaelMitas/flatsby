@@ -11,13 +11,23 @@ export const statistics = {
     sinceJoined: "Seit deinem Einzug",
   },
   yourShare: "Dein Anteil",
+  yourShareBy: "Dein Anteil bis {date}",
   ofHousehold: "von <b>{amount}</b>, die der Haushalt ausgegeben hat",
   wholeMonth: {
     less: "<b>{amount} weniger</b> als im {month}",
     more: "<b>{amount} mehr</b> als im {month}",
     same: "<b>Gleich viel</b> wie im {month}",
   },
+  byDay: {
+    less: "<b>{amount} weniger</b> als bis {date}",
+    more: "<b>{amount} mehr</b> als bis {date}",
+    same: "<b>Gleich viel</b> wie bis {date}",
+    before: "Bis {date} waren es <b>{amount}</b>",
+  },
   whereItWent: "Wofür",
+  ofYourShare: "{percent} von deinem Anteil",
+  ofItemsBought:
+    "von {count, plural, one {# gekauften Artikel} other {# gekauften Artikeln}}",
   householdAmount: "{amount} im Haushalt",
   monthByMonth: "Monat für Monat",
   you: "du",

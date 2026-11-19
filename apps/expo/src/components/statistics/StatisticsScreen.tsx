@@ -1,4 +1,5 @@
 import type { GroupWithAccess } from "@flatsby/api";
+import type { Pace } from "@flatsby/validators/home";
 import type {
   Statistics,
   StatisticsRange,
@@ -10,10 +11,12 @@ import { useRouter } from "expo-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
+import { useCountUp } from "@flatsby/api/hooks/useCountUp";
 import {
   deviceTimeZone,
   formatCalendarDate,
   localDate,
+  monthOf,
 } from "@flatsby/validators/calendar";
 import {
   expenseCategoryGroupColorKeys,
@@ -24,12 +27,15 @@ import {
   formatCurrencyFromCents,
   formatWholeAmountFromCents,
 } from "@flatsby/validators/expenses/formatting";
+import { sum } from "@flatsby/validators/home";
 import {
   isStatisticsEmpty,
-  statisticsMonth,
-  statisticsRanges,
+  presetOf,
+  statisticsChoices,
 } from "@flatsby/validators/statistics";
 
+import type { MonthPicker } from "./MonthBars";
+import type { PacePoint } from "~/components/home/PaceChart";
 import { getExpenseCategoryData } from "~/components/expenses/ExpenseCategoryConfig";
 import { GroupGate } from "~/components/GroupGate";
 import {
@@ -58,7 +64,19 @@ import { SplitBar } from "./SplitBar";
 
 const SPENDING_BARS_HEIGHT = 100;
 const COUNT_BARS_HEIGHT = 50;
+const HERO_PACE_HEIGHT = 80;
 const PLACEHOLDER_ROWS = [0, 1, 2, 3];
+
+interface MonthCount {
+  month: string;
+  total: number;
+}
+
+interface Only {
+  label: string;
+  fill: string;
+  of: string;
+}
 
 export function StatisticsScreen() {
   return (
@@ -71,7 +89,9 @@ export function StatisticsScreen() {
 function GroupStatistics({ group }: { group: GroupWithAccess }) {
   const t = useTranslations();
   const locale = useLocale();
-  const [range, setRange] = useState<StatisticsRange>("thisMonth");
+  const today = localDate();
+  const [chosen, setChosen] = useState<StatisticsRange>();
+  const range = chosen ?? monthOf(today);
   const query = useQuery({
     ...trpc.stats.getStatistics.queryOptions({
       groupId: group.id,
@@ -85,7 +105,8 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
   const data = query.data?.success ? query.data.data : undefined;
   const failed = !data && (query.isError || query.data?.success === false);
   const stale = query.isPlaceholderData;
-  const month = statisticsMonth(range, localDate());
+  const preset = presetOf(range);
+  const picker = data && { range, period: data, onPick: setChosen };
   const money = (cents: number) =>
     formatCurrencyFromCents({ cents, currency: group.currency, locale });
 
@@ -98,21 +119,20 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
         <BottomSheetPickerTrigger
           testID="statistics-range"
           title={t("statistics.ranges.title")}
-          items={statisticsRanges.map((id) => ({
-            id,
-            title: t(`statistics.ranges.${id}`),
+          items={statisticsChoices(today).map(({ key, range: option }) => ({
+            id: option,
+            title: t(`statistics.ranges.${key}`),
           }))}
           selectedId={range}
-          onSelect={({ id }) => {
-            const picked = statisticsRanges.find((option) => option === id);
-            if (picked) setRange(picked);
-          }}
+          onSelect={({ id }) => setChosen(id)}
           trigger={
             <View className="mt-4 flex-row items-center gap-2">
               <Text className="text-foreground text-4xl font-extrabold tracking-tight">
-                {month
-                  ? formatCalendarDate(`${month}-01`, locale, { month: "long" })
-                  : t(`statistics.ranges.${range}`)}
+                {preset
+                  ? t(`statistics.ranges.${preset}`)
+                  : formatCalendarDate(`${range}-01`, locale, {
+                      month: "long",
+                    })}
               </Text>
               <Icon name="chevron-down" size={22} color="muted-foreground" />
             </View>
@@ -146,7 +166,7 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
           </View>
         ) : (
           <View className={cn(stale && "opacity-50")}>
-            <Hero data={data} showsPace={month !== null} money={money} />
+            <Hero data={data} showsPace={!preset} money={money} />
             {(!data || data.spending.categories.length > 0) && (
               <WhereItWent data={data} money={money} disabled={stale} />
             )}
@@ -165,35 +185,19 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
                 )}
                 height={SPENDING_BARS_HEIGHT}
                 format={(cents) => formatWholeAmountFromCents(cents, locale)}
+                picker={picker}
+                barTestID="statistics-spending"
               />
             </HomeCard>
-            <CountCard
-              title={t("navigation.shopping")}
-              counts={data?.shopping}
-              to={data?.to}
-              wholeMonth={data?.wholeMonth}
-              unit={(count) => t("home.itemsBought", { count })}
-            >
-              {data ? (
-                <ShoppingDetails
-                  categories={data.shopping.categories}
-                  daysOnList={data.shopping.daysOnList}
-                />
-              ) : (
-                <>
-                  <Skeleton className="bg-foreground/10 mt-4 h-3 rounded-md" />
-                  <View className="mt-2.5">
-                    <TextSkeleton className="text-xs" size="xs" width="3xl" />
-                  </View>
-                </>
-              )}
-            </CountCard>
+            <ShoppingCard data={data} picker={picker} />
             <CountCard
               title={t("statistics.chores")}
               counts={data?.chores}
               to={data?.to}
               wholeMonth={data?.wholeMonth}
               unit={(count) => t("home.choresDone", { count })}
+              picker={picker}
+              barTestID="statistics-chores"
             >
               {!data &&
                 PLACEHOLDER_ROWS.map((row) => (
@@ -245,7 +249,9 @@ function Hero({
   money: (cents: number) => string;
 }) {
   const t = useTranslations();
-  const pace = data?.spending.pace ?? undefined;
+
+  if (data)
+    return <ShareHero data={data} showsPace={showsPace} money={money} />;
 
   return (
     <View className="mt-8">
@@ -253,53 +259,113 @@ function Hero({
         {t("statistics.yourShare")}
       </Text>
       <View className="mt-1">
-        {data ? (
-          <Text
-            testID="statistics-share"
-            className="text-foreground text-5xl font-extrabold tracking-tight"
-          >
-            {money(data.spending.share)}
-          </Text>
-        ) : (
-          <TextSkeleton
-            className="text-5xl font-extrabold"
-            size="3xl"
-            width="xl"
-          />
-        )}
+        <TextSkeleton
+          className="text-5xl font-extrabold"
+          size="3xl"
+          width="xl"
+        />
       </View>
       <View className="mt-2">
-        {data ? (
-          <Text className="text-muted-foreground text-base">
-            {t.rich("statistics.ofHousehold", {
-              amount: money(data.spending.household),
-              b: bold,
-            })}
-          </Text>
-        ) : (
-          <TextSkeleton className="text-base" size="sm" width="3xl" />
+        <TextSkeleton className="text-base" size="sm" width="3xl" />
+        {showsPace && (
+          <TextSkeleton className="text-base" size="sm" width="2xl" />
         )}
+      </View>
+      {showsPace && (
+        <PaceChart
+          pace={undefined}
+          today={undefined}
+          height={HERO_PACE_HEIGHT}
+          labelled
+          drawIn={false}
+        />
+      )}
+    </View>
+  );
+}
+
+function ShareHero({
+  data: { spending, to, wholeMonth },
+  showsPace,
+  money,
+}: {
+  data: Statistics;
+  showsPace: boolean;
+  money: (cents: number) => string;
+}) {
+  const t = useTranslations();
+  const locale = useLocale();
+  const [point, setPoint] = useState<PacePoint | null>(null);
+  const share = useCountUp(spending.share);
+  const { pace } = spending;
+  const now = point?.now;
+  const before = point?.before;
+  const date = (day: string) =>
+    formatCalendarDate(day, locale, { day: "numeric", month: "short" });
+
+  return (
+    <View className="mt-8">
+      <Text className="text-muted-foreground text-sm font-semibold">
+        {now
+          ? t("statistics.yourShareBy", { date: date(now.date) })
+          : t("statistics.yourShare")}
+      </Text>
+      <Text
+        testID="statistics-share"
+        className="text-foreground mt-1 text-5xl font-extrabold tracking-tight"
+      >
+        {money(now ? now.total : share)}
+      </Text>
+      <View className="mt-2">
+        <Text className="text-muted-foreground text-base">
+          {t.rich("statistics.ofHousehold", {
+            amount: money(
+              pace && point?.now
+                ? sum(pace.household.slice(0, point.index + 1))
+                : spending.household,
+            ),
+            b: bold,
+          })}
+        </Text>
         {showsPace &&
-          (data && pace ? (
+          (!pace ? (
+            <TextSkeleton className="text-base" size="sm" width="2xl" />
+          ) : !before ? (
             <PaceComparison
               pace={pace}
-              today={data.to}
+              today={to}
               format={money}
-              wholeMonth={data.wholeMonth}
+              wholeMonth={wholeMonth}
               className="text-muted-foreground text-base"
             />
           ) : (
-            <TextSkeleton className="text-base" size="sm" width="2xl" />
+            <Text className="text-muted-foreground text-base">
+              {now
+                ? t.rich(
+                    `statistics.byDay.${now.total < before.total ? "less" : now.total > before.total ? "more" : "same"}`,
+                    {
+                      amount: money(Math.abs(now.total - before.total)),
+                      date: date(before.date),
+                      b: bold,
+                    },
+                  )
+                : t.rich("statistics.byDay.before", {
+                    amount: money(before.total),
+                    date: date(before.date),
+                    b: bold,
+                  })}
+            </Text>
           ))}
       </View>
       {showsPace && (
         <PaceChart
-          pace={pace}
-          today={data?.to}
-          height={80}
+          pace={pace ?? undefined}
+          today={to}
+          height={HERO_PACE_HEIGHT}
           labelled
-          wholeMonth={data?.wholeMonth}
+          wholeMonth={wholeMonth}
           drawIn={false}
+          onScrub={setPoint}
         />
       )}
     </View>
@@ -339,6 +405,11 @@ function WhereItWent({
     );
 
   const { categories } = data.spending;
+  const open = (category: string) =>
+    router.navigate({
+      pathname: "/(tabs)/expenses",
+      params: { category, from: data.from, to: data.to },
+    });
 
   return (
     <HomeCard title={t("statistics.whereItWent")} className="mt-6">
@@ -346,8 +417,11 @@ function WhereItWent({
         segments={categories.map(({ category, share }) => ({
           key: category,
           value: share,
+          label: t(`expenseCategories.groups.${category}`),
           fill: categoryFillColorMap[expenseCategoryGroupColorKeys[category]],
         }))}
+        disabled={disabled}
+        onPick={open}
       />
       {categories.map(({ category, share, household }) => {
         const { bgColor, icon } = getExpenseCategoryData({
@@ -359,12 +433,7 @@ function WhereItWent({
             testID={`statistics-category-${category}`}
             accessibilityRole="button"
             disabled={disabled}
-            onPress={() =>
-              router.navigate({
-                pathname: "/(tabs)/expenses",
-                params: { category, from: data.from, to: data.to },
-              })
-            }
+            onPress={() => open(category)}
             className="mt-3.5 flex-row items-center gap-3 active:opacity-70"
           >
             <View
@@ -433,30 +502,33 @@ function CountCard({
   to,
   wholeMonth,
   unit,
+  only,
+  picker,
+  barTestID,
   children,
 }: {
   title: string;
-  counts: Pick<Statistics["shopping"], "total" | "pace" | "months"> | undefined;
+  counts:
+    { total: number; pace: Pace | null; months: MonthCount[] } | undefined;
   to: string | undefined;
   wholeMonth: boolean | undefined;
   unit: (count: number) => string;
+  only?: Only;
+  picker: MonthPicker | undefined;
+  barTestID: string;
   children: ReactNode;
 }) {
   return (
     <HomeCard title={title} className="mt-4">
       {counts && to ? (
-        <View className="mt-2">
-          <Headline value={counts.total} format={String} unit={unit} />
-          {counts.pace && (
-            <PaceComparison
-              pace={counts.pace}
-              today={to}
-              format={String}
-              wholeMonth={wholeMonth}
-              className="text-muted-foreground text-sm"
-            />
-          )}
-        </View>
+        <CountHeadline
+          total={counts.total}
+          pace={counts.pace}
+          to={to}
+          wholeMonth={wholeMonth}
+          unit={unit}
+          only={only}
+        />
       ) : (
         <HeadlineSkeleton />
       )}
@@ -464,55 +536,161 @@ function CountCard({
         bars={counts?.months}
         height={COUNT_BARS_HEIGHT}
         format={String}
+        picker={picker}
+        tint={only?.fill}
+        barTestID={barTestID}
       />
       {children}
     </HomeCard>
   );
 }
 
-function ShoppingDetails({
-  categories,
-  daysOnList,
-}: Pick<Statistics["shopping"], "categories" | "daysOnList">) {
+function CountHeadline({
+  total,
+  pace,
+  to,
+  wholeMonth,
+  unit,
+  only,
+}: {
+  total: number;
+  pace: Pace | null;
+  to: string;
+  wholeMonth: boolean | undefined;
+  unit: (count: number) => string;
+  only: Only | undefined;
+}) {
+  return (
+    <View className="mt-2">
+      <Headline
+        value={useCountUp(total)}
+        format={String}
+        unit={() => (only ? `× ${only.label}` : unit(total))}
+      />
+      {pace &&
+        (only ? (
+          <Text className="text-muted-foreground text-sm">{only.of}</Text>
+        ) : (
+          <PaceComparison
+            pace={pace}
+            today={to}
+            format={String}
+            wholeMonth={wholeMonth}
+            className="text-muted-foreground text-sm"
+          />
+        ))}
+    </View>
+  );
+}
+
+function ShoppingCard({
+  data,
+  picker,
+}: {
+  data: Statistics | undefined;
+  picker: MonthPicker | undefined;
+}) {
   const t = useTranslations();
-  const shown = categories.map(({ category, total }) => {
+  const [picked, setPicked] = useState<string | null>(null);
+  const shopping = data?.shopping;
+  const shown = (shopping?.categories ?? []).map(({ category, total }) => {
     const { colorKey, name } = getCategoryData({ categoryId: category });
-    return { category, total, name, fill: categoryFillColorMap[colorKey] };
+    return {
+      category,
+      total,
+      label: t(name),
+      fill: categoryFillColorMap[colorKey],
+    };
   });
+  const filtered = shown.find(({ category }) => category === picked);
+  const toggle = (category: string) =>
+    setPicked(picked === category ? null : category);
 
   return (
-    <>
-      {shown.length > 0 && (
+    <CountCard
+      title={t("navigation.shopping")}
+      counts={
+        shopping && {
+          total: filtered?.total ?? shopping.total,
+          pace: shopping.pace,
+          months: shopping.months.map(({ month, total, categories }) => ({
+            month,
+            total: filtered ? (categories[filtered.category] ?? 0) : total,
+          })),
+        }
+      }
+      to={data?.to}
+      wholeMonth={data?.wholeMonth}
+      unit={(count) => t("home.itemsBought", { count })}
+      only={
+        shopping &&
+        filtered && {
+          label: filtered.label,
+          fill: filtered.fill,
+          of: t("statistics.ofItemsBought", { count: shopping.total }),
+        }
+      }
+      picker={picker}
+      barTestID="statistics-shopping"
+    >
+      {shopping ? (
         <>
-          <SplitBar
-            segments={shown.map(({ category, total, fill }) => ({
-              key: category,
-              value: total,
-              fill,
-            }))}
-          />
-          <View className="mt-2.5 flex-row flex-wrap gap-x-3 gap-y-1">
-            {shown.map(({ category, total, name, fill }) => (
-              <LegendKey
-                key={category}
-                fill={fill}
-                label={t(name)}
-                count={total}
+          {shown.length > 0 && (
+            <>
+              <SplitBar
+                segments={shown.map(({ category, total, label, fill }) => ({
+                  key: category,
+                  value: total,
+                  label,
+                  fill,
+                }))}
+                lit={filtered?.category}
+                onPick={toggle}
               />
-            ))}
+              <View className="mt-1.5 flex-row flex-wrap gap-x-3">
+                {shown.map(({ category, total, label, fill }) => (
+                  <Pressable
+                    key={category}
+                    accessibilityRole="button"
+                    accessibilityState={{
+                      selected: filtered?.category === category,
+                    }}
+                    onPress={() => toggle(category)}
+                    className={cn(
+                      "py-1",
+                      filtered &&
+                        filtered.category !== category &&
+                        "opacity-40",
+                    )}
+                  >
+                    <LegendKey fill={fill} label={label} count={total} />
+                  </Pressable>
+                ))}
+              </View>
+            </>
+          )}
+          {shopping.daysOnList !== null && (
+            <View className="mt-4 flex-row items-center gap-3">
+              <View className="bg-muted size-9 items-center justify-center rounded-full">
+                <Icon name="timer" size={16} color="foreground" />
+              </View>
+              <Text className="text-muted-foreground flex-1 text-sm">
+                {t.rich("statistics.daysOnList", {
+                  count: shopping.daysOnList,
+                  b: bold,
+                })}
+              </Text>
+            </View>
+          )}
+        </>
+      ) : (
+        <>
+          <Skeleton className="bg-foreground/10 mt-4 h-3 rounded-md" />
+          <View className="mt-2.5">
+            <TextSkeleton className="text-xs" size="xs" width="3xl" />
           </View>
         </>
       )}
-      {daysOnList !== null && (
-        <View className="mt-4 flex-row items-center gap-3">
-          <View className="bg-muted size-9 items-center justify-center rounded-full">
-            <Icon name="timer" size={16} color="foreground" />
-          </View>
-          <Text className="text-muted-foreground flex-1 text-sm">
-            {t.rich("statistics.daysOnList", { count: daysOnList, b: bold })}
-          </Text>
-        </View>
-      )}
-    </>
+    </CountCard>
   );
 }
