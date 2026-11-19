@@ -18,10 +18,6 @@ import {
 } from "@flatsby/api/hooks/useExpenseFilters";
 import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { withMonthHeaders } from "@flatsby/validators/expenses/formatting";
-import {
-  expenseLinkSchema,
-  linkedFilterChoice,
-} from "@flatsby/validators/expenses/list-filter";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useRefreshControl } from "~/lib/components/pull-to-refresh";
@@ -91,11 +87,8 @@ function ExpenseList() {
   );
 
   const onLinkedFilter = useEffectEvent((params: unknown) => {
-    const link = expenseLinkSchema.safeParse(params);
-    if (link.success && groupData.success)
-      filters.replace(
-        linkedFilterChoice(link.data, groupData.data.thisGroupMember.id),
-      );
+    if (groupData.success)
+      filters.applyLink(params, groupData.data.thisGroupMember.id);
     router.setParams({ category: undefined, from: undefined, to: undefined });
   });
   useEffect(() => {

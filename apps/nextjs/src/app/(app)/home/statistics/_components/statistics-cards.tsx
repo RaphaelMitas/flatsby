@@ -125,6 +125,11 @@ export function MonthByMonthCard({
 export function ShoppingStatsCard({ stats }: { stats: Statistics }) {
   const t = useTranslations();
   const { shopping } = stats;
+  const segments = shopping.categories.map(({ category, total }) => ({
+    key: category,
+    value: total,
+    className: cn("bg-current", getCategoryData(category).colorClasses.base),
+  }));
 
   return (
     <CountCard
@@ -134,29 +139,14 @@ export function ShoppingStatsCard({ stats }: { stats: Statistics }) {
       wholeMonth={stats.wholeMonth}
       unit={(count) => t("home.itemsBought", { count })}
     >
-      {shopping.categories.length > 0 && (
+      {segments.length > 0 && (
         <>
-          <SplitBar
-            segments={shopping.categories.map(({ category, total }) => ({
-              key: category,
-              value: total,
-              className: cn(
-                "bg-current",
-                getCategoryData(category).colorClasses.base,
-              ),
-            }))}
-          />
+          <SplitBar segments={segments} />
           <div className="text-muted-foreground mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium">
-            {shopping.categories.map(({ category, total }) => (
-              <LegendKey
-                key={category}
-                className={cn(
-                  "bg-current",
-                  getCategoryData(category).colorClasses.base,
-                )}
-              >
-                {t(`shoppingCategories.names.${category}`)}
-                <b className="text-foreground tabular-nums">{total}</b>
+            {segments.map(({ key, value, className }) => (
+              <LegendKey key={key} className={className}>
+                {t(`shoppingCategories.names.${key}`)}
+                <b className="text-foreground tabular-nums">{value}</b>
               </LegendKey>
             ))}
           </div>

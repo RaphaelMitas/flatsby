@@ -165,7 +165,7 @@ export function PaceComparison({
 }) {
   const t = useTranslations();
   const locale = useLocale();
-  const { difference, direction } = paceSummary(pace, wholeMonth);
+  const { difference, direction } = paceSummary(pace);
 
   return t.rich(
     wholeMonth

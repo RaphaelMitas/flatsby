@@ -70,7 +70,11 @@ export function MonthBars({
                 <View
                   className={cn(
                     "items-center pt-1",
-                    last ? "bg-foreground" : "bg-muted-foreground",
+                    last
+                      ? "bg-foreground"
+                      : filled === undefined
+                        ? "bg-muted-foreground/40"
+                        : "bg-muted-foreground",
                   )}
                   style={{ height: filledHeight }}
                 >

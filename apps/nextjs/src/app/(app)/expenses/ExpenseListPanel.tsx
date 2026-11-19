@@ -1,9 +1,6 @@
 "use client";
 
-import type {
-  ExpenseLink,
-  ExpenseListFilter,
-} from "@flatsby/validators/expenses/list-filter";
+import type { ExpenseListFilter } from "@flatsby/validators/expenses/list-filter";
 import { Suspense, useEffect, useEffectEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -25,10 +22,7 @@ import { ScrollArea } from "@flatsby/ui/scroll-area";
 import { Skeleton } from "@flatsby/ui/skeleton";
 import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { withMonthHeaders } from "@flatsby/validators/expenses/formatting";
-import {
-  expenseLinkSchema,
-  linkedFilterChoice,
-} from "@flatsby/validators/expenses/list-filter";
+import { expenseLinkSchema } from "@flatsby/validators/expenses/list-filter";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -61,13 +55,14 @@ export function ExpenseListPanel({
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
 
-  const applyLink = useEffectEvent((link: ExpenseLink) => {
-    if (!groupData.success) return;
-    filters.replace(
-      linkedFilterChoice(link, groupData.data.thisGroupMember.id),
-    );
+  const applyLink = useEffectEvent(() => {
+    if (groupData.success)
+      filters.applyLink(
+        Object.fromEntries(searchParams),
+        groupData.data.thisGroupMember.id,
+      );
     const params = new URLSearchParams(searchParams);
-    for (const key of Object.keys(link)) params.delete(key);
+    for (const key of expenseLinkSchema.keyof().options) params.delete(key);
     window.history.replaceState(
       null,
       "",
@@ -75,8 +70,7 @@ export function ExpenseListPanel({
     );
   });
   useEffect(() => {
-    const link = expenseLinkSchema.safeParse(Object.fromEntries(searchParams));
-    if (link.success) applyLink(link.data);
+    if (searchParams.has("category")) applyLink();
   }, [searchParams]);
 
   const listOptions = (filter: ExpenseListFilter) =>
