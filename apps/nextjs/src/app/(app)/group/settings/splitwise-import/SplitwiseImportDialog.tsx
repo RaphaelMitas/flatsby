@@ -4,9 +4,9 @@ import type { GroupMemberWithUserInfo } from "@flatsby/api";
 import { useCallback, useRef, useState } from "react";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import {
-  AlertCircle,
   ArrowLeft,
-  CheckCircle2,
+  CircleCheck,
+  CircleExclamationPoint,
   LoaderCircle,
   Upload,
 } from "lucide-react";
@@ -128,7 +128,7 @@ export function SplitwiseImportDialog({
         {bulkCreateMutation.data?.success ? (
           <div className="space-y-4">
             <Alert variant="success">
-              <CheckCircle2 className="h-4 w-4" />
+              <CircleCheck className="h-4 w-4" />
               <AlertTitle>{t("importComplete")}</AlertTitle>
               <AlertDescription>
                 {t("importedCount", {
@@ -255,7 +255,7 @@ function StepFile({
 
       {wizard.parsed?.errors.map((err, i) => (
         <Alert key={i} variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <CircleExclamationPoint className="h-4 w-4" />
           <AlertDescription>{tRoot(err.key, err.values)}</AlertDescription>
         </Alert>
       ))}
@@ -403,7 +403,7 @@ function StepPreview({ wizard }: { wizard: WizardReturn }) {
 
       {wizard.isTooLarge && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <CircleExclamationPoint className="h-4 w-4" />
           <AlertTitle>{t("tooLargeTitle")}</AlertTitle>
           <AlertDescription>{t("tooLarge")}</AlertDescription>
         </Alert>
@@ -447,7 +447,7 @@ function StepConfirm({
 
       {error && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <CircleExclamationPoint className="h-4 w-4" />
           <AlertTitle>{t("importFailed")}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>

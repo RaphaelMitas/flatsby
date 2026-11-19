@@ -10,7 +10,6 @@ export const home = {
     afternoon: "Hallo, {name}.",
     evening: "Guten Abend, {name}.",
   },
-  more: "+{count} weitere",
   nothingToBuy: "Nichts zu kaufen",
   open: "{count} offen",
   itemsBought: "{count, plural, one {Artikel gekauft} other {Artikel gekauft}}",

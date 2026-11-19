@@ -49,6 +49,23 @@ export default function HomeLayout() {
             ...solidHeader,
           }}
         />
+        <Stack.Screen
+          name="pinboard/index"
+          options={{
+            title: t("pinboard.title"),
+            headerShown: true,
+            ...solidHeader,
+          }}
+        />
+        <Stack.Screen
+          name="pinboard/form"
+          options={{
+            title: t("pinboard.newTitle"),
+            presentation: "modal",
+            headerShown: true,
+            ...solidHeader,
+          }}
+        />
       </Stack>
     </TabSafeArea>
   );

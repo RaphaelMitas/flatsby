@@ -14,6 +14,7 @@ import { legal } from "./en/legal";
 import { marketing } from "./en/marketing";
 import { navigation } from "./en/navigation";
 import { notFound } from "./en/notFound";
+import { pinboard } from "./en/pinboard";
 import { settings } from "./en/settings";
 import { shoppingCategories } from "./en/shoppingCategories";
 import { shoppingList } from "./en/shoppingList";
@@ -37,6 +38,7 @@ export const en = {
   splitwiseImport,
   statistics,
   calendar,
+  pinboard,
   errors,
   marketing,
   legal,

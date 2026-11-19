@@ -5,7 +5,7 @@ import type { DebtEntry } from "@flatsby/validators/expenses/types";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { CheckCircle2, Plus } from "lucide-react";
+import { CircleCheck, Plus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@flatsby/ui/button";
@@ -118,7 +118,7 @@ export function DebtSummaryView() {
           className="flex flex-col items-center gap-3 px-6 py-10 text-center"
         >
           <span className="bg-success/15 text-success flex size-16 items-center justify-center rounded-full">
-            <CheckCircle2 className="size-8" />
+            <CircleCheck className="size-8" />
           </span>
           <div>
             <p className="text-lg font-semibold">{t("debts.allSettledUp")}</p>

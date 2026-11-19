@@ -32,7 +32,14 @@ export const homePaceSchema = z.object({
 
 export const homeCardOpenedSchema = z.object({
   groupId: z.number(),
-  card: z.enum(["expenses", "shopping", "calendar", "turn", "statistics"]),
+  card: z.enum([
+    "expenses",
+    "shopping",
+    "calendar",
+    "turn",
+    "statistics",
+    "pinboard",
+  ]),
 });
 export type HomeCardName = z.infer<typeof homeCardOpenedSchema>["card"];
 

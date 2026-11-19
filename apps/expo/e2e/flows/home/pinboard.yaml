@@ -1,0 +1,127 @@
+appId: ${APP_ID}
+tags:
+  - home
+---
+# Pin the WiFi from a starter, show its QR code, add a note, delete it.
+- runFlow: ../../subflows/e2e-login.yaml
+- tapOn:
+    id: "group-select-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-group-picker"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "home-card-pinboard"
+    direction: DOWN
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "home-card-pinboard"
+      MARKER_ID: "pinboard-empty"
+
+# The starter fills in the title and shows the network fields
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "pinboard-starter-wifi"
+      MARKER_ID: "pin-form-ssid"
+- assertVisible:
+    id: "pin-form-title"
+    text: "WiFi"
+# Without a network name or a note there is nothing to pin.
+# The keyboard is up on the network name; a tap on a label closes it.
+- tapOn: "Title"
+- scrollUntilVisible:
+    element:
+      id: "pin-form-save"
+- tapOn:
+    id: "pin-form-save"
+- scrollUntilVisible:
+    element: "Write what to pin"
+- scrollUntilVisible:
+    element:
+      id: "pin-form-ssid"
+    direction: UP
+- tapOn:
+    id: "pin-form-ssid"
+- inputText: "WG Darmstadt"
+- pressKey: Enter
+- assertNotVisible: "Write what to pin"
+- tapOn:
+    id: "pin-form-password"
+- inputText: "haferflocken42"
+- pressKey: Enter
+- scrollUntilVisible:
+    element:
+      id: "pin-form-save"
+- tapOn:
+    id: "pin-form-save"
+- extendedWaitUntil:
+    visible: "haferflocken42"
+    timeout: 15000
+- assertVisible: "WG Darmstadt"
+
+# The entry opens its QR code
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "pin-qr-WiFi"
+      MARKER_ID: "pin-qr-dialog"
+- tapOn:
+    id: "pin-qr-done"
+- extendedWaitUntil:
+    notVisible:
+      id: "pin-qr-dialog"
+    timeout: 15000
+
+# The optimistic entry can't be edited until the save comes back with a real id
+- extendedWaitUntil:
+    visible:
+      id: "pin-edit-WiFi"
+      enabled: true
+    timeout: 15000
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "pin-edit-WiFi"
+      MARKER_ID: "pin-form-title"
+- scrollUntilVisible:
+    element:
+      id: "pin-form-body"
+- tapOn:
+    id: "pin-form-body"
+- inputText: "On the fridge"
+# Return adds a line in the note; Return in a one-line field closes the keyboard.
+- tapOn:
+    id: "pin-form-password"
+- pressKey: Enter
+- scrollUntilVisible:
+    element:
+      id: "pin-form-save"
+- tapOn:
+    id: "pin-form-save"
+- extendedWaitUntil:
+    visible: "On the fridge"
+    timeout: 15000
+
+# Deleting brings the empty board back
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "pin-edit-WiFi"
+      MARKER_ID: "pin-form-title"
+- scrollUntilVisible:
+    element:
+      id: "pin-form-delete"
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "pin-form-delete"
+      MARKER_ID: "delete-confirmation-confirm"
+- tapOn:
+    id: "delete-confirmation-confirm"
+- extendedWaitUntil:
+    visible:
+      id: "pinboard-empty"
+    timeout: 15000

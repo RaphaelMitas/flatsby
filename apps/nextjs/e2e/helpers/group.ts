@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { waitForHydration } from "./hydration";
+import { refetched } from "./refetched";
 
 export const uniqueGroupName = () => `E2E Group ${Date.now()}`;
 
@@ -60,19 +61,12 @@ export async function deleteCurrentGroup(page: Page) {
   await page.waitForURL("/group");
 }
 
-export const groupRefetched = (page: Page) =>
-  page.waitForResponse(
-    (response) =>
-      response.url().includes("group.getGroup") &&
-      response.request().method() === "GET",
-  );
-
 export async function addPlaceholder(page: Page, name: string) {
   await page.goto("/group/settings");
   const input = page.getByTestId("placeholder-name-input");
   await waitForHydration(input);
   await input.fill(name);
-  const saved = groupRefetched(page);
+  const saved = refetched(page, "group.getGroup");
   await page.getByTestId("placeholder-add-button").click();
   await expect(page.getByTestId(`placeholder-row-${name}`)).toBeVisible();
   await saved;

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ExpenseWithSplitsAndMembers } from "@flatsby/api";
-import { Calendar, Edit, Handshake, Trash2, Users } from "lucide-react";
+import { Calendar, Handshake, SquarePen, Trash, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
@@ -61,7 +61,7 @@ export function ExpenseDetailContent({
               onClick={onEdit}
               disabled={isDeleting}
             >
-              <Edit className="mr-2 h-4 w-4" />
+              <SquarePen className="mr-2 h-4 w-4" />
               {t("common.edit")}
             </Button>
           )}
@@ -72,7 +72,7 @@ export function ExpenseDetailContent({
               onClick={onDelete}
               disabled={isDeleting}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash className="mr-2 h-4 w-4" />
               {t("common.delete")}
             </Button>
           )}

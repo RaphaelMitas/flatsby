@@ -41,6 +41,8 @@ export const deleteGroupSchema = groupSchema.pick({ id: true });
 
 export const groupIdInputSchema = z.object({ groupId: groupSchema.shape.id });
 
+export const groupItemRefSchema = groupIdInputSchema.extend({ id: z.number() });
+
 export const groupMemberRoleSchema = z.enum(["admin", "member"]);
 export type GroupMemberRole = z.infer<typeof groupMemberRoleSchema>;
 

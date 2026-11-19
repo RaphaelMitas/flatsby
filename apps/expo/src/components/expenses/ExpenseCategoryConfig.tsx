@@ -27,7 +27,7 @@ interface SubcategoryEntry {
 }
 
 const otherEntry: SubcategoryEntry = {
-  iconName: "circle-help",
+  iconName: "circle-question-mark",
   colorKey: "zinc",
 };
 

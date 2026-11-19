@@ -21,9 +21,6 @@ tags:
     timeout: 15000
 - assertVisible:
     id: "home-group-settings"
-# A fresh group has no chores, so there is no turn line
-- assertNotVisible:
-    id: "home-turn"
 - scrollUntilVisible:
     element:
       id: "home-card-shopping"

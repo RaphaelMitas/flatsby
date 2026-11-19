@@ -6,11 +6,11 @@ import {
   addPlaceholder,
   createAndSelectGroup,
   deleteCurrentGroup,
-  groupRefetched,
   submitCreateGroupForm,
   uniqueGroupName,
 } from "../helpers/group";
 import { waitForHydration } from "../helpers/hydration";
+import { refetched } from "../helpers/refetched";
 import {
   addShoppingListItem,
   createShoppingList,
@@ -282,7 +282,7 @@ test.describe("Group Management", () => {
     await memberActions.click();
     await expect(authPage.getByText("Took Anna's spot")).toBeVisible();
     await authPage.getByTestId("member-action-undo-claim").click();
-    const settled = groupRefetched(authPage);
+    const settled = refetched(authPage, "group.getGroup");
     await authPage.getByTestId("member-undo-claim-confirm").click();
 
     await expect(authPage.getByTestId("placeholder-row-Anna")).toBeVisible();

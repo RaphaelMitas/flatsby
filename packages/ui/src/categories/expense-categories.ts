@@ -10,11 +10,12 @@ import {
   Car,
   CarTaxiFront,
   CircleEllipsis,
-  CircleHelp,
+  CircleQuestionMark,
   Clapperboard,
   Coffee,
   Droplets,
   Dumbbell,
+  EighthNotes,
   Fuel,
   Gamepad2,
   Gift,
@@ -24,7 +25,6 @@ import {
   IdCard,
   Lamp,
   MapPin,
-  Music,
   Phone,
   Pill,
   Pizza,
@@ -32,7 +32,7 @@ import {
   Shirt,
   ShoppingCart,
   Smartphone,
-  SquareParking,
+  SquareLetterP,
   Stethoscope,
   Ticket,
   TrainFront,
@@ -69,7 +69,7 @@ const subcategoryIconMap: Record<string, LucideIcon> = {
   "ride-sharing": Car,
   "public-transit": TrainFront,
   gas: Fuel,
-  parking: SquareParking,
+  parking: SquareLetterP,
   taxi: CarTaxiFront,
   "other-transport": CircleEllipsis,
   clothes: Shirt,
@@ -80,7 +80,7 @@ const subcategoryIconMap: Record<string, LucideIcon> = {
   games: Gamepad2,
   sports: Dumbbell,
   events: Ticket,
-  music: Music,
+  music: EighthNotes,
   "other-entertainment": CircleEllipsis,
   rent: House,
   maintenance: Wrench,
@@ -109,7 +109,7 @@ const subcategoryIconMap: Record<string, LucideIcon> = {
   gift: Gift,
   donation: HeartHandshake,
   "other-gifts": CircleEllipsis,
-  other: CircleHelp,
+  other: CircleQuestionMark,
 };
 
 function getColorKey(groupId: string): CategoryColorKey {
@@ -141,7 +141,7 @@ const otherFallback: ExpenseCategoryDataItem = {
   id: "other",
   ...expenseCategoryLabelKeys("other"),
   groupId: "other",
-  icon: CircleHelp,
+  icon: CircleQuestionMark,
   colorClasses: getExpenseCategoryColorClasses("other"),
 };
 
@@ -160,7 +160,7 @@ for (const sub of expenseSubcategories) {
     id: sub.id,
     ...expenseCategoryLabelKeys(sub.id),
     groupId: sub.group,
-    icon: subcategoryIconMap[sub.id] ?? CircleHelp,
+    icon: subcategoryIconMap[sub.id] ?? CircleQuestionMark,
     colorClasses: getExpenseCategoryColorClasses(sub.group),
   };
 }

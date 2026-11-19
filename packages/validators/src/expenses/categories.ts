@@ -222,7 +222,7 @@ const subcategoryDefinitions = [
     group: "gifts",
     icon: "circle-ellipsis",
   },
-  { id: "other", group: "other", icon: "circle-help" },
+  { id: "other", group: "other", icon: "circle-question-mark" },
 ] as const;
 
 export type ExpenseSubcategoryId =

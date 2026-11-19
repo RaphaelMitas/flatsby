@@ -85,6 +85,7 @@ const UNLOGGED_MUTATIONS = new Set([
   "user.setAnalyticsOptOut",
   "stats.homeCardOpened",
   "stats.statisticsUsed",
+  "pinboard.reportUse",
 ]);
 
 const timingMiddleware = t.middleware(

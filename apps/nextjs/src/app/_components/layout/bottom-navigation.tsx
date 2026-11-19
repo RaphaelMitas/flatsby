@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Calendar,
-  HomeIcon,
+  HouseIcon,
   Settings,
   ShoppingCartIcon,
   Wallet,
@@ -41,7 +41,7 @@ export function BottomNavigation() {
           )}
           prefetch={false}
         >
-          <HomeIcon className="h-6 w-6" />
+          <HouseIcon className="h-6 w-6" />
           <span className="text-xs">{t("home")}</span>
         </Link>
         <Link
