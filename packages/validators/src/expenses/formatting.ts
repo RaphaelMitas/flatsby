@@ -42,6 +42,11 @@ export function formatCurrencyFromCents({
   });
 }
 
+export const formatWholeAmountFromCents = (
+  cents: number,
+  locale: Intl.LocalesArgument,
+) => Math.round(centsToDecimal(cents)).toLocaleString(locale);
+
 export function formatExpenseAmounts(
   expense: Pick<
     ConvertibleExpense,
