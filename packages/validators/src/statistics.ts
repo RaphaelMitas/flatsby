@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import type { CalendarColor } from "./calendar";
 import type { CategoryId } from "./categories";
 import type { ConvertibleExpense } from "./expenses/conversion";
+import type { Pace } from "./home";
 import {
   calendarColorSchema,
   calendarDateSchema,
@@ -157,8 +158,22 @@ const byMonth = <Row extends { day: string }, Totals>(
     ...totals(rows.filter(({ day }) => monthOf(day) === month)),
   }));
 
-const paceOf = (period: StatisticsPeriod, days: CountDay[]) =>
-  period.pace ? monthPace(days, period.to) : null;
+const withinShownDays = ({ current, previous }: Pace): Pace => ({
+  current,
+  previous:
+    previous.length > current.length
+      ? [
+          ...previous.slice(0, current.length - 1),
+          sum(previous.slice(current.length - 1)),
+        ]
+      : previous,
+});
+
+const paceOf = (period: StatisticsPeriod, days: CountDay[]) => {
+  if (!period.pace) return null;
+  const pace = monthPace(days, period.to);
+  return period.pace === "wholeMonth" ? withinShownDays(pace) : pace;
+};
 
 const countTotals = (rows: CountDay[]) => ({
   total: sum(rows.map(({ total }) => total)),
@@ -211,7 +226,7 @@ export function spendingStatistics(
           ),
         ),
       }))
-      .filter(({ household }) => household > 0)
+      .filter(({ share }) => share > 0)
       .sort((a, b) => b.share - a.share || b.household - a.household),
     months: byMonth(shown, period.to, spendingTotals),
   };
