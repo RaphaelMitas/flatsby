@@ -679,6 +679,7 @@ function ShoppingCard({
                     key={key}
                     accessibilityRole="button"
                     accessibilityState={{ selected: filtered?.key === key }}
+                    hitSlop={{ top: 8, bottom: 8 }}
                     onPress={() => toggle(key)}
                     className={cn(
                       "py-1",

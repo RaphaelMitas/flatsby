@@ -22,11 +22,7 @@ import {
 import { inLedgerCurrency } from "./expenses/conversion";
 import { directionOf, monthPace, paceSchema, sum } from "./home";
 
-export const statisticsPresets = [
-  "last3Months",
-  "thisYear",
-  "sinceJoined",
-] as const;
+const statisticsPresets = ["last3Months", "thisYear", "sinceJoined"] as const;
 type StatisticsPreset = (typeof statisticsPresets)[number];
 
 const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);

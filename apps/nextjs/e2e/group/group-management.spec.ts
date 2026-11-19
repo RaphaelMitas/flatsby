@@ -405,6 +405,11 @@ test.describe("Group Management", () => {
         .getByTestId(/^expense-card-\d+$/)
         .filter({ hasText: description }),
     ).toBeVisible();
+    await expect(
+      authPage
+        .getByTestId("expense-filter-category-clear")
+        .filter({ visible: true }),
+    ).toBeVisible();
     await expect(authPage).toHaveURL(/\/expenses/);
     await expect(authPage).not.toHaveURL(/category=/);
   });

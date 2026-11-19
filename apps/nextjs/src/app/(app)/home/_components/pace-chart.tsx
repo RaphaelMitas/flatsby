@@ -9,7 +9,7 @@ import { paceChart, paceLabels } from "@flatsby/validators/home";
 
 export const PACE_SIZE = { width: 100, height: 100 };
 
-export interface PaceScrub {
+interface PaceScrub {
   point: PacePoint | null;
   onMove: (x: number | null) => void;
 }
