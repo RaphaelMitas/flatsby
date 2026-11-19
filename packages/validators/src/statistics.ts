@@ -97,6 +97,13 @@ const firstOf = (month: string) => `${month}-01`;
 const lastOf = (month: string) => `${month}-${daysInMonth(month)}`;
 const earlier = (a: string, b: string) => (a < b ? a : b);
 
+export const statisticsMonth = (range: StatisticsRange, today: string) =>
+  range === "thisMonth"
+    ? monthOf(today)
+    : range === "lastMonth"
+      ? shiftMonth(monthOf(today), -1)
+      : null;
+
 export function statisticsPeriod(
   range: StatisticsRange,
   today: string,

@@ -18,6 +18,7 @@ import { settings } from "./en/settings";
 import { shoppingCategories } from "./en/shoppingCategories";
 import { shoppingList } from "./en/shoppingList";
 import { splitwiseImport } from "./en/splitwiseImport";
+import { statistics } from "./en/statistics";
 
 export const en = {
   common,
@@ -34,6 +35,7 @@ export const en = {
   expenseCategories,
   debts,
   splitwiseImport,
+  statistics,
   calendar,
   errors,
   marketing,
