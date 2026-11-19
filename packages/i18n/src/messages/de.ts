@@ -19,6 +19,7 @@ import { settings } from "./de/settings";
 import { shoppingCategories } from "./de/shoppingCategories";
 import { shoppingList } from "./de/shoppingList";
 import { splitwiseImport } from "./de/splitwiseImport";
+import { statistics } from "./de/statistics";
 
 export const de = {
   common,
@@ -35,6 +36,7 @@ export const de = {
   expenseCategories,
   debts,
   splitwiseImport,
+  statistics,
   calendar,
   pinboard,
   errors,

@@ -17,7 +17,7 @@ export const homePaceInputSchema = z.object({
   timeZone: ianaTimeZoneSchema.catch(DEFAULT_TIME_ZONE),
 });
 
-const paceSchema = z.object({
+export const paceSchema = z.object({
   current: z.array(z.number()),
   previous: z.array(z.number()),
 });
@@ -32,7 +32,14 @@ export const homePaceSchema = z.object({
 
 export const homeCardOpenedSchema = z.object({
   groupId: z.number(),
-  card: z.enum(["expenses", "shopping", "calendar", "turn", "pinboard"]),
+  card: z.enum([
+    "expenses",
+    "shopping",
+    "calendar",
+    "turn",
+    "statistics",
+    "pinboard",
+  ]),
 });
 export type HomeCardName = z.infer<typeof homeCardOpenedSchema>["card"];
 
@@ -63,7 +70,7 @@ export function monthPace(
   return { current, previous };
 }
 
-const sum = (values: number[]) =>
+export const sum = (values: number[]) =>
   values.reduce((total, value) => total + value, 0);
 
 export function paceSummary({ current, previous }: Pace) {
