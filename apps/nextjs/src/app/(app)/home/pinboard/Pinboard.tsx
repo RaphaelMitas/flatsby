@@ -1,6 +1,6 @@
 "use client";
 
-import type { Pin, PinDraft } from "@flatsby/validators/pinboard";
+import type { Pin, PinDraft, PinUse } from "@flatsby/validators/pinboard";
 import { useState } from "react";
 import Link from "next/link";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -32,7 +32,7 @@ import { CopyButton } from "~/app/_components/CopyButton";
 import { useTRPC } from "~/trpc/react";
 import { PinDialog } from "./PinDialog";
 import { PinIconBadge } from "./PinIconBadge";
-import { usePinMutations } from "./usePinMutations";
+import { usePinMutations, useReportPinUse } from "./usePinMutations";
 
 export function Pinboard() {
   const t = useTranslations();
@@ -50,6 +50,7 @@ export function Pinboard() {
     setDraftsOpened((count) => count + 1);
   };
   const { create, update, remove } = usePinMutations(groupId, openDraft);
+  const reportUse = useReportPinUse(groupId);
 
   if (!data.success)
     return (
@@ -97,7 +98,11 @@ export function Pinboard() {
             key={pin.id}
             pin={pin}
             onEdit={() => openDraft(pinFormOf(pin))}
-            onShowCode={() => setCodeFor(pin)}
+            onShowCode={() => {
+              setCodeFor(pin);
+              reportUse({ event: "wifi_qr_shown" });
+            }}
+            onUse={reportUse}
           />
         ))
       )}
@@ -106,6 +111,7 @@ export function Pinboard() {
         <PinDialog
           key={draftsOpened}
           draft={draft}
+          onUse={reportUse}
           onClose={() => setDraft(null)}
           onSave={(values) => {
             const content = pinContentOf(values);
@@ -165,10 +171,12 @@ function PinCard({
   pin,
   onEdit,
   onShowCode,
+  onUse,
 }: {
   pin: Pin;
   onEdit: () => void;
   onShowCode: () => void;
+  onUse: (use: PinUse) => void;
 }) {
   const copyValue = pin.wifi?.password || pin.body;
 
@@ -188,7 +196,18 @@ function PinCard({
           <p className="min-w-0 flex-1 font-semibold wrap-break-word">
             {pin.title}
           </p>
-          {copyValue !== "" && <CopyButton value={copyValue} />}
+          {copyValue !== "" && (
+            <CopyButton
+              value={copyValue}
+              onCopied={() =>
+                onUse({
+                  event: pin.wifi?.password
+                    ? "wifi_password_copied"
+                    : "pin_note_copied",
+                })
+              }
+            />
+          )}
           <Button
             data-testid={`pin-edit-${pin.title}`}
             variant="ghost"

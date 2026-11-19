@@ -21,6 +21,7 @@ import { ErrorMessage } from "~/lib/ui/error-message";
 import { Fab } from "~/lib/ui/fab";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
+import { useReportPinUse } from "./usePinMutations";
 
 function PinIconBadge({ icon }: { icon: PinIcon }) {
   return (
@@ -37,6 +38,7 @@ export function Pinboard({ groupId }: { groupId: number }) {
     trpc.pinboard.list.queryOptions({ groupId }),
   );
   const [codeFor, setCodeFor] = useState<Pin>();
+  const reportUse = useReportPinUse(groupId);
 
   const openForm = (params: { id?: number; title?: string; icon?: PinIcon }) =>
     router.push({ pathname: "/(tabs)/home/pinboard/form", params });
@@ -69,7 +71,10 @@ export function Pinboard({ groupId }: { groupId: number }) {
               key={pin.id}
               pin={pin}
               onEdit={() => openForm({ id: pin.id })}
-              onShowCode={() => setCodeFor(pin)}
+              onShowCode={() => {
+                setCodeFor(pin);
+                reportUse({ event: "wifi_qr_shown" });
+              }}
             />
           ))
         )}

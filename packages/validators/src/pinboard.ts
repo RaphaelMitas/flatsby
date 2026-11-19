@@ -2,7 +2,7 @@ import { z } from "zod/v4";
 
 import { msg } from "@flatsby/i18n/message-key";
 
-import { groupItemRefSchema } from "./group";
+import { groupIdInputSchema, groupItemRefSchema } from "./group";
 
 export const MAX_PIN_TITLE_LENGTH = 60;
 export const MAX_PIN_BODY_LENGTH = 1000;
@@ -153,4 +153,34 @@ export function wifiFromQrText(text: string): PinWifi | null {
     password: fields.get("P") ?? "",
   });
   return wifi.success ? wifi.data : null;
+}
+
+const pinScanSourceSchema = z.enum(["camera", "library", "file"]);
+
+const pinUseSchema = z.discriminatedUnion("event", [
+  z.object({
+    event: z.enum(["wifi_qr_shown", "wifi_password_copied", "pin_note_copied"]),
+  }),
+  z.object({
+    event: z.literal("wifi_qr_scanned"),
+    source: pinScanSourceSchema,
+  }),
+  z.object({
+    event: z.literal("wifi_qr_scan_failed"),
+    source: pinScanSourceSchema,
+    reason: z.enum(["no_code", "not_wifi"]),
+  }),
+]);
+export type PinUse = z.infer<typeof pinUseSchema>;
+
+export const reportPinUseSchema = groupIdInputSchema.and(pinUseSchema);
+
+export function wifiQrScan(
+  text: string | undefined,
+  source: z.infer<typeof pinScanSourceSchema>,
+): { wifi: PinWifi | null; use: PinUse } {
+  const wifi = wifiFromQrText(text ?? "");
+  if (wifi) return { wifi, use: { event: "wifi_qr_scanned", source } };
+  const reason = text ? "not_wifi" : "no_code";
+  return { wifi, use: { event: "wifi_qr_scan_failed", source, reason } };
 }

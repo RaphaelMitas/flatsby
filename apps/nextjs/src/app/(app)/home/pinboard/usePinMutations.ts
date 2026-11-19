@@ -3,6 +3,7 @@
 import type {
   CreatePinInput,
   PinDraft,
+  PinUse,
   UpdatePinInput,
 } from "@flatsby/validators/pinboard";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -55,4 +56,10 @@ export function usePinMutations(
       ),
     ),
   };
+}
+
+export function useReportPinUse(groupId: number) {
+  const trpc = useTRPC();
+  const { mutate } = useMutation(trpc.pinboard.reportUse.mutationOptions());
+  return (use: PinUse) => mutate({ groupId, ...use });
 }

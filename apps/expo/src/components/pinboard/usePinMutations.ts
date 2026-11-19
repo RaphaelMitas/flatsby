@@ -1,5 +1,6 @@
 import type {
   CreatePinInput,
+  PinUse,
   UpdatePinInput,
 } from "@flatsby/validators/pinboard";
 import { Alert } from "react-native";
@@ -55,4 +56,9 @@ export function usePinMutations(groupId: number) {
       ),
     ),
   };
+}
+
+export function useReportPinUse(groupId: number) {
+  const { mutate } = useMutation(trpc.pinboard.reportUse.mutationOptions());
+  return (use: PinUse) => mutate({ groupId, ...use });
 }

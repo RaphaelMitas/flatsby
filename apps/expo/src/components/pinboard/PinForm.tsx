@@ -15,7 +15,7 @@ import {
   pinFormOf,
   pinFormSchema,
   pinIcons,
-  wifiFromQrText,
+  wifiQrScan,
 } from "@flatsby/validators/pinboard";
 
 import type { PictureSource } from "~/utils/pick-picture";
@@ -30,7 +30,7 @@ import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { pickPicture } from "~/utils/pick-picture";
 import { qrTextFromPicture } from "~/utils/qr-from-picture";
-import { usePinMutations } from "./usePinMutations";
+import { usePinMutations, useReportPinUse } from "./usePinMutations";
 
 interface PinFormProps {
   groupId: number;
@@ -46,6 +46,7 @@ export function PinForm({ groupId, pinId, draft }: PinFormProps) {
     ? data.data.find(({ id }) => id === pinId)
     : undefined;
   const { create, update, remove } = usePinMutations(groupId);
+  const reportUse = useReportPinUse(groupId);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanProblem, setScanProblem] = useState<string>();
@@ -87,7 +88,8 @@ export function PinForm({ groupId, pinId, draft }: PinFormProps) {
     setScanning(true);
     const text = await qrTextFromPicture(picture.uri).catch(() => undefined);
     setScanning(false);
-    const wifi = wifiFromQrText(text ?? "");
+    const { wifi, use } = wifiQrScan(text, source);
+    reportUse(use);
     if (!wifi) {
       setScanProblem(t("pinboard.form.noCode"));
       return;

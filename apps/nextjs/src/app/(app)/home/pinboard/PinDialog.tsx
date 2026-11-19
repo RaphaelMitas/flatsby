@@ -4,6 +4,7 @@ import type {
   PinDraft,
   PinFormValues,
   PinIcon,
+  PinUse,
 } from "@flatsby/validators/pinboard";
 import { useRef, useState } from "react";
 import { QrCode, Trash } from "lucide-react";
@@ -47,7 +48,7 @@ import {
   MAX_WIFI_SSID_LENGTH,
   pinFormSchema,
   pinIcons,
-  wifiFromQrText,
+  wifiQrScan,
 } from "@flatsby/validators/pinboard";
 
 import { pinIconComponents } from "./PinIconBadge";
@@ -55,11 +56,13 @@ import { qrTextFromFile } from "./qrTextFromFile";
 
 export function PinDialog({
   draft: { id, ...defaultValues },
+  onUse,
   onClose,
   onSave,
   onDelete,
 }: {
   draft: PinDraft;
+  onUse: (use: PinUse) => void;
   onClose: () => void;
   onSave: (values: PinFormValues) => void;
   onDelete: (id: number) => void;
@@ -80,7 +83,8 @@ export function PinDialog({
   const scan = async (file: File | undefined) => {
     if (!file) return;
     const text = await qrTextFromFile(file).catch(() => undefined);
-    const wifi = wifiFromQrText(text ?? "");
+    const { wifi, use } = wifiQrScan(text, "file");
+    onUse(use);
     setScanProblem(!wifi);
     if (!wifi) return;
     form.setValue("ssid", wifi.ssid);

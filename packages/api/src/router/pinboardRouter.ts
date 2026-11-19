@@ -11,6 +11,7 @@ import {
   createPinSchema,
   MAX_PINS_PER_GROUP,
   pinSchema,
+  reportPinUseSchema,
   updatePinSchema,
 } from "@flatsby/validators/pinboard";
 
@@ -18,6 +19,7 @@ import { requireMember } from "../effect/groups";
 import { runResult } from "../effect/runtime";
 import { Database } from "../effect/services/Database";
 import { Errors, getApiResultZod } from "../errors";
+import { captureUserEvent } from "../lib/posthog";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { GroupUtils } from "../utils";
 
@@ -117,4 +119,15 @@ export const pinboardRouter = createTRPCRouter({
         }),
       ),
     ),
+
+  reportUse: protectedProcedure
+    .input(reportPinUseSchema)
+    .mutation(({ ctx, input: { event, ...properties } }) => {
+      captureUserEvent({
+        user: ctx.session.user,
+        event,
+        headers: ctx.headers,
+        additionalProperties: properties,
+      });
+    }),
 });

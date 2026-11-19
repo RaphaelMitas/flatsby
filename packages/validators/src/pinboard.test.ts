@@ -5,7 +5,9 @@ import {
   pinContentOf,
   pinFormOf,
   pinFormSchema,
+  reportPinUseSchema,
   wifiFromQrText,
+  wifiQrScan,
   wifiQrText,
 } from "./pinboard";
 
@@ -44,6 +46,24 @@ describe("wifiFromQrText", () => {
       expect(wifiFromQrText(text)).toBeNull();
     },
   );
+});
+
+describe("wifiQrScan", () => {
+  it.each([
+    ["WIFI:T:WPA;S:Guest;P:secret;;", { event: "wifi_qr_scanned" }],
+    [
+      "https://www.flatsby.com",
+      { event: "wifi_qr_scan_failed", reason: "not_wifi" },
+    ],
+    [undefined, { event: "wifi_qr_scan_failed", reason: "no_code" }],
+  ])("reports %j in a form the API accepts", (text, expected) => {
+    const { use } = wifiQrScan(text, "camera");
+    expect(use).toEqual({ ...expected, source: "camera" });
+    expect(reportPinUseSchema.parse({ groupId: 7, ...use })).toEqual({
+      groupId: 7,
+      ...use,
+    });
+  });
 });
 
 describe("pin form", () => {
