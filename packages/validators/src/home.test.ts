@@ -44,6 +44,22 @@ describe("monthPace", () => {
     });
   });
 
+  it("compares a whole month with the whole month before", () => {
+    const pace = monthPace(
+      [
+        { day: "2027-01-31", total: 6 },
+        { day: "2027-02-10", total: 4 },
+      ],
+      "2027-02-28",
+    );
+
+    expect(paceSummary(pace, true)).toEqual({
+      total: 4,
+      difference: -2,
+      direction: "less",
+    });
+  });
+
   it("reaches back across the new year", () => {
     expect(paceWindow("2027-01-05")).toEqual({
       from: "2026-12-01",

@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { inLedgerCurrency } from "./expenses/conversion";
+import type { Statistics } from "./statistics";
 import {
   barHeights,
   convertedShares,
   daysOnList,
+  isStatisticsEmpty,
   spendingStatistics,
   statisticsPeriod,
   statisticsWindow,
@@ -15,10 +16,10 @@ describe("statisticsPeriod", () => {
     expect(statisticsPeriod("lastMonth", "2027-01-15", "2020-01-01")).toEqual({
       from: "2026-12-01",
       to: "2026-12-31",
-      pace: true,
+      pace: "wholeMonth",
     });
     expect(statisticsPeriod("last3Months", "2027-01-15", "2020-01-01")).toEqual(
-      { from: "2026-11-01", to: "2027-01-15", pace: false },
+      { from: "2026-11-01", to: "2027-01-15", pace: null },
     );
   });
 
@@ -26,7 +27,7 @@ describe("statisticsPeriod", () => {
     expect(statisticsPeriod("thisYear", "2026-11-19", "2026-11-10")).toEqual({
       from: "2026-01-01",
       to: "2026-11-19",
-      pace: false,
+      pace: null,
     });
     expect(statisticsPeriod("thisMonth", "2026-11-19", "2026-11-10").from).toBe(
       "2026-11-01",
@@ -45,66 +46,41 @@ describe("statisticsPeriod", () => {
   });
 });
 
+describe("convertedShares", () => {
+  const expense = {
+    day: "2026-11-03",
+    subcategory: "groceries",
+    amountInCents: 1000,
+    currency: "USD",
+    convertedAmountInCents: 920,
+    convertedCurrency: "EUR",
+    expenseSplits: [
+      { groupMemberId: 1, amountInCents: 333 },
+      { groupMemberId: 2, amountInCents: 333 },
+      { groupMemberId: 3, amountInCents: 334 },
+    ],
+  };
+
+  it("gives the leftover cent to the largest remainder", () => {
+    const shareOf = (groupMemberId: number) =>
+      convertedShares([expense], groupMemberId)[0]?.share;
+
+    expect([shareOf(1), shareOf(2), shareOf(3)]).toEqual([307, 306, 307]);
+  });
+
+  it("gives a member outside the split nothing", () => {
+    expect(convertedShares([expense], 4)[0]?.share).toBe(0);
+  });
+});
+
 describe("spendingStatistics", () => {
   const period = statisticsPeriod("thisMonth", "2026-11-19", "2020-01-01");
 
-  it("adds a converted share exactly as the expense screens spread it", () => {
-    const expense = {
-      day: "2026-11-03",
-      subcategory: "groceries",
-      amountInCents: 1000,
-      currency: "USD",
-      convertedAmountInCents: 920,
-      convertedCurrency: "EUR",
-      expenseSplits: [
-        { groupMemberId: 1, amountInCents: 333 },
-        { groupMemberId: 2, amountInCents: 333 },
-        { groupMemberId: 3, amountInCents: 334 },
-      ],
-    };
-    const expected = inLedgerCurrency(expense).expenseSplits.find(
-      (split) => split.groupMemberId === 2,
-    )?.amountInCents;
-
-    const spending = spendingStatistics(
-      [
-        {
-          day: "2026-11-03",
-          subcategory: "groceries",
-          household: 920,
-          share: 0,
-        },
-        ...convertedShares([expense], 2),
-      ],
-      period,
-    );
-
-    expect(spending.share).toBe(expected);
-    expect(spending.household).toBe(920);
-  });
-
-  it("counts an expense the member has no split in for the household only", () => {
-    const [share] = convertedShares(
-      [
-        {
-          day: "2026-11-03",
-          subcategory: "rent",
-          amountInCents: 500,
-          currency: "USD",
-          convertedAmountInCents: 460,
-          convertedCurrency: "EUR",
-          expenseSplits: [{ groupMemberId: 1, amountInCents: 500 }],
-        },
-      ],
-      2,
-    );
-    expect(share?.share).toBe(0);
-
+  it("lists a category the member has no share in", () => {
     const spending = spendingStatistics(
       [{ day: "2026-11-04", subcategory: "rent", household: 800, share: 0 }],
       period,
     );
-    expect(spending).toMatchObject({ share: 0, household: 800 });
     expect(spending.categories).toEqual([
       { category: "housing", share: 0, household: 800 },
     ]);
@@ -129,6 +105,46 @@ describe("spendingStatistics", () => {
       { month: "2026-11", share: 0, household: 0 },
     ]);
     expect(spending.household).toBe(0);
+  });
+});
+
+describe("isStatisticsEmpty", () => {
+  const statistics = (household: number, lastMonth: number): Statistics => ({
+    wholeMonth: false,
+    from: "2026-01-01",
+    to: "2026-11-19",
+    spending: {
+      share: 0,
+      household,
+      pace: null,
+      categories: [],
+      months: [{ month: "2026-11", share: 0, household: 0 }],
+    },
+    shopping: {
+      total: 0,
+      pace: null,
+      months: [{ month: "2026-11", total: lastMonth }],
+      categories: [],
+      daysOnList: null,
+    },
+    chores: {
+      total: 0,
+      pace: null,
+      months: [{ month: "2026-11", total: 0 }],
+      titles: [],
+    },
+  });
+
+  it("keeps a range total that lies before the months shown", () => {
+    expect(isStatisticsEmpty(statistics(1200, 0))).toBe(false);
+  });
+
+  it("keeps month bars when the range itself is empty", () => {
+    expect(isStatisticsEmpty(statistics(0, 3))).toBe(false);
+  });
+
+  it("is empty when there is nothing at all", () => {
+    expect(isStatisticsEmpty(statistics(0, 0))).toBe(true);
   });
 });
 

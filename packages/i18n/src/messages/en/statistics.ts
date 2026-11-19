@@ -9,7 +9,7 @@ export const statistics = {
     sinceJoined: "Since you moved in",
   },
   yourShare: "Your share",
-  ofHousehold: "of <b>{amount}</b> the household spent.",
+  ofHousehold: "of <b>{amount}</b> the household spent",
   wholeMonth: {
     less: "<b>{amount} less</b> than in {month}",
     more: "<b>{amount} more</b> than in {month}",

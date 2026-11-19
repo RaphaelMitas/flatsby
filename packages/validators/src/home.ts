@@ -63,12 +63,13 @@ export function monthPace(
   return { current, previous };
 }
 
-const sum = (values: number[]) =>
+export const sum = (values: number[]) =>
   values.reduce((total, value) => total + value, 0);
 
-export function paceSummary({ current, previous }: Pace) {
+export function paceSummary({ current, previous }: Pace, wholeMonth = false) {
   const total = sum(current);
-  const difference = total - sum(previous.slice(0, current.length));
+  const difference =
+    total - sum(wholeMonth ? previous : previous.slice(0, current.length));
   const direction: "less" | "more" | "same" =
     difference < 0 ? "less" : difference > 0 ? "more" : "same";
   return { total, difference, direction };

@@ -58,6 +58,7 @@ export function useExpenseFilters(groupId: number) {
       ? undefined
       : current.choice.range,
     reset: () => setState(fresh),
+    replace: (choice: ExpenseFilterChoice) => setState({ ...fresh, choice }),
     live,
     query,
     isActive: isExpenseFilterActive(live),
