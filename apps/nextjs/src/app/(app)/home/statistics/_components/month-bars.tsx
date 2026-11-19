@@ -44,7 +44,7 @@ export function MonthBars({
             <span>{format(total)}</span>
             <div
               className={cn(
-                "relative w-full overflow-hidden rounded-lg",
+                "relative w-9 overflow-hidden rounded-lg",
                 share !== undefined
                   ? "bg-muted-foreground/20"
                   : last
