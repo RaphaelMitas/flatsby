@@ -57,7 +57,7 @@ export function AppearanceSettings() {
               <label
                 key={id}
                 data-testid={`palette-${id}`}
-                className="border-border has-checked:border-primary has-focus-visible:ring-ring/50 cursor-pointer overflow-hidden rounded-lg border-2 has-focus-visible:ring-4"
+                className="border-border has-checked:border-primary has-focus-visible:ring-ring/50 relative cursor-pointer overflow-hidden rounded-lg border-2 has-focus-visible:ring-4"
               >
                 <input
                   type="radio"

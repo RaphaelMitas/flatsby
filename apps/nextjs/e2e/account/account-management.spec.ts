@@ -59,7 +59,7 @@ test.describe("Account Management", () => {
     await expect.poll(background).not.toBe(defaultBackground);
     const sandBackground = await background();
 
-    await authPage.reload({ waitUntil: "commit" });
+    await authPage.reload();
     await expect.poll(background).toBe(sandBackground);
   });
 
