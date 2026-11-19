@@ -131,46 +131,19 @@ tags:
 - extendedWaitUntil:
     visible: "Out on Thursday"
     timeout: 15000
-- extendedWaitUntil:
-    visible:
-      id: "pin-edit-Bins"
-      enabled: true
-    timeout: 15000
 - runFlow:
-    file: ../../subflows/tap-until.yaml
+    file: ../../subflows/delete-pin.yaml
     env:
-      TARGET_ID: "pin-edit-Bins"
-      MARKER_ID: "pin-form-title"
-- scrollUntilVisible:
-    element:
-      id: "pin-form-delete"
-- runFlow:
-    file: ../../subflows/tap-until.yaml
-    env:
-      TARGET_ID: "pin-form-delete"
-      MARKER_ID: "delete-confirmation-confirm"
-- tapOn:
-    id: "delete-confirmation-confirm"
+      PIN_TITLE: "Bins"
 - extendedWaitUntil:
     notVisible: "Out on Thursday"
     timeout: 15000
 
 # Deleting the last pin brings the empty board back
 - runFlow:
-    file: ../../subflows/tap-until.yaml
+    file: ../../subflows/delete-pin.yaml
     env:
-      TARGET_ID: "pin-edit-WiFi"
-      MARKER_ID: "pin-form-title"
-- scrollUntilVisible:
-    element:
-      id: "pin-form-delete"
-- runFlow:
-    file: ../../subflows/tap-until.yaml
-    env:
-      TARGET_ID: "pin-form-delete"
-      MARKER_ID: "delete-confirmation-confirm"
-- tapOn:
-    id: "delete-confirmation-confirm"
+      PIN_TITLE: "WiFi"
 - extendedWaitUntil:
     visible:
       id: "pinboard-empty"

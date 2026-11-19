@@ -97,12 +97,11 @@ tags:
     env:
       TARGET_ID: "shopping-list-item-Oat Milk"
       MARKER_ID: "shopping-list-item-details-edit"
-- tapOn:
-    id: "shopping-list-item-details-edit"
-- extendedWaitUntil:
-    visible:
-      id: "shopping-list-item-edit-input"
-    timeout: 15000
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "shopping-list-item-details-edit"
+      MARKER_ID: "shopping-list-item-edit-input"
 - tapOn:
     id: "shopping-list-item-edit-input"
 - eraseText
@@ -117,12 +116,11 @@ tags:
     env:
       TARGET_ID: "shopping-list-item-Soy Milk"
       MARKER_ID: "shopping-list-item-details-delete"
-- tapOn:
-    id: "shopping-list-item-details-delete"
-- extendedWaitUntil:
-    visible:
-      id: "delete-confirmation-confirm"
-    timeout: 15000
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "shopping-list-item-details-delete"
+      MARKER_ID: "delete-confirmation-confirm"
 - tapOn:
     id: "delete-confirmation-confirm"
 - extendedWaitUntil:

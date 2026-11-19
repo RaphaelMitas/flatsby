@@ -29,9 +29,6 @@ export function useNewGroupForm({
   const [editedGroupName, setGroupName] = useState<string>();
   const [names, setNames] = useState<string[]>([]);
   const [draft, setDraft] = useState("");
-  const [issues, setIssues] = useState<
-    { path: PropertyKey[]; message: string }[]
-  >([]);
   const once = useOnce();
 
   const firstName = name.trim().split(/\s+/)[0] ?? "";
@@ -40,6 +37,16 @@ export function useNewGroupForm({
     (firstName
       ? t("group.onboarding.defaultGroupName", { name: firstName })
       : "");
+
+  const values = {
+    name,
+    groupName,
+    placeholders: [...names, draft].join("\n"),
+  } satisfies Record<Field, string>;
+  const [checked, setChecked] = useState<{
+    values: typeof values;
+    issues: { path: PropertyKey[]; message: string }[];
+  }>();
 
   const keepName = async (trimmed: string) =>
     trimmed === savedName ||
@@ -54,7 +61,7 @@ export function useNewGroupForm({
       groupName: groupName.trim(),
       placeholders: uniqueNames([...names, draft.trim()].filter(Boolean)),
     });
-    setIssues(parsed.error?.issues ?? []);
+    setChecked({ values, issues: parsed.error?.issues ?? [] });
     if (!parsed.success || !(await keepName(parsed.data.name))) return;
     await create({
       name: parsed.data.groupName,
@@ -64,43 +71,28 @@ export function useNewGroupForm({
 
   const joinWithCode = once(async () => {
     const parsed = nameSchema.safeParse({ name: name.trim() });
-    setIssues(parsed.error?.issues ?? []);
+    setChecked({ values, issues: parsed.error?.issues ?? [] });
     if (parsed.success && (await keepName(parsed.data.name))) openJoin();
   });
 
-  const clearIssues = (field: Field) =>
-    setIssues((all) => all.filter(({ path }) => path[0] !== field));
-
   const issueFor = (field: Field) => {
-    const message = issues.find(({ path }) => path[0] === field)?.message;
+    if (checked?.values[field] !== values[field]) return undefined;
+    const message = checked.issues.find(
+      ({ path }) => path[0] === field,
+    )?.message;
     return message === undefined ? undefined : translateIfKey(t, message);
   };
 
   return {
     name,
-    setName: (changed: string) => {
-      setName(changed);
-      clearIssues("name");
-      if (editedGroupName === undefined) clearIssues("groupName");
-    },
+    setName,
     groupName,
-    setGroupName: (changed: string) => {
-      setGroupName(changed);
-      clearIssues("groupName");
-    },
+    setGroupName,
     names,
-    addName: (added: string) => {
-      setNames((all) => uniqueNames([...all, added]));
-      clearIssues("placeholders");
-    },
-    removeName: (removed: string) => {
-      setNames((all) => all.filter((name) => name !== removed));
-      clearIssues("placeholders");
-    },
-    setDraft: (changed: string) => {
-      setDraft(changed);
-      clearIssues("placeholders");
-    },
+    addName: (added: string) => setNames((all) => uniqueNames([...all, added])),
+    removeName: (removed: string) =>
+      setNames((all) => all.filter((name) => name !== removed)),
+    setDraft,
     issueFor,
     submit,
     joinWithCode,
