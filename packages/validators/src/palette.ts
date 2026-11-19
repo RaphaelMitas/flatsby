@@ -12,7 +12,7 @@ type PaletteId = (typeof paletteIds)[number];
 
 export const HUE_MAX = 360;
 
-const paletteSchema = z.object({
+export const paletteSchema = z.object({
   id: z.enum(paletteIds),
   hue: z.number().min(0).max(HUE_MAX),
   tint: z.number().min(0).max(1),

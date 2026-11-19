@@ -1,7 +1,7 @@
 "use client";
 
 import type { Palette } from "@flatsby/validators/palette";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -12,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
-import { Label } from "@flatsby/ui/label";
 import { Slider } from "@flatsby/ui/slider";
 import {
   HUE_MAX,
@@ -21,15 +20,21 @@ import {
   paletteIds,
 } from "@flatsby/validators/palette";
 
-import { currentPalette, savePalette } from "~/app/_components/layout/palette";
+import { applyPalette } from "~/app/_components/layout/palette";
+import { setPalettePreference } from "./actions";
 
 export function AppearanceSettings(props: { palette: Palette }) {
   const t = useTranslations("settings");
-  const [palette, setPalette] = useState(() => currentPalette(props.palette));
+  const [palette, setPalette] = useState(props.palette);
+  const [, startTransition] = useTransition();
 
-  const pick = (next: Palette) => {
+  const preview = (next: Palette) => {
     setPalette(next);
-    savePalette(next);
+    applyPalette(next);
+  };
+  const pick = (next: Palette) => {
+    preview(next);
+    startTransition(() => setPalettePreference(next));
   };
 
   return (
@@ -90,7 +95,9 @@ export function AppearanceSettings(props: { palette: Palette }) {
         {palette.id === "custom" && (
           <div className="grid gap-4 md:max-w-md">
             <div className="grid gap-3">
-              <Label>{t("appearance.accent")}</Label>
+              <p className="text-sm leading-none font-medium">
+                {t("appearance.accent")}
+              </p>
               <Slider
                 aria-label={t("appearance.accent")}
                 max={HUE_MAX}
@@ -99,18 +106,26 @@ export function AppearanceSettings(props: { palette: Palette }) {
                   backgroundImage: `linear-gradient(to right, ${hueScale.join(", ")})`,
                 }}
                 onValueChange={([hue = palette.hue]) =>
+                  preview({ ...palette, hue })
+                }
+                onValueCommit={([hue = palette.hue]) =>
                   pick({ ...palette, hue })
                 }
               />
             </div>
             <div className="grid gap-3">
-              <Label>{t("appearance.tint")}</Label>
+              <p className="text-sm leading-none font-medium">
+                {t("appearance.tint")}
+              </p>
               <Slider
                 aria-label={t("appearance.tint")}
                 max={1}
                 step={0.01}
                 value={[palette.tint]}
                 onValueChange={([tint = palette.tint]) =>
+                  preview({ ...palette, tint })
+                }
+                onValueCommit={([tint = palette.tint]) =>
                   pick({ ...palette, tint })
                 }
               />

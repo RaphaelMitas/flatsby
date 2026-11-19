@@ -15,7 +15,7 @@ import {
   parsePalette,
 } from "@flatsby/validators/palette";
 
-export type Theme = "light" | "dark" | "system";
+type Theme = "light" | "dark" | "system";
 
 interface ThemeContextType {
   setTheme: (newTheme: Theme) => void;

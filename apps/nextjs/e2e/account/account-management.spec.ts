@@ -55,8 +55,14 @@ test.describe("Account Management", () => {
 
     const sand = authPage.getByTestId("palette-sand");
     await waitForHydration(sand);
+    const saved = authPage.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().endsWith("/user-settings"),
+    );
     await sand.click();
     await expect.poll(background).not.toBe(defaultBackground);
+    await saved;
     const sandBackground = await background();
 
     await authPage.getByRole("link", { name: "Calendar" }).click();
