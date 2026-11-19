@@ -14,12 +14,14 @@ export function PaceChart({
   today,
   className,
   labelled = false,
+  wholeMonth = false,
   fadeIn,
 }: {
   pace: Pace;
   today: string;
   className: string;
   labelled?: boolean;
+  wholeMonth?: boolean;
   fadeIn: boolean;
 }) {
   const t = useTranslations();
@@ -98,18 +100,22 @@ export function PaceChart({
           {end.x > 20 && (
             <span className="absolute left-0">{labels.start}</span>
           )}
-          <span
-            className={cn(
-              "absolute",
-              end.x > 90
-                ? "-translate-x-full"
-                : end.x >= 10 && "-translate-x-1/2",
-            )}
-            style={{ left: `${end.x}%` }}
-          >
-            {t("calendar.today")}
-          </span>
-          {end.x < 80 && <span className="absolute right-0">{labels.end}</span>}
+          {!wholeMonth && (
+            <span
+              className={cn(
+                "absolute",
+                end.x > 90
+                  ? "-translate-x-full"
+                  : end.x >= 10 && "-translate-x-1/2",
+              )}
+              style={{ left: `${end.x}%` }}
+            >
+              {t("calendar.today")}
+            </span>
+          )}
+          {(wholeMonth || end.x < 80) && (
+            <span className="absolute right-0">{labels.end}</span>
+          )}
         </div>
       )}
     </div>

@@ -379,13 +379,24 @@ test.describe("Group Management", () => {
 
   test("home opens the statistics", async ({ authPage }) => {
     await createAndSelectGroup(authPage, uniqueGroupName());
-    await createTestExpense(authPage);
+    const { description } = await createTestExpense(authPage);
     await authPage.goto("/home");
     const statistics = authPage.getByTestId("home-statistics");
     await waitForHydration(statistics);
     await statistics.click();
     await authPage.waitForURL(/\/home\/statistics$/);
     await expect(authPage.getByTestId("statistics-share")).toBeVisible();
+
+    const category = authPage.getByTestId(/^statistics-category-/);
+    await waitForHydration(category);
+    await category.click();
+    await expect(
+      authPage
+        .getByTestId(/^expense-card-\d+$/)
+        .filter({ hasText: description }),
+    ).toBeVisible();
+    await expect(authPage).toHaveURL(/\/expenses/);
+    await expect(authPage).not.toHaveURL(/category=/);
   });
 
   test("change group name", async ({ authPage }) => {

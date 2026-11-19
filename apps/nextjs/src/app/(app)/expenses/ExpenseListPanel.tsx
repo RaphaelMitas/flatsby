@@ -1,7 +1,10 @@
 "use client";
 
-import type { ExpenseListFilter } from "@flatsby/validators/expenses/list-filter";
-import { Suspense, useState } from "react";
+import type {
+  ExpenseLink,
+  ExpenseListFilter,
+} from "@flatsby/validators/expenses/list-filter";
+import { Suspense, useEffect, useEffectEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   keepPreviousData,
@@ -22,6 +25,10 @@ import { ScrollArea } from "@flatsby/ui/scroll-area";
 import { Skeleton } from "@flatsby/ui/skeleton";
 import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { withMonthHeaders } from "@flatsby/validators/expenses/formatting";
+import {
+  expenseLinkSchema,
+  linkedFilterChoice,
+} from "@flatsby/validators/expenses/list-filter";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -29,7 +36,6 @@ import { useTRPC } from "~/trpc/react";
 import { ExpenseCard } from "./ExpenseCard";
 import { ExpenseDebtCard } from "./ExpenseDebtCard";
 import { ExpenseFilterBar } from "./ExpenseFilterBar";
-import { expenseFilterChoice } from "./expenseFilterParams";
 
 interface ExpenseListPanelProps {
   selectedExpenseId: number | null;
@@ -50,15 +56,28 @@ export function ExpenseListPanel({
   const groupId = currentGroup?.id ?? 0;
   const filters = useExpenseFilters(groupId);
   const searchParams = useSearchParams();
-  const [seed, setSeed] = useState(() => expenseFilterChoice(searchParams));
-  if (seed) {
-    setSeed(undefined);
-    filters.choose(seed);
-  }
 
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
+
+  const applyLink = useEffectEvent((link: ExpenseLink) => {
+    if (!groupData.success) return;
+    filters.replace(
+      linkedFilterChoice(link, groupData.data.thisGroupMember.id),
+    );
+    const params = new URLSearchParams(searchParams);
+    for (const key of Object.keys(link)) params.delete(key);
+    window.history.replaceState(
+      null,
+      "",
+      `/expenses${params.size ? `?${params}` : ""}`,
+    );
+  });
+  useEffect(() => {
+    const link = expenseLinkSchema.safeParse(Object.fromEntries(searchParams));
+    if (link.success) applyLink(link.data);
+  }, [searchParams]);
 
   const listOptions = (filter: ExpenseListFilter) =>
     trpc.expense.getGroupExpenses.infiniteQueryOptions(

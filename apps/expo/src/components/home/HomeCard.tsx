@@ -12,6 +12,10 @@ import { cn } from "~/lib/utils";
 
 const cardFrame = "bg-card border-border rounded-3xl border p-4";
 
+export const bold = (chunks: ReactNode) => (
+  <Text className="text-foreground font-semibold">{chunks}</Text>
+);
+
 export function HomeCard({
   testID,
   title,
@@ -129,7 +133,7 @@ export function PaceComparison({
 }) {
   const t = useTranslations();
   const locale = useLocale();
-  const { difference, direction } = paceSummary(pace);
+  const { difference, direction } = paceSummary(pace, wholeMonth);
 
   return (
     <Text className={className}>
@@ -140,9 +144,7 @@ export function PaceComparison({
         {
           amount: format(Math.abs(difference)),
           month: paceLabels(today, locale).previousMonth,
-          b: (chunks) => (
-            <Text className="text-foreground font-semibold">{chunks}</Text>
-          ),
+          b: bold,
         },
       )}
     </Text>

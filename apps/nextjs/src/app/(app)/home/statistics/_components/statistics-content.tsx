@@ -21,9 +21,9 @@ import {
   deviceTimeZone,
   formatCalendarDate,
 } from "@flatsby/validators/calendar";
-import { centsToDecimal } from "@flatsby/validators/expenses/conversion";
 import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
+  isStatisticsEmpty,
   statisticsMonth,
   statisticsRanges,
 } from "@flatsby/validators/statistics";
@@ -60,7 +60,12 @@ export function StatisticsContent() {
       </div>
 
       {currentGroup && (
-        <StatisticsBody groupId={currentGroup.id} range={range} today={today} />
+        <StatisticsBody
+          key={currentGroup.id}
+          groupId={currentGroup.id}
+          range={range}
+          today={today}
+        />
       )}
     </div>
   );
@@ -130,7 +135,7 @@ function StatisticsBody({
   const { data: group } = useQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
-  const { data, isError, isFetching, refetch } = useQuery({
+  const { data, isError, isFetching, isPlaceholderData, refetch } = useQuery({
     ...trpc.stats.getStatistics.queryOptions(
       today ? { groupId, range, timeZone: deviceTimeZone() } : skipToken,
     ),
@@ -140,9 +145,8 @@ function StatisticsBody({
   const stats = data?.success ? data.data : undefined;
   const [fadeIn] = useState(stats === undefined);
   const currency = group?.success ? group.data.currency : undefined;
-  const memberId = group?.success ? group.data.thisGroupMember.id : undefined;
 
-  if (!stats || currency === undefined || memberId === undefined) {
+  if (!stats || currency === undefined) {
     if (isError || data?.success === false)
       return (
         <div className="flex flex-col items-center gap-3 py-12 text-center">
@@ -161,14 +165,7 @@ function StatisticsBody({
     return <StatisticsSkeleton />;
   }
 
-  const { spending, shopping, chores } = stats;
-  const nothingYet = [
-    ...spending.months.map(({ household }) => household),
-    ...shopping.months.map(({ total }) => total),
-    ...chores.months.map(({ total }) => total),
-  ].every((value) => value === 0);
-
-  if (nothingYet)
+  if (isStatisticsEmpty(stats))
     return (
       <div className="flex flex-col items-center gap-2 py-12 text-center">
         <p className="text-lg font-semibold">{t("statistics.empty.title")}</p>
@@ -180,19 +177,15 @@ function StatisticsBody({
 
   const money = (cents: number) =>
     formatCurrencyFromCents({ cents, currency, locale });
-  const wholeAmount = (cents: number) =>
-    Math.round(centsToDecimal(cents)).toLocaleString(locale);
-  const period = {
-    from: stats.from,
-    to: stats.to,
-    wholeMonth: stats.to !== stats.today,
-  };
+  const { spending } = stats;
 
   return (
     <div
+      inert={isPlaceholderData}
       className={cn(
         "flex flex-col gap-4",
         fadeIn && "animate-in fade-in duration-300",
+        isPlaceholderData && "opacity-50",
       )}
     >
       <section className="mb-2">
@@ -210,40 +203,40 @@ function StatisticsBody({
             amount: money(spending.household),
             b: bold,
           })}
-          {spending.pace && (
-            <>
-              {" "}
+        </p>
+        {spending.pace && (
+          <>
+            <p className="text-muted-foreground text-balance">
               <PaceComparison
                 pace={spending.pace}
                 today={stats.to}
                 format={money}
-                wholeMonth={period.wholeMonth}
+                wholeMonth={stats.wholeMonth}
               />
-            </>
-          )}
-        </p>
-        {spending.pace && (
-          <PaceChart
-            pace={spending.pace}
-            today={stats.to}
-            className="h-28"
-            labelled
-            fadeIn={fadeIn}
-          />
+            </p>
+            <PaceChart
+              pace={spending.pace}
+              today={stats.to}
+              className="h-28"
+              labelled
+              wholeMonth={stats.wholeMonth}
+              fadeIn={fadeIn}
+            />
+          </>
         )}
       </section>
 
       {spending.categories.length > 0 && (
         <CategoriesCard
           categories={spending.categories}
-          period={period}
-          memberId={memberId}
+          from={stats.from}
+          to={stats.to}
           money={money}
         />
       )}
-      <MonthByMonthCard months={spending.months} wholeAmount={wholeAmount} />
-      <ShoppingStatsCard shopping={shopping} period={period} />
-      <ChoresStatsCard chores={chores} period={period} />
+      <MonthByMonthCard months={spending.months} />
+      <ShoppingStatsCard stats={stats} />
+      <ChoresStatsCard stats={stats} />
     </div>
   );
 }

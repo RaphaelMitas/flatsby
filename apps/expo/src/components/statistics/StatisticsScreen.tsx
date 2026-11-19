@@ -1,5 +1,4 @@
 import type { GroupWithAccess } from "@flatsby/api";
-import type { Pace } from "@flatsby/validators/home";
 import type {
   Statistics,
   StatisticsRange,
@@ -21,8 +20,12 @@ import {
   groupIconSubcategory,
 } from "@flatsby/validators/expenses/categories";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
-import { formatCurrencyFromCents } from "@flatsby/validators/expenses/formatting";
 import {
+  formatCurrencyFromCents,
+  formatWholeAmountFromCents,
+} from "@flatsby/validators/expenses/formatting";
+import {
+  isStatisticsEmpty,
   statisticsMonth,
   statisticsRanges,
 } from "@flatsby/validators/statistics";
@@ -30,6 +33,7 @@ import {
 import { getExpenseCategoryData } from "~/components/expenses/ExpenseCategoryConfig";
 import { GroupGate } from "~/components/GroupGate";
 import {
+  bold,
   Headline,
   HeadlineSkeleton,
   HomeCard,
@@ -45,6 +49,7 @@ import {
 } from "~/lib/ui/bottom-sheet-picker";
 import { Button } from "~/lib/ui/button";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { Skeleton } from "~/lib/ui/skeleton";
 import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useRefetchStaleOnFocus } from "~/utils/useRefetchStaleOnFocus";
@@ -53,6 +58,7 @@ import { SplitBar } from "./SplitBar";
 
 const SPENDING_BARS_HEIGHT = 100;
 const COUNT_BARS_HEIGHT = 50;
+const PLACEHOLDER_ROWS = [0, 1, 2, 3];
 
 export function StatisticsScreen() {
   return (
@@ -61,17 +67,6 @@ export function StatisticsScreen() {
     </GroupGate>
   );
 }
-
-const bold = (chunks: ReactNode) => (
-  <Text className="text-foreground font-semibold">{chunks}</Text>
-);
-
-const isEmpty = ({ spending, shopping, chores }: Statistics) =>
-  [
-    ...spending.months.flatMap(({ share, household }) => [share, household]),
-    ...shopping.months.map(({ total }) => total),
-    ...chores.months.map(({ total }) => total),
-  ].every((value) => value === 0);
 
 function GroupStatistics({ group }: { group: GroupWithAccess }) {
   const t = useTranslations();
@@ -89,6 +84,7 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
 
   const data = query.data?.success ? query.data.data : undefined;
   const failed = !data && (query.isError || query.data?.success === false);
+  const stale = query.isPlaceholderData;
   const month = statisticsMonth(range, localDate());
   const money = (cents: number) =>
     formatCurrencyFromCents({ cents, currency: group.currency, locale });
@@ -134,11 +130,12 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
             <Button
               title={t("home.retry")}
               onPress={() => void query.refetch()}
+              disabled={query.isFetching}
               variant="primary"
               size="lg"
             />
           </View>
-        ) : data && isEmpty(data) ? (
+        ) : data && isStatisticsEmpty(data) ? (
           <View className="mt-16 items-center gap-2 px-4">
             <Text className="text-foreground text-center text-lg font-semibold">
               {t("statistics.empty.title")}
@@ -148,10 +145,10 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
             </Text>
           </View>
         ) : (
-          <>
+          <View className={cn(stale && "opacity-50")}>
             <Hero data={data} showsPace={month !== null} money={money} />
-            {data && data.spending.categories.length > 0 && (
-              <WhereItWent data={data} money={money} />
+            {(!data || data.spending.categories.length > 0) && (
+              <WhereItWent data={data} money={money} disabled={stale} />
             )}
             <HomeCard
               title={t("statistics.monthByMonth")}
@@ -167,30 +164,47 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
                   }),
                 )}
                 height={SPENDING_BARS_HEIGHT}
-                format={(cents) =>
-                  Math.round(cents / 100).toLocaleString(locale)
-                }
+                format={(cents) => formatWholeAmountFromCents(cents, locale)}
               />
             </HomeCard>
             <CountCard
               title={t("navigation.shopping")}
               counts={data?.shopping}
-              data={data}
+              to={data?.to}
+              wholeMonth={data?.wholeMonth}
               unit={(count) => t("home.itemsBought", { count })}
             >
-              {data && (
+              {data ? (
                 <ShoppingDetails
                   categories={data.shopping.categories}
                   daysOnList={data.shopping.daysOnList}
                 />
+              ) : (
+                <>
+                  <Skeleton className="bg-foreground/10 mt-4 h-3 rounded-md" />
+                  <View className="mt-2.5">
+                    <TextSkeleton className="text-xs" size="xs" width="3xl" />
+                  </View>
+                </>
               )}
             </CountCard>
             <CountCard
               title={t("statistics.chores")}
               counts={data?.chores}
-              data={data}
+              to={data?.to}
+              wholeMonth={data?.wholeMonth}
               unit={(count) => t("home.choresDone", { count })}
             >
+              {!data &&
+                PLACEHOLDER_ROWS.map((row) => (
+                  <View key={row} className="mt-3">
+                    <TextSkeleton
+                      className="text-base font-semibold"
+                      size="sm"
+                      width="2xl"
+                    />
+                  </View>
+                ))}
               {data?.chores.titles.map(({ title, color, total }) => (
                 <View
                   key={title}
@@ -214,7 +228,7 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
                 </View>
               ))}
             </CountCard>
-          </>
+          </View>
         )}
       </AppScrollView>
     </BottomSheetPickerProvider>
@@ -231,66 +245,60 @@ function Hero({
   money: (cents: number) => string;
 }) {
   const t = useTranslations();
-
-  if (!data)
-    return (
-      <View className="mt-8">
-        <Text className="text-muted-foreground text-sm font-semibold">
-          {t("statistics.yourShare")}
-        </Text>
-        <View className="mt-1">
-          <TextSkeleton
-            className="text-5xl font-extrabold"
-            size="3xl"
-            width="xl"
-          />
-        </View>
-        <View className="mt-2">
-          <TextSkeleton className="text-base" size="sm" width="3xl" />
-        </View>
-        {showsPace && (
-          <PaceChart
-            pace={undefined}
-            today={undefined}
-            height={80}
-            labelled
-            drawIn={false}
-          />
-        )}
-      </View>
-    );
-
-  const { pace, share, household } = data.spending;
+  const pace = data?.spending.pace ?? undefined;
 
   return (
     <View className="mt-8">
       <Text className="text-muted-foreground text-sm font-semibold">
         {t("statistics.yourShare")}
       </Text>
-      <Text
-        testID="statistics-share"
-        className="text-foreground mt-1 text-5xl font-extrabold tracking-tight"
-      >
-        {money(share)}
-      </Text>
-      <Text className="text-muted-foreground mt-2 text-base">
-        {t.rich("statistics.ofHousehold", {
-          amount: money(household),
-          b: bold,
-        })}
-        {pace && (
-          <>
-            {" "}
-            <Comparison pace={pace} data={data} format={money} />
-          </>
+      <View className="mt-1">
+        {data ? (
+          <Text
+            testID="statistics-share"
+            className="text-foreground text-5xl font-extrabold tracking-tight"
+          >
+            {money(data.spending.share)}
+          </Text>
+        ) : (
+          <TextSkeleton
+            className="text-5xl font-extrabold"
+            size="3xl"
+            width="xl"
+          />
         )}
-      </Text>
-      {pace && (
+      </View>
+      <View className="mt-2">
+        {data ? (
+          <Text className="text-muted-foreground text-base">
+            {t.rich("statistics.ofHousehold", {
+              amount: money(data.spending.household),
+              b: bold,
+            })}
+          </Text>
+        ) : (
+          <TextSkeleton className="text-base" size="sm" width="3xl" />
+        )}
+        {showsPace &&
+          (data && pace ? (
+            <PaceComparison
+              pace={pace}
+              today={data.to}
+              format={money}
+              wholeMonth={data.wholeMonth}
+              className="text-muted-foreground text-base"
+            />
+          ) : (
+            <TextSkeleton className="text-base" size="sm" width="2xl" />
+          ))}
+      </View>
+      {showsPace && (
         <PaceChart
           pace={pace}
-          today={data.to}
+          today={data?.to}
           height={80}
           labelled
+          wholeMonth={data?.wholeMonth}
           drawIn={false}
         />
       )}
@@ -298,37 +306,38 @@ function Hero({
   );
 }
 
-function Comparison({
-  pace,
-  data,
-  format,
-  className,
-}: {
-  pace: Pace;
-  data: Statistics;
-  format: (value: number) => string;
-  className?: string;
-}) {
-  return (
-    <PaceComparison
-      pace={pace}
-      today={data.to}
-      format={format}
-      wholeMonth={data.to !== data.today}
-      className={className}
-    />
-  );
-}
-
 function WhereItWent({
   data,
   money,
+  disabled,
 }: {
-  data: Statistics;
+  data: Statistics | undefined;
   money: (cents: number) => string;
+  disabled: boolean;
 }) {
   const t = useTranslations();
   const router = useRouter();
+
+  if (!data)
+    return (
+      <HomeCard title={t("statistics.whereItWent")} className="mt-6">
+        <Skeleton className="bg-foreground/10 mt-4 h-3 rounded-md" />
+        {PLACEHOLDER_ROWS.map((row) => (
+          <View key={row} className="mt-3.5 flex-row items-center gap-3">
+            <Skeleton className="bg-foreground/10 size-9 rounded-full" />
+            <View className="flex-1">
+              <TextSkeleton
+                className="text-base font-semibold"
+                size="sm"
+                width="md"
+              />
+              <TextSkeleton className="text-sm" size="xs" width="lg" />
+            </View>
+          </View>
+        ))}
+      </HomeCard>
+    );
+
   const { categories } = data.spending;
 
   return (
@@ -349,6 +358,7 @@ function WhereItWent({
             key={category}
             testID={`statistics-category-${category}`}
             accessibilityRole="button"
+            disabled={disabled}
             onPress={() =>
               router.navigate({
                 pathname: "/(tabs)/expenses",
@@ -420,32 +430,29 @@ function LegendKey({
 function CountCard({
   title,
   counts,
-  data,
+  to,
+  wholeMonth,
   unit,
   children,
 }: {
   title: string;
-  counts:
-    | {
-        total: number;
-        pace: Pace | null;
-        months: { month: string; total: number }[];
-      }
-    | undefined;
-  data: Statistics | undefined;
+  counts: Pick<Statistics["shopping"], "total" | "pace" | "months"> | undefined;
+  to: string | undefined;
+  wholeMonth: boolean | undefined;
   unit: (count: number) => string;
   children: ReactNode;
 }) {
   return (
     <HomeCard title={title} className="mt-4">
-      {counts && data ? (
+      {counts && to ? (
         <View className="mt-2">
           <Headline value={counts.total} format={String} unit={unit} />
           {counts.pace && (
-            <Comparison
+            <PaceComparison
               pace={counts.pace}
-              data={data}
+              today={to}
               format={String}
+              wholeMonth={wholeMonth}
               className="text-muted-foreground text-sm"
             />
           )}

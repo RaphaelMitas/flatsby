@@ -41,6 +41,7 @@ export function PaceChart({
   today: string | undefined;
   height: number;
   labelled?: boolean;
+  wholeMonth?: boolean;
   drawIn: boolean;
 }) {
   if (!pace || !today)
@@ -58,12 +59,14 @@ function DrawnPaceChart({
   today,
   height,
   labelled = false,
+  wholeMonth = false,
   drawIn,
 }: {
   pace: Pace;
   today: string;
   height: number;
   labelled?: boolean;
+  wholeMonth?: boolean;
   drawIn: boolean;
 }) {
   const t = useTranslations();
@@ -152,10 +155,12 @@ function DrawnPaceChart({
                     {labels.start}
                   </Text>
                 )}
-                <Text x={todayX} y={labelY} textAnchor="middle">
-                  {t("calendar.today")}
-                </Text>
-                {todayX < plotWidth - LABEL_GAP && (
+                {!wholeMonth && (
+                  <Text x={todayX} y={labelY} textAnchor="middle">
+                    {t("calendar.today")}
+                  </Text>
+                )}
+                {(wholeMonth || todayX < plotWidth - LABEL_GAP) && (
                   <Text x={plotWidth} y={labelY} textAnchor="end">
                     {labels.end}
                   </Text>

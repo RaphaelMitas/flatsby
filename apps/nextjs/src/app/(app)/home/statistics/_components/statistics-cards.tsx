@@ -1,10 +1,10 @@
 "use client";
 
-import type { Pace } from "@flatsby/validators/home";
+import type { ExpenseLink } from "@flatsby/validators/expenses/list-filter";
 import type { Statistics } from "@flatsby/validators/statistics";
 import Link from "next/link";
 import { ChevronRight, Timer } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@flatsby/ui";
 import { getCategoryData } from "@flatsby/ui/categories";
@@ -14,8 +14,8 @@ import {
   groupIconSubcategory,
 } from "@flatsby/validators/expenses/categories";
 import { categoryFillColorMap } from "@flatsby/validators/expenses/category-colors";
+import { formatWholeAmountFromCents } from "@flatsby/validators/expenses/formatting";
 
-import { expenseFilterHref } from "~/app/(app)/expenses/expenseFilterParams";
 import {
   bold,
   Headline,
@@ -28,21 +28,15 @@ import { SplitBar } from "./split-bar";
 const SPENDING_BAR_HEIGHT = 96;
 const COUNT_BAR_HEIGHT = 48;
 
-interface Period {
-  from: string;
-  to: string;
-  wholeMonth: boolean;
-}
-
 export function CategoriesCard({
   categories,
-  period,
-  memberId,
+  from,
+  to,
   money,
 }: {
   categories: Statistics["spending"]["categories"];
-  period: Period;
-  memberId: number;
+  from: string;
+  to: string;
   money: (cents: number) => string;
 }) {
   const t = useTranslations();
@@ -63,12 +57,7 @@ export function CategoriesCard({
           return (
             <Link
               key={category}
-              href={expenseFilterHref({
-                memberId,
-                memberRole: "split",
-                category,
-                range: { from: period.from, to: period.to },
-              })}
+              href={`/expenses?${new URLSearchParams({ category, from, to } satisfies ExpenseLink)}`}
               data-testid={`statistics-category-${category}`}
               className="hover:bg-muted -mx-2 flex items-center gap-3 rounded-xl p-2 transition-colors"
             >
@@ -102,12 +91,11 @@ export function CategoriesCard({
 
 export function MonthByMonthCard({
   months,
-  wholeAmount,
 }: {
   months: Statistics["spending"]["months"];
-  wholeAmount: (cents: number) => string;
 }) {
   const t = useTranslations();
+  const locale = useLocale();
 
   return (
     <TitledCard
@@ -128,34 +116,24 @@ export function MonthByMonthCard({
           share,
         }))}
         height={SPENDING_BAR_HEIGHT}
-        format={wholeAmount}
+        format={(cents) => formatWholeAmountFromCents(cents, locale)}
       />
     </TitledCard>
   );
 }
 
-export function ShoppingStatsCard({
-  shopping,
-  period,
-}: {
-  shopping: Statistics["shopping"];
-  period: Period;
-}) {
+export function ShoppingStatsCard({ stats }: { stats: Statistics }) {
   const t = useTranslations();
+  const { shopping } = stats;
 
   return (
-    <TitledCard title={t("navigation.shopping")}>
-      <CountHeadline
-        total={shopping.total}
-        pace={shopping.pace}
-        period={period}
-        unit={(count) => t("home.itemsBought", { count })}
-      />
-      <MonthBars
-        months={shopping.months}
-        height={COUNT_BAR_HEIGHT}
-        format={String}
-      />
+    <CountCard
+      title={t("navigation.shopping")}
+      counts={shopping}
+      to={stats.to}
+      wholeMonth={stats.wholeMonth}
+      unit={(count) => t("home.itemsBought", { count })}
+    >
       {shopping.categories.length > 0 && (
         <>
           <SplitBar
@@ -197,34 +175,23 @@ export function ShoppingStatsCard({
           </span>
         </div>
       )}
-    </TitledCard>
+    </CountCard>
   );
 }
 
-export function ChoresStatsCard({
-  chores,
-  period,
-}: {
-  chores: Statistics["chores"];
-  period: Period;
-}) {
+export function ChoresStatsCard({ stats }: { stats: Statistics }) {
   const t = useTranslations();
 
   return (
-    <TitledCard title={t("statistics.chores")}>
-      <CountHeadline
-        total={chores.total}
-        pace={chores.pace}
-        period={period}
-        unit={(count) => t("home.choresDone", { count })}
-      />
-      <MonthBars
-        months={chores.months}
-        height={COUNT_BAR_HEIGHT}
-        format={String}
-      />
+    <CountCard
+      title={t("statistics.chores")}
+      counts={stats.chores}
+      to={stats.to}
+      wholeMonth={stats.wholeMonth}
+      unit={(count) => t("home.choresDone", { count })}
+    >
       <div className="mt-2 flex flex-col">
-        {chores.titles.map(({ title, color, total }) => (
+        {stats.chores.titles.map(({ title, color, total }) => (
           <div key={title} className="mt-2 flex items-center gap-3">
             <span
               className={cn(
@@ -239,35 +206,41 @@ export function ChoresStatsCard({
           </div>
         ))}
       </div>
-    </TitledCard>
+    </CountCard>
   );
 }
 
-function CountHeadline({
-  total,
-  pace,
-  period,
+function CountCard({
+  title,
+  counts: { total, pace, months },
+  to,
+  wholeMonth,
   unit,
+  children,
 }: {
-  total: number;
-  pace: Pace | null;
-  period: Period;
+  title: string;
+  counts: Statistics["chores"] | Statistics["shopping"];
+  to: string;
+  wholeMonth: boolean;
   unit: (count: number) => string;
+  children: React.ReactNode;
 }) {
   return (
-    <>
+    <TitledCard title={title}>
       <Headline value={total} format={String} unit={unit} />
       {pace && (
         <p className="text-muted-foreground text-sm">
           <PaceComparison
             pace={pace}
-            today={period.to}
+            today={to}
             format={String}
-            wholeMonth={period.wholeMonth}
+            wholeMonth={wholeMonth}
           />
         </p>
       )}
-    </>
+      <MonthBars months={months} height={COUNT_BAR_HEIGHT} format={String} />
+      {children}
+    </TitledCard>
   );
 }
 

@@ -83,6 +83,32 @@ tags:
 - assertVisible: "€9[.,]00"
 - assertVisible: ".*CHF.10[.,]00.*"
 
+# The statistics count this month's expenses, and a category opens them in the list
+- runFlow:
+    file: ../../subflows/tap-tab.yaml
+    env:
+      TAB_ID: "tab-home"
+      TAB_LABEL: "Home"
+      TAB_X: "10%"
+      MARKER_ID: "home-statistics"
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "home-statistics"
+      MARKER_ID: "statistics-share"
+- scrollUntilVisible:
+    element:
+      id: "statistics-category-food-drinks"
+    direction: DOWN
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "statistics-category-food-drinks"
+      MARKER_ID: "expense-heading"
+- extendedWaitUntil:
+    visible: "Team snacks"
+    timeout: 20000
+
 # The photo picker is system UI; the web e2e covers the scan itself (same hook)
 - tapOn:
     id: "expense-add-button"
