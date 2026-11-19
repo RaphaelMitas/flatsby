@@ -88,7 +88,7 @@ function RangeTitle({
     <DropdownMenu>
       <DropdownMenuTrigger
         data-testid="statistics-range"
-        className="mt-4 flex items-center gap-2 text-left text-3xl font-extrabold tracking-tight"
+        className="hover:bg-muted data-[state=open]:bg-muted mt-3 -ml-2 flex items-center gap-2 rounded-xl px-2 py-1 text-left text-3xl font-extrabold tracking-tight transition-colors"
       >
         {today === null ? (
           <Skeleton className="h-9 w-40" />
