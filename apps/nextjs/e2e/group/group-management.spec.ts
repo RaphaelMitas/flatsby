@@ -396,6 +396,9 @@ test.describe("Group Management", () => {
     await expect(title).not.toHaveText(thisMonth);
     await bars.nth(5).click();
     await expect(title).toHaveText(thisMonth);
+    await title.click();
+    await authPage.getByTestId("statistics-range-thisYear").click();
+    await expect(title).toHaveText("This year");
 
     const category = authPage.getByTestId(/^statistics-category-/);
     await waitForHydration(category);
@@ -412,6 +415,9 @@ test.describe("Group Management", () => {
     ).toBeVisible();
     await expect(authPage).toHaveURL(/\/expenses/);
     await expect(authPage).not.toHaveURL(/category=/);
+
+    await authPage.goBack();
+    await expect(title).toHaveText("This year");
   });
 
   test("change group name", async ({ authPage }) => {

@@ -7,6 +7,7 @@ import type {
 } from "@flatsby/validators/statistics";
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   keepPreviousData,
   skipToken,
@@ -59,7 +60,7 @@ export function StatisticsContent() {
   const { currentGroup } = useGroupContext();
   const today = useToday();
   const trpc = useTRPC();
-  const [chosen, setChosen] = useState<StatisticsRange>();
+  const chosen = useSearchParams().get("range");
   const range =
     today === null
       ? undefined
@@ -73,7 +74,11 @@ export function StatisticsContent() {
   };
   const choose = (action: StatisticsAction, next: StatisticsRange) => {
     count(action, next);
-    setChosen(next);
+    window.history.replaceState(
+      null,
+      "",
+      `?${new URLSearchParams({ range: next })}`,
+    );
   };
 
   return (
