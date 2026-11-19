@@ -9,6 +9,7 @@ import type { ApiResult } from "./errors";
 export type QuerySnapshot = { queryKey: QueryKey; previous: unknown }[];
 
 export const PENDING_ID = -1;
+export const temporaryId = () => -Date.now();
 
 export const isPendingId = (id: number) => id < 0;
 

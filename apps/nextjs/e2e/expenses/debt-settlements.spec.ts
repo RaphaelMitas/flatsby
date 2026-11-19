@@ -1,8 +1,8 @@
 import type { Page } from "@playwright/test";
 
 import { createAuthSession, expect, test } from "../fixtures/auth";
-import { groupRefetched } from "../helpers/group";
 import { waitForHydration } from "../helpers/hydration";
+import { refetched } from "../helpers/refetched";
 
 async function openSeededDebts(page: Page, baseURL: string | undefined) {
   await createAuthSession(page, baseURL, { seed: "debts" });
@@ -74,7 +74,7 @@ test.describe("Debt & Settlements", () => {
     await expect(banner).toContainText("Debts are now in");
     const keepSeparate = banner.getByTestId("currency-banner-keep-separate");
     await waitForHydration(keepSeparate);
-    const saved = groupRefetched(page);
+    const saved = refetched(page, "group.getGroup");
     await keepSeparate.click();
     await expect(banner).toBeHidden();
     await saved;

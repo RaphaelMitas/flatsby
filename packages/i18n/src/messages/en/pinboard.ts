@@ -5,7 +5,6 @@ export const pinboard = {
   newTitle: "New entry",
   editTitle: "Edit entry",
   editEntry: "Edit {title}",
-  copyEntry: "Copy {title}",
   empty: {
     title: "Nothing pinned yet",
     body: "Put the things here that every flatmate asks for once.",

@@ -27,7 +27,7 @@ import {
 
 import type { ApiResult } from "./errors";
 import type { QuerySnapshot } from "./resultMutation";
-import { restoreSnapshot, resultMutation } from "./resultMutation";
+import { restoreSnapshot, resultMutation, temporaryId } from "./resultMutation";
 
 const rangeKeySchema = z.tuple([
   z.unknown(),
@@ -133,8 +133,6 @@ const asView = (
   timeZone: previous?.timeZone ?? input.timeZone ?? DEFAULT_TIME_ZONE,
   memberIds: input.memberIds,
 });
-
-const temporaryId = () => -Date.now();
 
 const skipDays = (
   range: CalendarRange,

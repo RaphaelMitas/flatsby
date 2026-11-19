@@ -2,6 +2,8 @@ import { z } from "zod/v4";
 
 import { msg } from "@flatsby/i18n/message-key";
 
+import { groupItemRefSchema } from "./group";
+
 export const MAX_PIN_TITLE_LENGTH = 60;
 export const MAX_PIN_BODY_LENGTH = 1000;
 export const MAX_PINS_PER_GROUP = 30;
@@ -103,23 +105,27 @@ export const pinFormOf = (pin?: Partial<PinContent>): PinFormValues => ({
   password: pin?.wifi?.password ?? "",
 });
 
-export const pinRefSchema = z.object({
-  groupId: z.number(),
-  id: z.number(),
-});
-
 export const createPinSchema = pinContentSchema
   .extend({ groupId: z.number() })
   .refine(hasContent, bodyRequired);
 export type CreatePinInput = z.infer<typeof createPinSchema>;
 
 export const updatePinSchema = pinContentSchema
-  .extend(pinRefSchema.shape)
+  .extend(groupItemRefSchema.shape)
   .refine(hasContent, bodyRequired);
 export type UpdatePinInput = z.infer<typeof updatePinSchema>;
 
 export const pinSchema = pinContentSchema.extend({ id: z.number() });
 export type Pin = z.infer<typeof pinSchema>;
+
+export type PinDraft = PinFormValues & { id?: number };
+
+export const pinDraftOf = (
+  input: CreatePinInput | UpdatePinInput,
+): PinDraft => ({
+  ...pinFormOf(input),
+  ...("id" in input && { id: input.id }),
+});
 
 export const pinStarters = [
   { icon: "wifi", title: msg("pinboard.starters.wifi") },

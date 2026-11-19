@@ -65,8 +65,8 @@ export function PinForm({ groupId, pinId, draft }: PinFormProps) {
 
   const save = (values: PinFormValues) => {
     const content = pinContentOf(values);
-    if (pinId === undefined) create.mutate({ groupId, ...content });
-    else update.mutate({ groupId, id: pinId, ...content });
+    if (pin) update.mutate({ groupId, id: pin.id, ...content });
+    else create.mutate({ groupId, ...content });
     router.back();
   };
 

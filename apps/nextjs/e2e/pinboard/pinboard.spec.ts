@@ -1,3 +1,5 @@
+import type { Route } from "@playwright/test";
+
 import { expect, test } from "../fixtures/auth";
 import { waitForHydration } from "../helpers/hydration";
 import { refetched } from "../helpers/refetched";
@@ -89,5 +91,40 @@ test.describe("Pinboard", () => {
     await expect(authPage.getByTestId("pin-Bins")).toContainText(
       "Paper on Tuesday",
     );
+  });
+
+  test("a failed save puts its text back, over an entry opened meanwhile", async ({
+    authPage,
+  }) => {
+    const add = authPage.getByTestId("pinboard-add");
+    const title = authPage.getByTestId("pin-form-title");
+    const body = authPage.getByTestId("pin-form-body");
+    const save = authPage.getByTestId("pin-form-save");
+    const pin = authPage.getByTestId("pin-Bins");
+    const creates = "**/api/trpc/pinboard.create*";
+    let held: Route | undefined;
+    await authPage.route(creates, (route) => {
+      held = route;
+    });
+
+    await authPage.goto("/home/pinboard");
+    await waitForHydration(add);
+    await add.click();
+    await title.fill("Bins");
+    await body.fill("Paper on Tuesday");
+    await save.click();
+    await expect(pin).toBeVisible();
+
+    await add.click();
+    await title.fill("Landlord");
+    await expect.poll(() => held).toBeDefined();
+    await held?.abort();
+    await expect(title).toHaveValue("Bins");
+    await expect(body).toHaveValue("Paper on Tuesday");
+    await expect(pin).toBeHidden();
+
+    await authPage.unroute(creates);
+    await save.click();
+    await expect(pin).toContainText("Paper on Tuesday");
   });
 });

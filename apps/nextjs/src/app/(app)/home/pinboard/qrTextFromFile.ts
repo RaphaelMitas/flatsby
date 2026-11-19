@@ -10,6 +10,8 @@ export async function qrTextFromFile(file: File) {
   canvas.height = Math.round(bitmap.height * scale);
   const context = canvas.getContext("2d");
   if (!context) return undefined;
+  context.fillStyle = "white";
+  context.fillRect(0, 0, canvas.width, canvas.height);
   context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   const { data, width, height } = context.getImageData(
     0,

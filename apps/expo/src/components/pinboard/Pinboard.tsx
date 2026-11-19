@@ -1,6 +1,6 @@
 import type { Pin, PinIcon } from "@flatsby/validators/pinboard";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import QRCode from "react-qr-code";
@@ -41,7 +41,13 @@ export function Pinboard({ groupId }: { groupId: number }) {
   const openForm = (params: { id?: number; title?: string; icon?: PinIcon }) =>
     router.push({ pathname: "/(tabs)/home/pinboard/form", params });
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
   if (!data.success) return <ErrorMessage message={data.error.message} />;
   const pins = data.data;
 

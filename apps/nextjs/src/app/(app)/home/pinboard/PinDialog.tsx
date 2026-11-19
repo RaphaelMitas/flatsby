@@ -1,6 +1,10 @@
 "use client";
 
-import type { PinFormValues, PinIcon } from "@flatsby/validators/pinboard";
+import type {
+  PinDraft,
+  PinFormValues,
+  PinIcon,
+} from "@flatsby/validators/pinboard";
 import { useRef, useState } from "react";
 import { QrCode, Trash } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -46,7 +50,6 @@ import {
   wifiFromQrText,
 } from "@flatsby/validators/pinboard";
 
-import type { PinDraft } from "./usePinMutations";
 import { pinIconComponents } from "./PinIconBadge";
 import { qrTextFromFile } from "./qrTextFromFile";
 

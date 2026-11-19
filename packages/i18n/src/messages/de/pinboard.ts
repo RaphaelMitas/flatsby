@@ -5,7 +5,6 @@ export const pinboard = {
   newTitle: "Neuer Eintrag",
   editTitle: "Eintrag bearbeiten",
   editEntry: "{title} bearbeiten",
-  copyEntry: "{title} kopieren",
   empty: {
     title: "Noch nichts angepinnt",
     body: "Hier steht, wonach jeder Mitbewohner einmal fragt.",
@@ -30,7 +29,7 @@ export const pinboard = {
     ssid: "Netzwerkname",
     ssidPlaceholder: "FRITZ!Box 7590",
     ssidHint:
-      "Muss genau so heißen wie das Netzwerk, mit Groß- und Kleinschreibung und Leerzeichen. Sonst verbindet der QR-Code nicht.",
+      "Muss genau so heißen wie das Netzwerk, mit Groß- und Kleinschreibung und Leerzeichen. Sonst funktioniert der QR-Code nicht.",
     password: "Passwort",
     wifiHelp:
       "Beides steht auf dem Aufkleber am Router. Oder scann den QR-Code, den ein verbundenes Handy beim Teilen des WLANs zeigt.",
@@ -44,7 +43,7 @@ export const pinboard = {
   },
   qr: {
     open: "QR-Code",
-    hint: "Handykamera draufhalten, um beizutreten.",
+    hint: "Handykamera draufhalten, um ins WLAN zu kommen.",
   },
   icon: {
     pin: "Pin",
@@ -62,7 +61,8 @@ export const pinboard = {
   },
   saveFailed:
     "Der Eintrag konnte nicht gespeichert werden. Dein Text steht wieder im Formular.",
-  deleteFailed: "Der Eintrag konnte nicht gelöscht werden. Versuch es nochmal.",
+  deleteFailed:
+    "Der Eintrag konnte nicht gelöscht werden. Bitte versuch es noch einmal.",
   full: "Die Pinnwand ist voll. Lösch einen Eintrag, um einen neuen anzulegen.",
   validation: {
     titleRequired: "Gib dem Eintrag einen Titel",

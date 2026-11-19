@@ -1,6 +1,6 @@
 "use client";
 
-import type { Pin } from "@flatsby/validators/pinboard";
+import type { Pin, PinDraft } from "@flatsby/validators/pinboard";
 import { useState } from "react";
 import Link from "next/link";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -27,7 +27,6 @@ import {
   wifiQrText,
 } from "@flatsby/validators/pinboard";
 
-import type { PinDraft } from "./usePinMutations";
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { CopyButton } from "~/app/_components/CopyButton";
 import { useTRPC } from "~/trpc/react";
@@ -44,8 +43,13 @@ export function Pinboard() {
     trpc.pinboard.list.queryOptions({ groupId }),
   );
   const [draft, setDraft] = useState<PinDraft | null>(null);
+  const [draftsOpened, setDraftsOpened] = useState(0);
   const [codeFor, setCodeFor] = useState<Pin | null>(null);
-  const { create, update, remove } = usePinMutations(groupId, setDraft);
+  const openDraft = (opened: PinDraft) => {
+    setDraft(opened);
+    setDraftsOpened((count) => count + 1);
+  };
+  const { create, update, remove } = usePinMutations(groupId, openDraft);
 
   if (!data.success)
     return (
@@ -71,7 +75,7 @@ export function Pinboard() {
         {pins.length < MAX_PINS_PER_GROUP && (
           <Button
             data-testid="pinboard-add"
-            onClick={() => setDraft(pinFormOf())}
+            onClick={() => openDraft(pinFormOf())}
           >
             <Plus />
             {t("pinboard.add")}
@@ -82,7 +86,9 @@ export function Pinboard() {
       {pins.length === 0 ? (
         <EmptyBoard
           onStart={(starter) =>
-            setDraft(pinFormOf({ title: t(starter.title), icon: starter.icon }))
+            openDraft(
+              pinFormOf({ title: t(starter.title), icon: starter.icon }),
+            )
           }
         />
       ) : (
@@ -90,7 +96,7 @@ export function Pinboard() {
           <PinCard
             key={pin.id}
             pin={pin}
-            onEdit={() => setDraft({ ...pinFormOf(pin), id: pin.id })}
+            onEdit={() => openDraft({ ...pinFormOf(pin), id: pin.id })}
             onShowCode={() => setCodeFor(pin)}
           />
         ))
@@ -98,12 +104,14 @@ export function Pinboard() {
 
       {draft && (
         <PinDialog
+          key={draftsOpened}
           draft={draft}
           onClose={() => setDraft(null)}
           onSave={(values) => {
             const content = pinContentOf(values);
-            if (draft.id === undefined) create.mutate({ groupId, ...content });
-            else update.mutate({ groupId, id: draft.id, ...content });
+            const pin = pins.find(({ id }) => id === draft.id);
+            if (pin) update.mutate({ groupId, id: pin.id, ...content });
+            else create.mutate({ groupId, ...content });
             setDraft(null);
           }}
           onDelete={(id) => {
