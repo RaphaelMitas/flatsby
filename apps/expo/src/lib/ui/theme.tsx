@@ -3,15 +3,15 @@ import type {
   Palette,
   PaletteTokens,
 } from "@flatsby/validators/palette";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { Appearance, useColorScheme } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { VariableContextProvider } from "nativewind";
 
 import {
   defaultPalette,
-  paletteTokenNames,
   paletteTokens,
+  paletteVariables,
   parsePalette,
 } from "@flatsby/validators/palette";
 
@@ -30,17 +30,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = "theme_preference";
 const PALETTE_STORAGE_KEY = "theme_palette";
-const PALETTE_SAVE_DELAY_MS = 300;
 
 const applyColorScheme = (theme: Theme) => {
   Appearance.setColorScheme(theme === "system" ? "unspecified" : theme);
 };
-
-function cssVariables(tokens: PaletteTokens) {
-  const variables: Record<`--${string}`, string> = {};
-  for (const name of paletteTokenNames) variables[`--${name}`] = tokens[name];
-  return variables;
-}
 
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -53,7 +46,6 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [storedTheme, setStoredTheme] = useState<Theme | null>(null);
   const [palette, setStoredPalette] = useState(defaultPalette);
-  const paletteSave = useRef<ReturnType<typeof setTimeout>>(undefined);
   const colorMode: ColorMode = useColorScheme() === "dark" ? "dark" : "light";
   const tokens = paletteTokens(palette, colorMode);
 
@@ -95,15 +87,12 @@ export function ThemeProvider({
 
   const setPalette = (newPalette: Palette) => {
     setStoredPalette(newPalette);
-    clearTimeout(paletteSave.current);
-    paletteSave.current = setTimeout(() => {
-      void AsyncStorage.setItem(
-        PALETTE_STORAGE_KEY,
-        JSON.stringify(newPalette),
-      ).catch((error: unknown) => {
-        console.error("Error saving palette to storage:", error);
-      });
-    }, PALETTE_SAVE_DELAY_MS);
+    void AsyncStorage.setItem(
+      PALETTE_STORAGE_KEY,
+      JSON.stringify(newPalette),
+    ).catch((error: unknown) => {
+      console.error("Error saving palette to storage:", error);
+    });
   };
 
   const value: ThemeContextType = {
@@ -117,7 +106,7 @@ export function ThemeProvider({
 
   return (
     <ThemeContext.Provider value={value}>
-      <VariableContextProvider value={cssVariables(tokens)}>
+      <VariableContextProvider value={paletteVariables(tokens)}>
         {children}
       </VariableContextProvider>
     </ThemeContext.Provider>

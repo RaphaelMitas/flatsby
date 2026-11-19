@@ -1,17 +1,22 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import type { ColorMode, Palette, PaletteTokenName } from "./palette";
+import type { ColorMode, Palette } from "./palette";
 import {
+  colorModes,
   defaultPalette,
+  fixedColors,
   HUE_MAX,
-  palettePresetIds,
-  paletteTokenNames,
+  paletteIds,
   paletteTokens,
   parsePalette,
 } from "./palette";
 
-const modes: ColorMode[] = ["light", "dark"];
+const themeColors = (palette: Palette, mode: ColorMode) => ({
+  ...paletteTokens(palette, mode),
+  ...fixedColors[mode],
+});
+type ThemeColorName = keyof ReturnType<typeof themeColors>;
 
 function hslToHex(hue: number, saturation: number, lightness: number) {
   const s = saturation / 100;
@@ -27,7 +32,7 @@ function hslToHex(hue: number, saturation: number, lightness: number) {
   return `#${channel(0)}${channel(8)}${channel(4)}`;
 }
 
-function themeCssTokens(mode: ColorMode) {
+function themeCssColors(mode: ColorMode) {
   const css = readFileSync(
     new URL("../../../tooling/tailwind/theme.css", import.meta.url),
     "utf8",
@@ -35,7 +40,7 @@ function themeCssTokens(mode: ColorMode) {
   const [light = "", rest = ""] = css.split("@variant dark {");
   const block = mode === "light" ? light : rest.slice(0, rest.indexOf("}"));
   return Object.fromEntries(
-    paletteTokenNames.map((name) => {
+    Object.keys(themeColors(defaultPalette, mode)).map((name) => {
       const match = new RegExp(
         `--${name}: hsl\\(([\\d.]+) ([\\d.]+)% ([\\d.]+)%\\)`,
       ).exec(block);
@@ -63,7 +68,7 @@ function contrast(first: string, second: string) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-const readablePairs: [PaletteTokenName, PaletteTokenName, number][] = [
+const readablePairs: [ThemeColorName, ThemeColorName, number][] = [
   ["primary-foreground", "primary", 4.5],
   ["primary", "background", 3],
   ["primary", "card", 3],
@@ -73,14 +78,24 @@ const readablePairs: [PaletteTokenName, PaletteTokenName, number][] = [
   ["muted-foreground", "card", 4.5],
   ["muted-foreground", "muted", 4.5],
 ];
+const readableOnLightPairs: [ThemeColorName, ThemeColorName, number][] = [
+  ["destructive", "background", 4.5],
+  ["destructive", "card", 4.5],
+  ["success", "background", 4.5],
+  ["success", "card", 4.5],
+];
 
 function unreadablePairs(palette: Palette) {
-  return modes.flatMap((mode) => {
-    const tokens = paletteTokens(palette, mode);
-    return readablePairs
+  return colorModes.flatMap((mode) => {
+    const colors = themeColors(palette, mode);
+    const pairs =
+      mode === "light"
+        ? [...readablePairs, ...readableOnLightPairs]
+        : readablePairs;
+    return pairs
       .filter(
         ([text, surface, minimum]) =>
-          contrast(tokens[text], tokens[surface]) < minimum,
+          contrast(colors[text], colors[surface]) < minimum,
       )
       .map(
         ([text, surface]) =>
@@ -90,16 +105,16 @@ function unreadablePairs(palette: Palette) {
 }
 
 describe("paletteTokens", () => {
-  it.each(modes)(
+  it.each(colorModes)(
     "keeps the default palette equal to theme.css in %s",
     (mode) => {
-      expect(paletteTokens(defaultPalette, mode)).toEqual(themeCssTokens(mode));
+      expect(themeColors(defaultPalette, mode)).toEqual(themeCssColors(mode));
     },
   );
 
   it("keeps text readable in every preset", () => {
-    const failures = palettePresetIds
-      .filter((id) => id !== "default")
+    const failures = paletteIds
+      .filter((id) => id !== "default" && id !== "custom")
       .flatMap((id) => unreadablePairs({ ...defaultPalette, id }));
 
     expect(failures).toEqual([]);

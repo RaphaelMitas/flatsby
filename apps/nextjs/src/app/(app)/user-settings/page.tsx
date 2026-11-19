@@ -9,7 +9,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
+import { parsePalette } from "@flatsby/validators/palette";
 
+import { paletteCookie } from "~/app/_components/layout/palette";
 import { SupportFlatsby } from "~/app/_components/SupportFlatsby";
 import {
   getCurrentUserWithGroups,
@@ -30,7 +32,9 @@ export default async function Page() {
   await getCurrentUserWithGroups();
   prefetch(trpc.user.getCurrentUser.queryOptions());
   const t = await getTranslations("settings.page");
-  const preference = (await cookies()).get(localeCookie)?.value;
+  const cookieStore = await cookies();
+  const preference = cookieStore.get(localeCookie)?.value;
+  const palette = parsePalette(cookieStore.get(paletteCookie)?.value ?? null);
   return (
     <HydrateClient>
       <div className="flex flex-col p-4 md:pt-16">
@@ -49,7 +53,7 @@ export default async function Page() {
           <LanguageSettings
             preference={preference && isLocale(preference) ? preference : null}
           />
-          <AppearanceSettings />
+          <AppearanceSettings palette={palette} />
           <AnalyticsSettings />
           <SupportFlatsby />
           <Card>

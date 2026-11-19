@@ -4,26 +4,13 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+import { fixedColors } from "@flatsby/validators/palette";
+
 import { useTheme } from "~/lib/ui/theme";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
-const fixedColors = {
-  light: {
-    destructive: "hsl(0, 72.2%, 50.6%)",
-    "destructive-foreground": "hsl(0, 0%, 98%)",
-    success: "hsl(120, 100%, 25.1%)",
-    info: "hsl(224.3, 76.3%, 48%)",
-  },
-  dark: {
-    destructive: "hsl(0, 72.2%, 50.6%)",
-    "destructive-foreground": "hsl(0, 0%, 98%)",
-    success: "hsl(142.1, 70.6%, 45.3%)",
-    info: "hsl(213.1, 93.9%, 67.8%)",
-  },
-} as const;
 
 export type ColorName = PaletteTokenName | keyof typeof fixedColors.light;
 

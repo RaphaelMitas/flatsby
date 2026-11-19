@@ -2,40 +2,18 @@ import type { Palette } from "@flatsby/validators/palette";
 
 import { paletteCss } from "@flatsby/validators/palette";
 
-const PALETTE_KEY = "palette";
-const PALETTE_CSS_KEY = "palette_css";
-const PALETTE_STYLE_ID = "palette";
+export const paletteCookie = "palette";
+export const PALETTE_STYLE_ID = "palette";
 
-export const paletteScript = `try{var c=localStorage.getItem("${PALETTE_CSS_KEY}");if(c){var s=document.createElement("style");s.id="${PALETTE_STYLE_ID}";s.textContent=c;document.head.appendChild(s)}}catch(e){}`;
+const PALETTE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
-const listeners = new Set<() => void>();
-
-export function subscribeToPalette(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-export const readStoredPalette = () => localStorage.getItem(PALETTE_KEY);
-
-function paletteStyle() {
-  const existing = document.getElementById(PALETTE_STYLE_ID);
-  if (existing) return existing;
-  const style = document.createElement("style");
-  style.id = PALETTE_STYLE_ID;
-  document.head.appendChild(style);
-  return style;
-}
-
-export function applyPalette(palette: Palette) {
-  const css = paletteCss(palette);
-  paletteStyle().textContent = css;
-  localStorage.setItem(PALETTE_CSS_KEY, css);
-}
+export const rootPaletteCss = (palette: Palette) =>
+  palette.id === "default"
+    ? ""
+    : paletteCss(palette, { light: "html:root", dark: "html.dark" });
 
 export function savePalette(palette: Palette) {
-  localStorage.setItem(PALETTE_KEY, JSON.stringify(palette));
-  applyPalette(palette);
-  for (const listener of listeners) listener();
+  const style = document.getElementById(PALETTE_STYLE_ID);
+  if (style) style.textContent = rootPaletteCss(palette);
+  document.cookie = `${paletteCookie}=${encodeURIComponent(JSON.stringify(palette))}; path=/; max-age=${PALETTE_COOKIE_MAX_AGE}`;
 }

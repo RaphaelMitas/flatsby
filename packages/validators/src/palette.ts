@@ -1,16 +1,14 @@
 import { z } from "zod/v4";
 
-export const palettePresetIds = [
+export const paletteIds = [
   "default",
   "sand",
   "forest",
   "ocean",
   "blossom",
+  "custom",
 ] as const;
-export type PalettePresetId = (typeof palettePresetIds)[number];
-
-export const paletteIds = [...palettePresetIds, "custom"] as const;
-export type PaletteId = (typeof paletteIds)[number];
+type PaletteId = (typeof paletteIds)[number];
 
 export const HUE_MAX = 360;
 
@@ -32,7 +30,8 @@ export function parsePalette(stored: string | null): Palette {
   }
 }
 
-export type ColorMode = "light" | "dark";
+export const colorModes = ["light", "dark"] as const;
+export type ColorMode = (typeof colorModes)[number];
 
 export const paletteTokenNames = [
   "background",
@@ -118,6 +117,21 @@ const defaultTokens: Record<ColorMode, PaletteTokens> = {
   },
 };
 
+export const fixedColors = {
+  light: {
+    destructive: "#dc2626",
+    "destructive-foreground": "#fafafa",
+    success: "#008000",
+    info: "#1d4ed8",
+  },
+  dark: {
+    destructive: "#dc2626",
+    "destructive-foreground": "#fafafa",
+    success: "#22c55e",
+    info: "#60a5fa",
+  },
+} as const;
+
 type Oklch = readonly [lightness: number, chroma: number, hue: number];
 type Accent = Record<ColorMode, { fill: Oklch; text: Oklch }>;
 
@@ -133,7 +147,7 @@ function hueAccent(hue: number): Accent {
 const PRESET_TINT = 0.4;
 
 const presets: Record<
-  Exclude<PalettePresetId, "default">,
+  Exclude<PaletteId, "default" | "custom">,
   { hue: number; accent: Accent }
 > = {
   sand: {
@@ -228,7 +242,7 @@ function derivedTokens(
   const surfaces =
     mode === "light"
       ? {
-          background: at(1 - 0.03 * tint, 0.014 * tint),
+          background: at(1 - 0.02 * tint, 0.014 * tint),
           card: at(1 - 0.008 * tint, 0.007 * tint),
           foreground: at(0.16, 0.005 + 0.025 * tint),
           mutedForeground: at(0.51, 0.014 + 0.012 * tint),
@@ -293,26 +307,36 @@ export function paletteTokens(
   return derivedTokens(preset.hue, PRESET_TINT, preset.accent, mode);
 }
 
+export function paletteVariables(tokens: PaletteTokens) {
+  const variables: Record<`--${string}`, string> = {};
+  for (const name of paletteTokenNames) variables[`--${name}`] = tokens[name];
+  return variables;
+}
+
+export function paletteCss(
+  palette: Palette,
+  selector: Record<ColorMode, string>,
+): string {
+  return colorModes
+    .map((mode) => {
+      const declarations = Object.entries(
+        paletteVariables(paletteTokens(palette, mode)),
+      ).map(([name, value]) => `${name}:${value}`);
+      return `${selector[mode]}{${declarations.join(";")}}`;
+    })
+    .join("");
+}
+
 const HUE_SCALE_STEP = 30;
 
-export function accentScale(mode: ColorMode): [string, string, ...string[]] {
-  const at = (hue: number) => oklchToHex(hueAccent(hue)[mode].fill);
-  return [
-    at(0),
-    at(HUE_SCALE_STEP),
-    ...Array.from({ length: HUE_MAX / HUE_SCALE_STEP - 1 }, (_, step) =>
-      at((step + 2) * HUE_SCALE_STEP),
-    ),
-  ];
+function hueSwatch(hue: number) {
+  return oklchToHex([0.65, 0.15, hue]);
 }
 
-function cssDeclarations(tokens: PaletteTokens) {
-  return paletteTokenNames.map((name) => `--${name}:${tokens[name]}`).join(";");
-}
-
-export function paletteCss(palette: Palette): string {
-  if (palette.id === "default") return "";
-  const light = cssDeclarations(paletteTokens(palette, "light"));
-  const dark = cssDeclarations(paletteTokens(palette, "dark"));
-  return `html:root{${light}}html.dark{${dark}}`;
-}
+export const hueScale: [string, string, ...string[]] = [
+  hueSwatch(0),
+  hueSwatch(HUE_SCALE_STEP),
+  ...Array.from({ length: HUE_MAX / HUE_SCALE_STEP - 1 }, (_, step) =>
+    hueSwatch((step + 2) * HUE_SCALE_STEP),
+  ),
+];

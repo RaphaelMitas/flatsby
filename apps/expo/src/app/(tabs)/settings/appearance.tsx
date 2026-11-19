@@ -5,8 +5,8 @@ import { Slider } from "@expo/ui/community/slider";
 import { useTranslations } from "use-intl";
 
 import {
-  accentScale,
   HUE_MAX,
+  hueScale,
   paletteIds,
   paletteTokens,
 } from "@flatsby/validators/palette";
@@ -31,7 +31,7 @@ function PaletteTile(props: {
       <Pressable
         testID={props.testID}
         accessibilityRole="radio"
-        accessibilityState={{ selected: props.selected }}
+        accessibilityState={{ checked: props.selected }}
         onPress={props.onPress}
         className={cn(
           "overflow-hidden rounded-lg border-2",
@@ -120,7 +120,7 @@ export default function AppearanceScreen() {
                 {t("appearance.accent")}
               </Text>
               <LinearGradient
-                colors={accentScale(colorMode)}
+                colors={hueScale}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{ height: 8, borderRadius: 4 }}
@@ -128,6 +128,7 @@ export default function AppearanceScreen() {
               <Slider
                 accessibilityLabel={t("appearance.accent")}
                 value={palette.hue}
+                minimumValue={0}
                 maximumValue={HUE_MAX}
                 minimumTrackTintColor={tokens.primary}
                 thumbTintColor={tokens.primary}
