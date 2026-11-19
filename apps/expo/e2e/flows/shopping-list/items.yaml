@@ -4,6 +4,7 @@ tags:
 ---
 # Mirrors apps/nextjs/e2e/shopping-list/shopping-list-items.spec.ts:
 # add with manual category, complete, undo completion, edit, delete.
+# Edit and delete run twice: by swipe, then from the item details.
 - runFlow: ../../subflows/e2e-login.yaml
 - runFlow:
     file: ../../subflows/create-shopping-list.yaml
@@ -79,4 +80,51 @@ tags:
     id: "delete-confirmation-confirm"
 - extendedWaitUntil:
     notVisible: "Green Apples"
+    timeout: 15000
+
+# The same two actions without a swipe: a tap on the item opens its details
+- runFlow:
+    file: ../../subflows/add-shopping-list-item.yaml
+    env:
+      ITEM_NAME: "Oat Milk"
+      CATEGORY: "dairy"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-item-checkbox-Oat Milk"
+    timeout: 15000
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "shopping-list-item-Oat Milk"
+      MARKER_ID: "shopping-list-item-details-edit"
+- tapOn:
+    id: "shopping-list-item-details-edit"
+- extendedWaitUntil:
+    visible:
+      id: "shopping-list-item-edit-input"
+    timeout: 15000
+- tapOn:
+    id: "shopping-list-item-edit-input"
+- eraseText
+- inputText: "Soy Milk"
+- tapOn:
+    id: "shopping-list-item-edit-save"
+- extendedWaitUntil:
+    visible: "Soy Milk"
+    timeout: 15000
+- runFlow:
+    file: ../../subflows/tap-until.yaml
+    env:
+      TARGET_ID: "shopping-list-item-Soy Milk"
+      MARKER_ID: "shopping-list-item-details-delete"
+- tapOn:
+    id: "shopping-list-item-details-delete"
+- extendedWaitUntil:
+    visible:
+      id: "delete-confirmation-confirm"
+    timeout: 15000
+- tapOn:
+    id: "delete-confirmation-confirm"
+- extendedWaitUntil:
+    notVisible: "Soy Milk"
     timeout: 15000

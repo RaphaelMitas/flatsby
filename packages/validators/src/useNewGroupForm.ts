@@ -68,6 +68,9 @@ export function useNewGroupForm({
     if (parsed.success && (await keepName(parsed.data.name))) openJoin();
   });
 
+  const clearIssues = (field: Field) =>
+    setIssues((all) => all.filter(({ path }) => path[0] !== field));
+
   const issueFor = (field: Field) => {
     const message = issues.find(({ path }) => path[0] === field)?.message;
     return message === undefined ? undefined : translateIfKey(t, message);
@@ -75,14 +78,29 @@ export function useNewGroupForm({
 
   return {
     name,
-    setName,
+    setName: (changed: string) => {
+      setName(changed);
+      clearIssues("name");
+      if (editedGroupName === undefined) clearIssues("groupName");
+    },
     groupName,
-    setGroupName,
+    setGroupName: (changed: string) => {
+      setGroupName(changed);
+      clearIssues("groupName");
+    },
     names,
-    addName: (added: string) => setNames((all) => uniqueNames([...all, added])),
-    removeName: (removed: string) =>
-      setNames((all) => all.filter((name) => name !== removed)),
-    setDraft,
+    addName: (added: string) => {
+      setNames((all) => uniqueNames([...all, added]));
+      clearIssues("placeholders");
+    },
+    removeName: (removed: string) => {
+      setNames((all) => all.filter((name) => name !== removed));
+      clearIssues("placeholders");
+    },
+    setDraft: (changed: string) => {
+      setDraft(changed);
+      clearIssues("placeholders");
+    },
     issueFor,
     submit,
     joinWithCode,
