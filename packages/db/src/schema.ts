@@ -4,6 +4,7 @@ import type {
   Recurrence,
 } from "@flatsby/validators/calendar";
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
+import type { PinIcon, PinWifi } from "@flatsby/validators/pinboard";
 import { relations, sql } from "drizzle-orm";
 import {
   bigint,
@@ -35,6 +36,7 @@ import {
 } from "@flatsby/validators/group";
 import { INVITE_CODE_LENGTH } from "@flatsby/validators/invite";
 import { MAX_PAYPAL_HANDLE_LENGTH } from "@flatsby/validators/payment";
+import { MAX_PIN_TITLE_LENGTH } from "@flatsby/validators/pinboard";
 import { MAX_CONSENT_VERSION_LENGTH } from "@flatsby/validators/user";
 
 export const createTable = pgTableCreator((name) => `flat-cove_${name}`);
@@ -448,6 +450,26 @@ export const expenseSplitsRelations = relations(expenseSplits, ({ one }) => ({
     references: [groupMembers.id],
   }),
 }));
+
+export const pins = createTable(
+  "pin",
+  {
+    id: serial("id").primaryKey(),
+    groupId: integer("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: MAX_PIN_TITLE_LENGTH }).notNull(),
+    body: text("body").notNull(),
+    icon: varchar("icon", { length: 16 }).$type<PinIcon>().notNull(),
+    wifi: jsonb("wifi").$type<PinWifi>(),
+    createdByGroupMemberId: integer("created_by_group_member_id").references(
+      () => groupMembers.id,
+      { onDelete: "set null" },
+    ),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("pin_group_idx").on(table.groupId)],
+);
 
 export const calendarItems = createTable(
   "calendar_item",

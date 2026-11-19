@@ -13,6 +13,7 @@ import {
   Controller,
   FormProvider,
   useFormContext,
+  useFormState,
 } from "react-hook-form";
 import { useTranslations } from "use-intl";
 
@@ -61,7 +62,8 @@ const FormField = <
 
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext);
-  const { getFieldState, formState } = useFormContext();
+  const { getFieldState } = useFormContext();
+  const formState = useFormState({ name: fieldContext?.name });
 
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>");

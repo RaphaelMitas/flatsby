@@ -21,7 +21,7 @@ export const restoreSnapshot =
 interface ResultMutationOptions<TData, TInput, TContext> {
   onMutate?: (input: TInput) => TContext | Promise<TContext>;
   rollback?: (context: NonNullable<TContext>) => void;
-  onFailure?: (message: string | undefined) => void;
+  onFailure?: (message: string | undefined, input: TInput) => void;
   onSuccess?: (data: TData, input: TInput, context: TContext) => void;
   onSettled?: () => void;
 }
@@ -33,17 +33,21 @@ export const resultMutation = <TData, TInput, TContext = undefined>({
   onSuccess,
   onSettled,
 }: ResultMutationOptions<TData, TInput, TContext>) => {
-  const fail = (context: TContext | undefined, message: string | undefined) => {
+  const fail = (
+    context: TContext | undefined,
+    message: string | undefined,
+    input: TInput,
+  ) => {
     if (context != null) rollback?.(context);
-    onFailure?.(message);
+    onFailure?.(message, input);
   };
   return {
     onMutate,
-    onError: (_error: unknown, _input: TInput, context: TContext | undefined) =>
-      fail(context, undefined),
+    onError: (_error: unknown, input: TInput, context: TContext | undefined) =>
+      fail(context, undefined, input),
     onSuccess: (result: ApiResult<TData>, input: TInput, context: TContext) => {
       if (result.success) onSuccess?.(result.data, input, context);
-      else fail(context, result.error.message);
+      else fail(context, result.error.message, input);
     },
     onSettled,
   };
@@ -68,7 +72,7 @@ export const patchResultQuery = <TCached>(
   );
 
 export interface OptimisticOptions<TData, TInput> {
-  onFailure?: (message: string | undefined) => void;
+  onFailure?: (message: string | undefined, input: TInput) => void;
   onSuccess?: (data: TData, input: TInput) => void;
   invalidate?: QueryFilters[];
 }

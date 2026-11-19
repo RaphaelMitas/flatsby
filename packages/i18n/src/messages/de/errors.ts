@@ -10,6 +10,7 @@ export const errors = {
     group: "Gruppe nicht gefunden",
     groupMember: "Mitglied nicht gefunden",
     groupMembership: "Mitgliedschaft nicht gefunden",
+    pin: "Pinnwand-Eintrag nicht gefunden",
     shoppingList: "Einkaufsliste nicht gefunden",
     shoppingListItem: "Artikel nicht gefunden",
     user: "Nutzer nicht gefunden",

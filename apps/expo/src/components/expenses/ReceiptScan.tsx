@@ -1,14 +1,12 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { ReceiptTextLine } from "@flatsby/validators/expenses/receipt-scan";
 import type { useReceiptScan } from "@flatsby/validators/expenses/useReceiptScan";
-import type { ImagePickerOptions } from "expo-image-picker";
 import type { ComponentRef, ReactNode, Ref, RefObject } from "react";
 import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
-import * as ImagePicker from "expo-image-picker";
 import { useTranslations } from "use-intl";
 
 import { receiptDocument } from "@flatsby/validators/expenses/receipt-document";
@@ -20,6 +18,7 @@ import {
 
 import type { StageOrigin, StagePhoto } from "./ReceiptReadingStage";
 import type { IconProps } from "~/lib/ui/custom/icons/Icon";
+import type { PictureSource } from "~/utils/pick-picture";
 import { Alert, AlertDescription, AlertTitle } from "~/lib/ui/alert";
 import { Badge } from "~/lib/ui/badge";
 import { Button } from "~/lib/ui/button";
@@ -27,13 +26,12 @@ import FlatsbyCat from "~/lib/ui/custom/icons/FlatsbyCat";
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { SheetModal } from "~/lib/ui/sheet-modal";
 import { cn, useThemeColors } from "~/lib/utils";
+import { pickPicture } from "~/utils/pick-picture";
 import { recognizeLines } from "../../../modules/receipt-text";
 import { ReceiptReadingStage } from "./ReceiptReadingStage";
 
 type ReceiptScan = ReturnType<typeof useReceiptScan>;
-type Source = "camera" | "library" | "pdf";
-
-const PICKER_OPTIONS: ImagePickerOptions = { mediaTypes: ["images"] };
+type Source = PictureSource | "pdf";
 
 async function receiptBase64(uri: string) {
   const image = await ImageManipulator.manipulate(uri, {
@@ -119,19 +117,12 @@ export function ReceiptScan({
       void receiptScan.scan("application/pdf", () => file.base64(), file.size);
       return;
     }
-    if (source === "camera") {
-      const permission = await ImagePicker.requestCameraPermissionsAsync();
-      if (!permission.granted) {
-        receiptScan.fail(t("expenses.receiptScan.cameraDenied"));
-        return;
-      }
+    const asset = await pickPicture(source);
+    if (asset === "denied") {
+      receiptScan.fail(t("expenses.receiptScan.cameraDenied"));
+      return;
     }
-    const result =
-      source === "camera"
-        ? await ImagePicker.launchCameraAsync(PICKER_OPTIONS)
-        : await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
-    const asset = result.assets?.[0];
-    if (result.canceled || !asset) return;
+    if (!asset) return;
     open({ uri: asset.uri, width: asset.width, height: asset.height });
     void recognizeLines(asset.uri).then(setLines);
     void receiptScan.scan("image/jpeg", () => receiptBase64(asset.uri));

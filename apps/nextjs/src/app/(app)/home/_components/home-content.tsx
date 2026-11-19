@@ -9,6 +9,7 @@ import { CalendarCard } from "./calendar-card";
 import { ExpensesCard } from "./expenses-card";
 import { GroupHeader } from "./group-header";
 import { InviteFlatmatesCard } from "./invite-flatmates-card";
+import { PinboardCard } from "./pinboard-card";
 import { ShoppingCard } from "./shopping-card";
 import { TurnLine } from "./turn-line";
 
@@ -37,6 +38,7 @@ export function HomeContent() {
           </div>
           <ShoppingCard groupId={groupId} today={today} />
           <CalendarCard groupId={groupId} today={today} />
+          <PinboardCard groupId={groupId} />
         </div>
       )}
     </div>

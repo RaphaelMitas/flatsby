@@ -391,6 +391,20 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             </View>
           )}
         </HomeCard>
+
+        <HomeCard
+          testID="home-card-pinboard"
+          title={t("pinboard.title")}
+          onPress={() => {
+            count("pinboard");
+            router.navigate("/(tabs)/home/pinboard");
+          }}
+          className="mt-4"
+        >
+          <Text className="text-foreground mt-2 text-base">
+            {t("pinboard.homeHint")}
+          </Text>
+        </HomeCard>
       </AppScrollView>
     </View>
   );

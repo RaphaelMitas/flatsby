@@ -7,6 +7,7 @@ export const errors = {
     group: "group not found",
     groupMember: "group member not found",
     groupMembership: "group membership not found",
+    pin: "pinboard entry not found",
     shoppingList: "shopping list not found",
     shoppingListItem: "shopping list item not found",
     user: "user not found",
