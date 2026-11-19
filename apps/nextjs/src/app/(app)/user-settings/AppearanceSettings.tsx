@@ -21,7 +21,6 @@ import {
   paletteIds,
 } from "@flatsby/validators/palette";
 
-import { rootPaletteSelector } from "~/app/_components/layout/palette";
 import { setPalettePreference } from "./actions";
 
 export function AppearanceSettings(props: { palette: Palette }) {
@@ -44,7 +43,7 @@ export function AppearanceSettings(props: { palette: Palette }) {
       <CardContent className="grid gap-6">
         <style>
           {[
-            paletteCss(palette, rootPaletteSelector),
+            paletteCss(palette),
             ...paletteIds.map((id) =>
               paletteCss(
                 { ...palette, id },

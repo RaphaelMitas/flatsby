@@ -4,9 +4,7 @@ import type { Palette } from "@flatsby/validators/palette";
 import { cookies } from "next/headers";
 
 import { isLocale, localeCookie } from "@flatsby/i18n/locale";
-import { paletteSchema } from "@flatsby/validators/palette";
-
-import { paletteCookie } from "~/app/_components/layout/palette";
+import { paletteCookie, paletteSchema } from "@flatsby/validators/palette";
 
 const preferenceCookie = { maxAge: 60 * 60 * 24 * 365, path: "/" };
 

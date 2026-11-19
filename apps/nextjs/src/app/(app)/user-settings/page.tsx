@@ -9,9 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
-import { parsePalette } from "@flatsby/validators/palette";
+import { paletteCookie, parsePalette } from "@flatsby/validators/palette";
 
-import { paletteCookie } from "~/app/_components/layout/palette";
 import { SupportFlatsby } from "~/app/_components/SupportFlatsby";
 import {
   getCurrentUserWithGroups,

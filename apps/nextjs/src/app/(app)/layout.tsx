@@ -2,13 +2,13 @@ import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
-import { paletteCss, parsePalette } from "@flatsby/validators/palette";
-
-import { NavBeacon } from "~/app/_components/analytics/NavBeacon";
 import {
   paletteCookie,
-  rootPaletteSelector,
-} from "~/app/_components/layout/palette";
+  paletteCss,
+  parsePalette,
+} from "@flatsby/validators/palette";
+
+import { NavBeacon } from "~/app/_components/analytics/NavBeacon";
 import {
   rootMetadata,
   RootShell,
@@ -24,11 +24,7 @@ export default async function AppLayout(props: { children: React.ReactNode }) {
   return (
     <RootShell
       lang={await getLocale()}
-      head={
-        palette.id !== "default" && (
-          <style>{paletteCss(palette, rootPaletteSelector)}</style>
-        )
-      }
+      head={palette.id !== "default" && <style>{paletteCss(palette)}</style>}
     >
       <NavBeacon entryPagesOnly />
       <NextIntlClientProvider messages={messages}>

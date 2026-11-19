@@ -21,6 +21,8 @@ export type Palette = z.infer<typeof paletteSchema>;
 
 export const defaultPalette: Palette = { id: "default", hue: 300, tint: 0.5 };
 
+export const paletteCookie = "palette";
+
 export function parsePalette(stored: string | null | undefined): Palette {
   if (!stored) return defaultPalette;
   try {
@@ -315,7 +317,10 @@ export function paletteVariables(tokens: PaletteTokens) {
 
 export function paletteCss(
   palette: Palette,
-  selector: Record<ColorMode, string>,
+  selector: Record<ColorMode, string> = {
+    light: "html:root",
+    dark: "html.dark",
+  },
 ): string {
   return colorModes
     .map((mode) => {

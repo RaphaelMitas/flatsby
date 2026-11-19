@@ -67,6 +67,7 @@ test.describe("Account Management", () => {
 
     await authPage.getByRole("link", { name: "Calendar" }).click();
     await authPage.waitForURL(/\/calendar/);
+    await expect.poll(background).toBe(sandBackground);
     await authPage.goBack();
     await expect(
       authPage.getByTestId("palette-sand").getByRole("radio"),
