@@ -11,7 +11,6 @@ import { GroupHeader } from "./group-header";
 import { InviteFlatmatesCard } from "./invite-flatmates-card";
 import { PinboardCard } from "./pinboard-card";
 import { ShoppingCard } from "./shopping-card";
-import { TurnLine } from "./turn-line";
 
 export function HomeContent() {
   const { currentGroup } = useGroupContext();
@@ -21,8 +20,6 @@ export function HomeContent() {
   return (
     <div className="mx-auto flex w-full max-w-prose flex-col gap-6 p-4">
       <GroupHeader />
-
-      {groupId !== undefined && <TurnLine groupId={groupId} today={today} />}
 
       <InviteFlatmatesCard />
 

@@ -8,7 +8,6 @@ export const home = {
     afternoon: "Hi, {name}.",
     evening: "Evening, {name}.",
   },
-  more: "+{count} more",
   nothingToBuy: "Nothing to buy",
   open: "{count} open",
   itemsBought: "{count, plural, one {item bought} other {items bought}}",

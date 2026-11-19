@@ -1,6 +1,5 @@
 export const pinboard = {
   title: "Pinnwand",
-  homeHint: "Was hier alle wissen sollten",
   add: "Eintrag hinzufügen",
   newTitle: "Neuer Eintrag",
   editTitle: "Eintrag bearbeiten",

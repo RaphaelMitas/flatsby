@@ -182,11 +182,6 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       queryClient.invalidateQueries(trpc.stats.getHomePace.pathFilter()),
     ]);
 
-  const openCalendar = (date?: string) =>
-    router.navigate({
-      pathname: "/(tabs)/calendar",
-      params: date ? { date } : {},
-    });
   const openShopping = () => {
     if (lastList && lastList.id !== selectedShoppingListId) {
       setSelectedShoppingList(lastList.id, lastList.name);
@@ -194,7 +189,6 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
     router.navigate("/(tabs)/shoppingList");
   };
 
-  const firstDue = due[0];
   const pose = POSES[Math.min(due.length, 2)] ?? "asleep";
   const firstName = group.thisGroupMember.user.name.split(" ")[0] ?? "";
 
@@ -231,70 +225,29 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
               })}
             </Text>
           </View>
-
-          {firstDue && (
-            <Pressable
-              testID="home-turn"
-              accessibilityRole="button"
-              onPress={() => {
-                count("turn");
-                openCalendar(firstDue.occurrence.date);
-              }}
-              className="mt-3 flex-row items-center gap-2.5 active:opacity-70"
-            >
-              <View
-                className={cn(
-                  "h-2 w-2 rounded-full",
-                  categoryFillColorMap[firstDue.item.color],
-                )}
-              />
-              <Text
-                numberOfLines={1}
-                className={cn(
-                  "shrink text-base font-semibold",
-                  home ? "text-white" : "text-foreground",
-                )}
-                style={greetingShadow}
-              >
-                {firstDue.item.title}
-              </Text>
-              <Text
-                numberOfLines={1}
-                className={cn(
-                  "flex-1 text-base",
-                  home ? "text-white opacity-80" : "text-muted-foreground",
-                )}
-                style={greetingShadow}
-              >
-                {t("calendar.yourTurn")}
-                {due.length > 1 &&
-                  ` · ${t("home.more", { count: due.length - 1 })}`}
-              </Text>
-              <Icon
-                name="chevron-right"
-                size={16}
-                className={home ? "text-white" : "text-muted-foreground"}
-              />
-            </Pressable>
-          )}
         </View>
 
         <View className="gap-4 pt-16">
           <HomeCat pose={pose} onPress={() => say(t(`home.cat.${pose}`))} />
           <InviteFlatmatesCard groupId={group.id} />
           <AnalyticsPrompt />
-          <HomeCard
+          <Pressable
             testID="home-card-pinboard"
-            title={t("pinboard.title")}
+            accessibilityRole="button"
             onPress={() => {
               count("pinboard");
               router.navigate("/(tabs)/home/pinboard");
             }}
+            className="bg-card border-border flex-row items-center gap-3 rounded-2xl border py-2 pr-4 pl-2 active:opacity-70"
           >
-            <Text className="text-foreground mt-2 text-base">
-              {t("pinboard.homeHint")}
+            <View className="bg-muted h-8 w-8 items-center justify-center rounded-full">
+              <Icon name="pin" size={16} color="foreground" />
+            </View>
+            <Text className="text-foreground flex-1 text-base font-semibold">
+              {t("pinboard.title")}
             </Text>
-          </HomeCard>
+            <Icon name="chevron-right" size={16} color="muted-foreground" />
+          </Pressable>
           <HomeCard
             testID="home-card-expenses"
             title={t("navigation.expenses")}
@@ -371,7 +324,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
           title={t("navigation.calendar")}
           onPress={() => {
             count("calendar");
-            openCalendar();
+            router.navigate("/(tabs)/calendar");
           }}
           className="mt-4"
         >
