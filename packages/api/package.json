@@ -36,6 +36,10 @@
       "types": "./dist/groupMembersCache.d.ts",
       "default": "./src/groupMembersCache.ts"
     },
+    "./pinboardCache": {
+      "types": "./dist/pinboardCache.d.ts",
+      "default": "./src/pinboardCache.ts"
+    },
     "./shoppingListsCache": {
       "types": "./dist/shoppingListsCache.d.ts",
       "default": "./src/shoppingListsCache.ts"

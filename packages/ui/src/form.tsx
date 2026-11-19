@@ -14,6 +14,7 @@ import {
   useForm as __useForm,
   Controller,
   useFormContext,
+  useFormState,
 } from "react-hook-form";
 import { useTranslations } from "use-intl";
 
@@ -60,9 +61,10 @@ export function FormField<
 }
 
 export function useFormField() {
-  const { getFieldState, formState } = useFormContext();
+  const { getFieldState } = useFormContext();
 
   const fieldContext = React.use(FormFieldContext);
+  const formState = useFormState({ name: fieldContext?.name });
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>");
   }

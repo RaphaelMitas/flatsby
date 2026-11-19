@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2, Upload } from "lucide-react";
+import { Trash, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -83,7 +83,7 @@ export default function ImportExpenses({
                 variant="destructive"
                 disabled={deleteAllMutation.isPending}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash className="mr-2 h-4 w-4" />
                 {deleteAllMutation.isPending
                   ? tCommon("deleting")
                   : t("resetExpenses")}

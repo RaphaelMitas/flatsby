@@ -6,10 +6,10 @@ import { useRef } from "react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import {
-  AlertCircle,
   ArrowLeft,
   CalendarIcon,
   ChevronRight,
+  CircleExclamationPoint,
   LoaderCircle,
   Tag,
   User,
@@ -383,7 +383,7 @@ export function ExpenseFormContent({ formState }: ExpenseFormContentProps) {
 
             {failure && (
               <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
+                <CircleExclamationPoint className="h-4 w-4" />
                 <AlertTitle>{t("common.error")}</AlertTitle>
                 <AlertDescription>{failure}</AlertDescription>
               </Alert>

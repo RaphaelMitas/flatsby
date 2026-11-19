@@ -25,7 +25,6 @@ import {
 import {
   addDays,
   calendarItemDetailSchema,
-  calendarItemRefSchema,
   calendarRangeSchema,
   continuedRotation,
   createCalendarItemSchema,
@@ -43,6 +42,7 @@ import {
   splitsSeries,
   updateCalendarItemSchema,
 } from "@flatsby/validators/calendar";
+import { groupItemRefSchema } from "@flatsby/validators/group";
 
 import type { Database as DbClient, DbTransaction } from "../types";
 import { requireActiveMembers, requireMember } from "../effect/groups";
@@ -503,7 +503,7 @@ export const calendarRouter = createTRPCRouter({
     ),
 
   delete: protectedProcedure
-    .input(calendarItemRefSchema)
+    .input(groupItemRefSchema)
     .mutation(({ ctx, input }) =>
       runResult(
         ctx,

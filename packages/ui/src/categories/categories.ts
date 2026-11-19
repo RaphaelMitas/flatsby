@@ -8,7 +8,7 @@ import {
   CircleOff,
   Cookie,
   CupSoda,
-  Home,
+  House,
   Milk,
   Package,
   Snowflake,
@@ -75,7 +75,7 @@ const categoryIcons: Record<CategoryIdWithAiAutoSelect, LucideIcon> = {
   snacks: Cookie,
   pantry: Package,
   "personal-care": Bath,
-  household: Home,
+  household: House,
   other: CircleOff,
 };
 

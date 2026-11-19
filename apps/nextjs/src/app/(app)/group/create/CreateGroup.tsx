@@ -3,7 +3,7 @@
 import type { CurrencyCode } from "@flatsby/validators/expenses/types";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle } from "lucide-react";
+import { CircleExclamationPoint } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { failureOf } from "@flatsby/api/resultMutation";
@@ -119,7 +119,7 @@ export function CreateGroup() {
 
           {createFailure && (
             <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
+              <CircleExclamationPoint className="h-4 w-4" />
               <AlertTitle>{t("common.error")}</AlertTitle>
               <AlertDescription>{createFailure}</AlertDescription>
             </Alert>

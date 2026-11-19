@@ -31,7 +31,7 @@ describe("resultMutation", () => {
     const { callbacks, mutation } = setup();
     mutation.onError(new Error("offline"), 1, "snapshot");
     expect(callbacks.rollback).toHaveBeenCalledWith("snapshot");
-    expect(callbacks.onFailure).toHaveBeenCalledWith(undefined);
+    expect(callbacks.onFailure).toHaveBeenCalledWith(undefined, 1);
     expect(callbacks.onSuccess).not.toHaveBeenCalled();
   });
 
@@ -39,14 +39,14 @@ describe("resultMutation", () => {
     const { callbacks, mutation } = setup();
     mutation.onError(new Error("offline"), 1, undefined);
     expect(callbacks.rollback).not.toHaveBeenCalled();
-    expect(callbacks.onFailure).toHaveBeenCalledWith(undefined);
+    expect(callbacks.onFailure).toHaveBeenCalledWith(undefined, 1);
   });
 
   it("rolls back and reports the server message on success: false", () => {
     const { callbacks, mutation } = setup();
     mutation.onSuccess(failed, 1, "snapshot");
     expect(callbacks.rollback).toHaveBeenCalledWith("snapshot");
-    expect(callbacks.onFailure).toHaveBeenCalledWith("Nope");
+    expect(callbacks.onFailure).toHaveBeenCalledWith("Nope", 1);
     expect(callbacks.onSuccess).not.toHaveBeenCalled();
   });
 

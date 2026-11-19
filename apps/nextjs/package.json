@@ -38,6 +38,7 @@
     "geist": "^1.9.2",
     "isbot": "^5.2.3",
     "jose": "^6.2.17",
+    "jsqr": "catalog:",
     "next": "catalog:",
     "next-intl": "catalog:",
     "prop-types": "^15.8.1",

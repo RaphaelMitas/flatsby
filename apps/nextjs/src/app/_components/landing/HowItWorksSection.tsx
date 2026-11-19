@@ -1,11 +1,11 @@
-import { Home, LogIn, UserPlus } from "lucide-react";
+import { House, LogIn, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@flatsby/ui/card";
 
 import { STEPS } from "./content";
 
-const ICONS = { signIn: LogIn, createGroup: Home, addFlatmates: UserPlus };
+const ICONS = { signIn: LogIn, createGroup: House, addFlatmates: UserPlus };
 
 export function HowItWorksSection() {
   const t = useTranslations("marketing.steps");

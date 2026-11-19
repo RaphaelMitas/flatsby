@@ -9,8 +9,8 @@ import { CalendarCard } from "./calendar-card";
 import { ExpensesCard } from "./expenses-card";
 import { GroupHeader } from "./group-header";
 import { InviteFlatmatesCard } from "./invite-flatmates-card";
+import { PinboardCard } from "./pinboard-card";
 import { ShoppingCard } from "./shopping-card";
-import { TurnLine } from "./turn-line";
 
 export function HomeContent() {
   const { currentGroup } = useGroupContext();
@@ -20,8 +20,6 @@ export function HomeContent() {
   return (
     <div className="mx-auto flex w-full max-w-prose flex-col gap-6 p-4">
       <GroupHeader />
-
-      {groupId !== undefined && <TurnLine groupId={groupId} today={today} />}
 
       <InviteFlatmatesCard />
 
@@ -33,8 +31,9 @@ export function HomeContent() {
             {!season.HomeBackdrop && (
               <PeekingCat variant="home" className="mr-8 ml-auto h-8 w-16" />
             )}
-            <ExpensesCard groupId={groupId} today={today} />
+            <PinboardCard groupId={groupId} />
           </div>
+          <ExpensesCard groupId={groupId} today={today} />
           <ShoppingCard groupId={groupId} today={today} />
           <CalendarCard groupId={groupId} today={today} />
         </div>

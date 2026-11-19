@@ -185,11 +185,6 @@ export const updateCalendarItemSchema = calendarItemFields
   .extend({ id: z.number(), today: calendarDateSchema })
   .refine(isConsistentItem);
 
-export const calendarItemRefSchema = z.object({
-  groupId: z.number(),
-  id: z.number(),
-});
-
 const MAX_RANGE_DAYS = 62;
 
 export const calendarRangeSchema = z
