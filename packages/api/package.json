@@ -16,6 +16,10 @@
       "types": "./dist/expenseListCache.d.ts",
       "default": "./src/expenseListCache.ts"
     },
+    "./hooks/useCountUp": {
+      "types": "./dist/hooks/useCountUp.d.ts",
+      "default": "./src/hooks/useCountUp.ts"
+    },
     "./hooks/useExpenseFilters": {
       "types": "./dist/hooks/useExpenseFilters.d.ts",
       "default": "./src/hooks/useExpenseFilters.ts"

@@ -1,16 +1,11 @@
 import type { GroupWithAccess } from "@flatsby/api";
 import type { CalendarRange } from "@flatsby/validators/calendar";
 import type { HomeCardName } from "@flatsby/validators/home";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { useFocusEffect, useIsFocused, useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import {
-  useIsMutating,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import {
@@ -33,6 +28,7 @@ import {
 import { GroupsDashboard } from "~/components/groupDashboard/GroupsDashboard";
 import { GroupGate } from "~/components/GroupGate";
 import { GroupSwitcher } from "~/components/switcher/GroupSwitcher";
+import { SwitcherButton } from "~/components/switcher/Switcher";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
 import { season } from "~/lib/seasonal/season";
 import Icon from "~/lib/ui/custom/icons/Icon";
@@ -40,6 +36,10 @@ import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { useShoppingStore } from "~/utils/shopping-store";
 import { useNow } from "~/utils/useNow";
+import {
+  usageEvent,
+  useRefetchStaleOnFocus,
+} from "~/utils/useRefetchStaleOnFocus";
 import { CategoryStack } from "./CategoryStack";
 import { HomeCard, PaceHeadline } from "./HomeCard";
 import { CatOverlay, HomeCat } from "./HomeCat";
@@ -131,20 +131,13 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
       timeZone: deviceTimeZone(),
     }),
   );
-  const opened = useMutation(trpc.stats.homeCardOpened.mutationOptions());
+  const opened = useMutation(
+    trpc.stats.homeCardOpened.mutationOptions({ meta: usageEvent }),
+  );
   const count = (card: HomeCardName) =>
     opened.mutate({ groupId: group.id, card });
 
-  const settled = useIsMutating() === 0;
-  useFocusEffect(
-    useCallback(() => {
-      if (!settled) return;
-      void queryClient.refetchQueries(
-        { ...trpc.stats.getHomePace.pathFilter(), stale: true, type: "active" },
-        { cancelRefetch: false },
-      );
-    }, [queryClient, settled]),
-  );
+  useRefetchStaleOnFocus(trpc.stats.getHomePace.pathFilter());
 
   const { due, days, nextEvent } = homeAgenda(
     rangeData?.success ? rangeData.data : NOTHING_PLANNED,
@@ -209,7 +202,17 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             testID="home-group-picker"
             settingsTestID="home-group-settings"
             className="mt-2 mb-4"
-          />
+          >
+            <SwitcherButton
+              testID="home-statistics"
+              icon="chart-no-axes-column"
+              label={t("statistics.title")}
+              onPress={() => {
+                count("statistics");
+                router.push("/(tabs)/home/statistics");
+              }}
+            />
+          </GroupSwitcher>
 
           <View className="pr-20">
             <Text

@@ -69,6 +69,7 @@ export interface BottomSheetPickerItem {
 }
 
 interface PickerConfig {
+  title?: string;
   items: BottomSheetPickerItem[];
   selectedId?: string;
   onSelect?: (item: BottomSheetPickerItem) => void;
@@ -154,6 +155,13 @@ export const BottomSheetPickerProvider: React.FC<
           data={pickerConfig?.items ?? []}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
+          ListHeaderComponent={
+            pickerConfig?.title ? (
+              <Text className="text-foreground px-4 pb-3 text-xl font-extrabold">
+                {pickerConfig.title}
+              </Text>
+            ) : null
+          }
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
         />
@@ -163,6 +171,7 @@ export const BottomSheetPickerProvider: React.FC<
 };
 
 export interface BottomSheetPickerTriggerProps {
+  title?: string;
   items: BottomSheetPickerItem[];
   selectedId?: string;
   onSelect?: (item: BottomSheetPickerItem) => void;
@@ -176,6 +185,7 @@ export interface BottomSheetPickerTriggerProps {
 export const BottomSheetPickerTrigger: React.FC<
   BottomSheetPickerTriggerProps
 > = ({
+  title,
   items,
   selectedId,
   onSelect,
@@ -191,11 +201,12 @@ export const BottomSheetPickerTrigger: React.FC<
   const handleOpen = useCallback(() => {
     Keyboard.dismiss();
     openPicker({
+      title,
       items,
       selectedId,
       onSelect,
     });
-  }, [openPicker, items, selectedId, onSelect]);
+  }, [openPicker, title, items, selectedId, onSelect]);
 
   const selectedItem = useMemo(() => {
     return items.find((item) => item.id === selectedId);
@@ -203,7 +214,11 @@ export const BottomSheetPickerTrigger: React.FC<
 
   if (trigger) {
     return (
-      <Pressable testID={testID} onPress={handleOpen}>
+      <Pressable
+        testID={testID}
+        accessibilityRole="button"
+        onPress={handleOpen}
+      >
         {trigger}
       </Pressable>
     );

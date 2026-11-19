@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, ShoppingBasket } from "lucide-react";
+import { Plus, Settings, ShoppingBasket } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { Switcher } from "~/app/_components/switcher/Switcher";
-import { SwitcherSettingsButton } from "~/app/_components/switcher/SwitcherSettingsButton";
+import { SwitcherIconButton } from "~/app/_components/switcher/SwitcherIconButton";
 import { useTRPC } from "~/trpc/react";
 import { EditListDialog } from "../ListDialogs";
 
@@ -71,8 +71,9 @@ export function ListSwitcher({
           },
         ]}
       />
-      <SwitcherSettingsButton
+      <SwitcherIconButton
         testId="shopping-list-settings"
+        icon={Settings}
         label={t("switcher.editTitle")}
         onClick={() =>
           setEditing({ id: shoppingListId, name: current?.name ?? name })

@@ -1,7 +1,8 @@
 "use client";
 
 import type { ExpenseListFilter } from "@flatsby/validators/expenses/list-filter";
-import { Suspense } from "react";
+import { Suspense, useEffect, useEffectEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   keepPreviousData,
   useInfiniteQuery,
@@ -21,6 +22,7 @@ import { ScrollArea } from "@flatsby/ui/scroll-area";
 import { Skeleton } from "@flatsby/ui/skeleton";
 import { isLeftUnconverted } from "@flatsby/validators/expenses/conversion";
 import { withMonthHeaders } from "@flatsby/validators/expenses/formatting";
+import { expenseLinkSchema } from "@flatsby/validators/expenses/list-filter";
 import { PAGE_SIZE } from "@flatsby/validators/pagination";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
@@ -47,10 +49,29 @@ export function ExpenseListPanel({
 
   const groupId = currentGroup?.id ?? 0;
   const filters = useExpenseFilters(groupId);
+  const searchParams = useSearchParams();
 
   const { data: groupData } = useSuspenseQuery(
     trpc.group.getGroup.queryOptions({ id: groupId }),
   );
+
+  const applyLink = useEffectEvent(() => {
+    if (groupData.success)
+      filters.applyLink(
+        Object.fromEntries(searchParams),
+        groupData.data.thisGroupMember.id,
+      );
+    const params = new URLSearchParams(searchParams);
+    for (const key of expenseLinkSchema.keyof().options) params.delete(key);
+    window.history.replaceState(
+      null,
+      "",
+      `/expenses${params.size ? `?${params}` : ""}`,
+    );
+  });
+  useEffect(() => {
+    if (searchParams.has("category")) applyLink();
+  }, [searchParams]);
 
   const listOptions = (filter: ExpenseListFilter) =>
     trpc.expense.getGroupExpenses.infiniteQueryOptions(

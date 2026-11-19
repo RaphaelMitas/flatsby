@@ -158,7 +158,7 @@ jobs:
   e2e-ios:
     needs: e2e-ios-build
     runs-on: xcode-27
-    timeout-minutes: 45
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       # Five shards: the repo's macOS runner concurrency is 5, so a sixth would

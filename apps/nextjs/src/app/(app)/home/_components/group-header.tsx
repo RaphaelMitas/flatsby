@@ -2,15 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { House, KeyRound, Plus } from "lucide-react";
+import {
+  ChartNoAxesColumn,
+  House,
+  KeyRound,
+  Plus,
+  Settings,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useGroupContext } from "~/app/_components/context/group-context";
 import { PeekingCat } from "~/app/_components/peeking-cat";
 import { season } from "~/app/_components/seasonal/season";
 import { Switcher } from "~/app/_components/switcher/Switcher";
-import { SwitcherSettingsButton } from "~/app/_components/switcher/SwitcherSettingsButton";
+import { SwitcherIconButton } from "~/app/_components/switcher/SwitcherIconButton";
 import { JoinWithCodeDialog } from "~/app/(app)/group/JoinWithCodeDialog";
+import { useHomeCardOpened } from "./home-card";
 
 export function GroupHeader() {
   const t = useTranslations();
@@ -18,6 +25,7 @@ export function GroupHeader() {
   const { currentGroup, groups, switchGroup } = useGroupContext();
   const [isSwitching, setIsSwitching] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
+  const opened = useHomeCardOpened(currentGroup?.id ?? 0);
 
   if (!currentGroup) {
     return null;
@@ -71,8 +79,16 @@ export function GroupHeader() {
         disabled={isSwitching}
       />
 
-      <SwitcherSettingsButton
+      <SwitcherIconButton
+        testId="home-statistics"
+        icon={ChartNoAxesColumn}
+        label={t("statistics.title")}
+        href="/home/statistics"
+        onClick={() => opened("statistics")}
+      />
+      <SwitcherIconButton
         testId="home-group-settings"
+        icon={Settings}
         label={t("navigation.groupSettings")}
         href="/group/settings"
       />

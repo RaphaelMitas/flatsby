@@ -53,6 +53,7 @@ export const errors = {
   invalidReference: "Ungültiger Verweis auf zugehörige Daten",
   fieldRequired: "{field} ist erforderlich",
   invalidName: "Bitte gib einen gültigen Namen ein",
+  monthNotShown: "Dieser Monat wird nicht mehr angezeigt",
   databaseFailed: "Datenbankvorgang fehlgeschlagen",
   serviceUnavailable: "Externer Dienst ({service}) ist gerade nicht erreichbar",
   unexpected:

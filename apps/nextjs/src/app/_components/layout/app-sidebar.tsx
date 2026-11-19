@@ -1,8 +1,9 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, HandCoins, Wallet } from "lucide-react";
+import { Calendar, ChartNoAxesColumn, HandCoins, Wallet } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { localePath } from "@flatsby/i18n/locale";
@@ -31,9 +32,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { hasCurrentGroup } = useGroupContext();
 
-  const isExpensesPage = pathname.startsWith("/expenses");
   const isDebtsPage = pathname === "/expenses/debts";
-  const isCalendarPage = pathname.startsWith("/calendar");
 
   return (
     <Sidebar collapsible="icon">
@@ -43,59 +42,56 @@ export function AppSidebar() {
         {hasCurrentGroup && <SidebarShoppingListSwitcher />}
 
         {hasCurrentGroup && (
-          <SidebarGroup>
-            <SidebarGroupLabel>{t("navigation.expenses")}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isExpensesPage && !isDebtsPage}
+          <>
+            <SidebarGroup>
+              <SidebarGroupLabel>{t("navigation.expenses")}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarLink
+                    href="/expenses"
+                    icon={Wallet}
+                    label={t("navigation.allExpenses")}
                     tooltip={t("navigation.expenses")}
-                  >
-                    <Link href="/expenses">
-                      <Wallet />
-                      <span>{t("navigation.allExpenses")}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
+                    isActive={pathname.startsWith("/expenses") && !isDebtsPage}
+                  />
+                  <SidebarLink
+                    href="/expenses/debts"
+                    icon={HandCoins}
+                    label={t("navigation.debts")}
                     isActive={isDebtsPage}
-                    tooltip={t("navigation.debts")}
-                  >
-                    <Link href="/expenses/debts">
-                      <HandCoins />
-                      <span>{t("navigation.debts")}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+                  />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-        {hasCurrentGroup && (
-          <SidebarGroup>
-            <SidebarGroupLabel>{t("navigation.calendar")}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isCalendarPage}
-                    tooltip={t("navigation.calendar")}
-                  >
-                    <Link href="/calendar">
-                      <Calendar />
-                      <span>{t("navigation.calendar")}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>{t("navigation.calendar")}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarLink
+                    href="/calendar"
+                    icon={Calendar}
+                    label={t("navigation.calendar")}
+                    isActive={pathname.startsWith("/calendar")}
+                  />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>{t("statistics.title")}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarLink
+                    href="/home/statistics"
+                    icon={ChartNoAxesColumn}
+                    label={t("statistics.title")}
+                    isActive={pathname.startsWith("/home/statistics")}
+                  />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
         )}
       </SidebarContent>
 
@@ -130,5 +126,30 @@ export function AppSidebar() {
 
       <SidebarRail />
     </Sidebar>
+  );
+}
+
+function SidebarLink({
+  href,
+  icon: Icon,
+  label,
+  tooltip = label,
+  isActive,
+}: {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  tooltip?: string;
+  isActive: boolean;
+}) {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive} tooltip={tooltip}>
+        <Link href={href}>
+          <Icon />
+          <span>{label}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }

@@ -1,47 +1,67 @@
 import { describe, expect, it } from "vitest";
 
 import type { Statistics } from "./statistics";
-import { paceSummary } from "./home";
+import { paceAt, paceSummary } from "./home";
 import {
   barHeights,
   convertedShares,
   daysOnList,
   isStatisticsEmpty,
+  scrubbedShare,
   spendingStatistics,
   statisticsPeriod,
   statisticsWindow,
 } from "./statistics";
 
+const month = (range: string, today: string) => {
+  const period = statisticsPeriod(range, today, "2020-01-01");
+  if (!period) throw new Error(`${range} is not shown on ${today}`);
+  return period;
+};
+
 describe("statisticsPeriod", () => {
   it("takes last month and the last three months across the new year", () => {
-    expect(statisticsPeriod("lastMonth", "2027-01-15", "2020-01-01")).toEqual({
+    expect(statisticsPeriod("2026-12", "2027-01-15", "2020-01-01")).toEqual({
       from: "2026-12-01",
       to: "2026-12-31",
+      today: "2027-01-15",
       pace: "wholeMonth",
     });
-    expect(statisticsPeriod("last3Months", "2027-01-15", "2020-01-01")).toEqual(
-      { from: "2026-11-01", to: "2027-01-15", pace: null },
-    );
+    expect(
+      statisticsPeriod("last3Months", "2027-01-15", "2020-01-01"),
+    ).toMatchObject({ from: "2026-11-01", to: "2027-01-15", pace: null });
+  });
+
+  it("takes only the six months shown", () => {
+    expect(
+      statisticsPeriod("2026-08", "2027-01-15", "2020-01-01"),
+    ).toMatchObject({ from: "2026-08-01", to: "2026-08-31" });
+    expect(statisticsPeriod("2026-07", "2027-01-15", "2020-01-01")).toBeNull();
+    expect(statisticsPeriod("2027-02", "2027-01-15", "2020-01-01")).toBeNull();
   });
 
   it("ignores a recent join date except for since joined", () => {
-    expect(statisticsPeriod("thisYear", "2026-11-19", "2026-11-10")).toEqual({
-      from: "2026-01-01",
-      to: "2026-11-19",
-      pace: null,
-    });
-    expect(statisticsPeriod("thisMonth", "2026-11-19", "2026-11-10").from).toBe(
+    expect(
+      statisticsPeriod("thisYear", "2026-11-19", "2026-11-10"),
+    ).toMatchObject({ from: "2026-01-01", to: "2026-11-19", pace: null });
+    expect(statisticsPeriod("2026-11", "2026-11-19", "2026-11-10")?.from).toBe(
       "2026-11-01",
     );
     expect(
-      statisticsPeriod("sinceJoined", "2026-11-19", "2026-11-10").from,
+      statisticsPeriod("sinceJoined", "2026-11-19", "2026-11-10")?.from,
     ).toBe("2026-11-10");
   });
 
   it("covers six months in the window even for a short range", () => {
-    const period = statisticsPeriod("thisMonth", "2027-02-10", "2020-01-01");
-    expect(statisticsWindow(period)).toEqual({
+    expect(statisticsWindow(month("2027-02", "2027-02-10"))).toEqual({
       from: "2026-09-01",
+      to: "2027-02-10",
+    });
+  });
+
+  it("reaches one month further back to compare the oldest month shown", () => {
+    expect(statisticsWindow(month("2026-09", "2027-02-10"))).toEqual({
+      from: "2026-08-01",
       to: "2027-02-10",
     });
   });
@@ -75,7 +95,7 @@ describe("convertedShares", () => {
 });
 
 describe("spendingStatistics", () => {
-  const period = statisticsPeriod("thisMonth", "2026-11-19", "2020-01-01");
+  const period = month("2026-11", "2026-11-19");
 
   it("counts a category the member has no share in for the household only", () => {
     const spending = spendingStatistics(
@@ -92,7 +112,7 @@ describe("spendingStatistics", () => {
         { day: "2027-01-31", subcategory: "rent", household: 6, share: 6 },
         { day: "2027-02-10", subcategory: "rent", household: 4, share: 4 },
       ],
-      statisticsPeriod("lastMonth", "2027-03-05", "2020-01-01"),
+      month("2027-02", "2027-03-05"),
     );
 
     expect(pace?.previous).toHaveLength(28);
@@ -103,7 +123,22 @@ describe("spendingStatistics", () => {
     });
   });
 
-  it("zero-fills six months ending with the range and leaves out later days", () => {
+  it("keeps the same six months when an older month is picked", () => {
+    const spending = spendingStatistics(
+      [
+        { day: "2026-08-02", subcategory: "rent", household: 300, share: 100 },
+        { day: "2026-11-04", subcategory: "rent", household: 90, share: 30 },
+      ],
+      month("2026-08", "2026-11-19"),
+    );
+
+    expect(spending.share).toBe(100);
+    expect(spending.months.map(({ household }) => household)).toEqual([
+      0, 0, 300, 0, 0, 90,
+    ]);
+  });
+
+  it("zero-fills six months ending today and leaves out later days", () => {
     const spending = spendingStatistics(
       [
         { day: "2026-05-31", subcategory: "rent", household: 99, share: 99 },
@@ -125,6 +160,39 @@ describe("spendingStatistics", () => {
   });
 });
 
+describe("scrubbing a picked month", () => {
+  const size = { width: 270, height: 100 };
+  const { pace } = spendingStatistics(
+    [
+      { day: "2026-01-30", subcategory: "rent", household: 9000, share: 5000 },
+      { day: "2026-02-10", subcategory: "rent", household: 300, share: 100 },
+    ],
+    month("2026-02", "2026-03-10"),
+  );
+  if (!pace) throw new Error("a month has a pace");
+  const at = (day: number) =>
+    scrubbedShare(pace, paceAt(pace, "2026-02-28", size, (day - 1) * 10));
+
+  it("compares a day with the same day of the month before", () => {
+    expect(at(27)).toMatchObject({
+      by: "2026-02-27",
+      share: 100,
+      household: 300,
+      comparison: "more",
+      amount: 100,
+      before: "2026-01-27",
+    });
+  });
+
+  it("names the end of the longer month before on the last day", () => {
+    expect(at(28)).toMatchObject({
+      comparison: "less",
+      amount: 4900,
+      before: "2026-01-31",
+    });
+  });
+});
+
 describe("isStatisticsEmpty", () => {
   const statistics = (household: number, lastMonth: number): Statistics => ({
     wholeMonth: false,
@@ -140,7 +208,7 @@ describe("isStatisticsEmpty", () => {
     shopping: {
       total: 0,
       pace: null,
-      months: [{ month: "2026-11", total: lastMonth }],
+      months: [{ month: "2026-11", total: lastMonth, categories: {} }],
       categories: [],
       daysOnList: null,
     },

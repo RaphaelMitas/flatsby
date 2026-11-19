@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import type { CalendarColor } from "./calendar";
 import type { CategoryId } from "./categories";
 import type { ConvertibleExpense } from "./expenses/conversion";
-import type { Pace } from "./home";
+import type { Pace, PacePoint } from "./home";
 import {
   calendarColorSchema,
   calendarDateSchema,
@@ -20,24 +20,28 @@ import {
   getSubcategoryGroup,
 } from "./expenses/categories";
 import { inLedgerCurrency } from "./expenses/conversion";
-import { monthPace, paceSchema, sum } from "./home";
+import { directionOf, monthPace, paceSchema, sum } from "./home";
 
-export const statisticsRanges = [
-  "thisMonth",
-  "lastMonth",
-  "last3Months",
-  "thisYear",
-  "sinceJoined",
-] as const;
-export type StatisticsRange = (typeof statisticsRanges)[number];
+const statisticsPresets = ["last3Months", "thisYear", "sinceJoined"] as const;
+type StatisticsPreset = (typeof statisticsPresets)[number];
+
+const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+const statisticsRangeSchema = z.union([z.enum(statisticsPresets), monthSchema]);
+export type StatisticsRange = z.infer<typeof statisticsRangeSchema>;
 
 export const statisticsInputSchema = z.object({
   groupId: z.number(),
-  range: z.enum(statisticsRanges),
+  range: statisticsRangeSchema,
   timeZone: ianaTimeZoneSchema.catch(DEFAULT_TIME_ZONE),
 });
 
-const monthSchema = z.string().regex(/^\d{4}-\d{2}$/);
+export const statisticsUsedSchema = z.object({
+  groupId: z.number(),
+  action: z.enum(["month", "range", "scrub", "shoppingFilter", "category"]),
+  range: statisticsRangeSchema,
+});
+export type StatisticsAction = z.infer<typeof statisticsUsedSchema>["action"];
+
 const totalSchema = { total: z.number() };
 const spendingTotalsSchema = { share: z.number(), household: z.number() };
 
@@ -47,7 +51,7 @@ export const statisticsSchema = z.object({
   to: calendarDateSchema,
   spending: z.object({
     ...spendingTotalsSchema,
-    pace: paceSchema.nullable(),
+    pace: paceSchema.extend({ household: z.array(z.number()) }).nullable(),
     categories: z.array(
       z.object({
         category: z.enum(expenseCategoryGroups),
@@ -59,7 +63,13 @@ export const statisticsSchema = z.object({
   shopping: z.object({
     ...totalSchema,
     pace: paceSchema.nullable(),
-    months: z.array(z.object({ month: monthSchema, ...totalSchema })),
+    months: z.array(
+      z.object({
+        month: monthSchema,
+        ...totalSchema,
+        categories: z.partialRecord(categoryIdSchema, z.number()),
+      }),
+    ),
     categories: z.array(
       z.object({ category: categoryIdSchema, ...totalSchema }),
     ),
@@ -86,6 +96,7 @@ interface Period {
 }
 
 export interface StatisticsPeriod extends Period {
+  today: string;
   pace: "toDate" | "wholeMonth" | null;
 }
 
@@ -93,49 +104,72 @@ const firstOf = (month: string) => `${month}-01`;
 const lastOf = (month: string) => `${month}-${daysInMonth(month)}`;
 const earlier = (a: string, b: string) => (a < b ? a : b);
 
-export const statisticsMonth = (range: StatisticsRange, today: string) =>
-  range === "thisMonth"
-    ? monthOf(today)
-    : range === "lastMonth"
-      ? shiftMonth(monthOf(today), -1)
-      : null;
+const MONTHS_SHOWN = 6;
+
+const shownMonths = (today: string) =>
+  Array.from({ length: MONTHS_SHOWN }, (_, i) =>
+    shiftMonth(monthOf(today), i + 1 - MONTHS_SHOWN),
+  );
+
+export const presetOf = (range: StatisticsRange) =>
+  statisticsPresets.find((preset) => preset === range);
+
+export const statisticsChoices = (
+  today: string,
+): { key: "thisMonth" | "lastMonth" | StatisticsPreset; range: string }[] => [
+  { key: "thisMonth", range: monthOf(today) },
+  { key: "lastMonth", range: shiftMonth(monthOf(today), -1) },
+  ...statisticsPresets.map((preset) => ({ key: preset, range: preset })),
+];
 
 export function statisticsPeriod(
   range: StatisticsRange,
   today: string,
   joinedOn: string,
-): StatisticsPeriod {
+): StatisticsPeriod | null {
   const month = monthOf(today);
+  const untilToday = { to: today, today };
   switch (range) {
-    case "thisMonth":
-      return { from: firstOf(month), to: today, pace: "toDate" };
-    case "lastMonth": {
-      const previous = shiftMonth(month, -1);
-      return {
-        from: firstOf(previous),
-        to: lastOf(previous),
-        pace: "wholeMonth",
-      };
-    }
     case "last3Months":
-      return { from: firstOf(shiftMonth(month, -2)), to: today, pace: null };
+      return {
+        from: firstOf(shiftMonth(month, -2)),
+        ...untilToday,
+        pace: null,
+      };
     case "thisYear":
-      return { from: `${today.slice(0, 4)}-01-01`, to: today, pace: null };
+      return {
+        from: `${today.slice(0, 4)}-01-01`,
+        ...untilToday,
+        pace: null,
+      };
     case "sinceJoined":
-      return { from: earlier(joinedOn, today), to: today, pace: null };
+      return { from: earlier(joinedOn, today), ...untilToday, pace: null };
   }
+  if (range === month)
+    return { from: firstOf(month), ...untilToday, pace: "toDate" };
+  if (!shownMonths(today).includes(range)) return null;
+  return { from: firstOf(range), to: lastOf(range), today, pace: "wholeMonth" };
 }
 
-const MONTHS_SHOWN = 6;
+export const coversMonth = (
+  month: string,
+  range: StatisticsRange,
+  { from, to }: Period,
+) =>
+  presetOf(range)
+    ? month >= monthOf(from) && month <= monthOf(to)
+    : month === range;
 
-const shownMonths = (to: string) =>
-  Array.from({ length: MONTHS_SHOWN }, (_, i) =>
-    shiftMonth(monthOf(to), i + 1 - MONTHS_SHOWN),
-  );
-
-export const statisticsWindow = ({ from, to }: Period): Period => ({
-  from: earlier(from, firstOf(shiftMonth(monthOf(to), 1 - MONTHS_SHOWN))),
-  to,
+export const statisticsWindow = ({
+  from,
+  today,
+  pace,
+}: StatisticsPeriod): Period => ({
+  from: earlier(
+    pace ? firstOf(shiftMonth(monthOf(from), -1)) : from,
+    firstOf(shiftMonth(monthOf(today), 1 - MONTHS_SHOWN)),
+  ),
+  to: today,
 });
 
 interface CountDay {
@@ -150,10 +184,10 @@ const within = <Row extends { day: string }>(
 
 const byMonth = <Row extends { day: string }, Totals>(
   rows: Row[],
-  to: string,
+  today: string,
   totals: (rows: Row[]) => Totals,
 ) =>
-  shownMonths(to).map((month) => ({
+  shownMonths(today).map((month) => ({
     month,
     ...totals(rows.filter(({ day }) => monthOf(day) === month)),
   }));
@@ -211,12 +245,19 @@ export function spendingStatistics(
 ): Statistics["spending"] {
   const shown = within(days, statisticsWindow(period));
   const inRange = within(days, period);
+  const pace = paceOf(
+    period,
+    shown.map(({ day, share }) => ({ day, total: share })),
+  );
   return {
     ...spendingTotals(inRange),
-    pace: paceOf(
-      period,
-      shown.map(({ day, share }) => ({ day, total: share })),
-    ),
+    pace: pace && {
+      ...pace,
+      household: monthPace(
+        shown.map(({ day, household }) => ({ day, total: household })),
+        period.to,
+      ).current,
+    },
     categories: expenseCategoryGroups
       .map((category) => ({
         category,
@@ -228,7 +269,7 @@ export function spendingStatistics(
       }))
       .filter(({ share }) => share > 0)
       .sort((a, b) => b.share - a.share || b.household - a.household),
-    months: byMonth(shown, period.to, spendingTotals),
+    months: byMonth(shown, period.today, spendingTotals),
   };
 }
 
@@ -245,22 +286,32 @@ export const daysOnList = ({
     ? null
     : Math.max(1, Math.ceil(medianDays));
 
+type CategoryDay = CountDay & { category: string };
+
+const categoryCounts = (rows: CategoryDay[]) => {
+  const counts: Partial<Record<CategoryId, number>> = {};
+  for (const { category, total } of rows) {
+    const id = isCategoryId(category) ? category : "other";
+    counts[id] = (counts[id] ?? 0) + total;
+  }
+  return counts;
+};
+
 export function shoppingStatistics(
-  days: (CountDay & { category: string })[],
+  days: CategoryDay[],
   period: StatisticsPeriod,
   onList: { items: number; medianDays: number | null },
 ): Statistics["shopping"] {
   const shown = within(days, statisticsWindow(period));
   const inRange = within(days, period);
-  const counts: Partial<Record<CategoryId, number>> = {};
-  for (const { category, total } of inRange) {
-    const id = isCategoryId(category) ? category : "other";
-    counts[id] = (counts[id] ?? 0) + total;
-  }
+  const counts = categoryCounts(inRange);
   return {
     ...countTotals(inRange),
     pace: paceOf(period, shown),
-    months: byMonth(shown, period.to, countTotals),
+    months: byMonth(shown, period.today, (rows) => ({
+      ...countTotals(rows),
+      categories: categoryCounts(rows),
+    })),
     categories: topCategories(counts).map((category) => ({
       category,
       total: counts[category] ?? 0,
@@ -284,7 +335,7 @@ export function choreStatistics(
   return {
     ...countTotals(inRange),
     pace: paceOf(period, shown),
-    months: byMonth(shown, period.to, countTotals),
+    months: byMonth(shown, period.today, countTotals),
     titles: [...totals]
       .map(([title, total]) => ({
         title,
@@ -295,6 +346,25 @@ export function choreStatistics(
       }))
       .sort((a, b) => b.total - a.total)
       .slice(0, MAX_CHORE_TITLES),
+  };
+}
+
+export function scrubbedShare(
+  { household }: NonNullable<Statistics["spending"]["pace"]>,
+  { index, now, before }: PacePoint,
+) {
+  if (!before) return null;
+  const difference = now ? now.total - before.total : before.total;
+  const comparison: "less" | "more" | "same" | "before" = now
+    ? directionOf(difference)
+    : "before";
+  return {
+    by: now?.date,
+    share: now?.total,
+    household: now && sum(household.slice(0, index + 1)),
+    comparison,
+    amount: Math.abs(difference),
+    before: before.date,
   };
 }
 

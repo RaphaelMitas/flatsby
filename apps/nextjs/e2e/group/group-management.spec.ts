@@ -377,6 +377,49 @@ test.describe("Group Management", () => {
     await authPage.waitForURL(/\/expenses$/);
   });
 
+  test("home opens the statistics", async ({ authPage }) => {
+    await createAndSelectGroup(authPage, uniqueGroupName());
+    const { description } = await createTestExpense(authPage);
+    await authPage.goto("/home");
+    const statistics = authPage.getByTestId("home-statistics");
+    await waitForHydration(statistics);
+    await statistics.click();
+    await authPage.waitForURL(/\/home\/statistics$/);
+    await expect(authPage.getByTestId("statistics-share")).toBeVisible();
+
+    const title = authPage.getByTestId("statistics-range");
+    const thisMonth = await title.innerText();
+    const bars = authPage.getByRole("button", { name: /: you / });
+    await waitForHydration(bars.nth(4));
+    await bars.nth(4).click();
+    await expect(bars.nth(4)).toHaveAttribute("aria-pressed", "true");
+    await expect(title).not.toHaveText(thisMonth);
+    await bars.nth(5).click();
+    await expect(title).toHaveText(thisMonth);
+    await title.click();
+    await authPage.getByTestId("statistics-range-thisYear").click();
+    await expect(title).toHaveText("This year");
+
+    const category = authPage.getByTestId(/^statistics-category-/);
+    await waitForHydration(category);
+    await category.click();
+    await expect(
+      authPage
+        .getByTestId(/^expense-card-\d+$/)
+        .filter({ hasText: description }),
+    ).toBeVisible();
+    await expect(
+      authPage
+        .getByTestId("expense-filter-category-clear")
+        .filter({ visible: true }),
+    ).toBeVisible();
+    await expect(authPage).toHaveURL(/\/expenses/);
+    await expect(authPage).not.toHaveURL(/category=/);
+
+    await authPage.goBack();
+    await expect(title).toHaveText("This year");
+  });
+
   test("change group name", async ({ authPage }) => {
     const groupName = uniqueGroupName();
     const newName = `${groupName} Updated`;

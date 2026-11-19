@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useRouter } from "expo-router";
 import { useTranslations } from "use-intl";
 
@@ -9,10 +10,12 @@ export function GroupSwitcher({
   testID,
   settingsTestID,
   className,
+  children,
 }: {
   testID: string;
   settingsTestID: string;
   className?: string;
+  children?: ReactNode;
 }) {
   const t = useTranslations();
   const router = useRouter();
@@ -60,6 +63,8 @@ export function GroupSwitcher({
       ]}
       settings={{ ...settings, testID: settingsTestID }}
       className={className}
-    />
+    >
+      {children}
+    </Switcher>
   );
 }

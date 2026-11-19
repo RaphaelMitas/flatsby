@@ -61,14 +61,38 @@ export function HomeCard({
       onClick={onOpen}
       className="block rounded-3xl"
     >
-      <Card className="hover:border-foreground/30 flex flex-col rounded-3xl p-4 shadow-none transition-colors">
-        <div className="text-muted-foreground flex items-center justify-between text-sm font-semibold">
-          {title}
-          <ChevronRight className="size-4" />
-        </div>
+      <TitledCard
+        title={title}
+        aside={<ChevronRight className="size-4" />}
+        className="hover:border-foreground/30 transition-colors"
+      >
         {children}
-      </Card>
+      </TitledCard>
     </Link>
+  );
+}
+
+export function TitledCard({
+  title,
+  aside,
+  className,
+  children,
+}: {
+  title: string;
+  aside?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card
+      className={cn("flex flex-col rounded-3xl p-4 shadow-none", className)}
+    >
+      <div className="text-muted-foreground flex items-center justify-between text-sm font-semibold">
+        {title}
+        {aside}
+      </div>
+      {children}
+    </Card>
   );
 }
 
@@ -85,9 +109,6 @@ export function PaceNumbers({
   unit?: (count: number) => string;
   fadeIn: boolean;
 }) {
-  const t = useTranslations();
-  const locale = useLocale();
-
   if (!pace || !today)
     return (
       <>
@@ -96,27 +117,64 @@ export function PaceNumbers({
       </>
     );
 
-  const { total, difference, direction } = paceSummary(pace);
-
   return (
     <div className={cn(fadeIn && "animate-in fade-in duration-300")}>
-      <p className="mt-2 text-4xl font-extrabold tracking-tight tabular-nums">
-        {format(total)}
-        {unit && (
-          <span className="text-muted-foreground ml-1 text-base font-medium tracking-normal">
-            {unit(total)}
-          </span>
-        )}
-      </p>
+      <Headline value={paceSummary(pace).total} format={format} unit={unit} />
       <p className="text-muted-foreground text-sm">
-        {t.rich(`home.pace.${direction}`, {
-          amount: format(Math.abs(difference)),
-          month: paceLabels(today, locale).previousMonth,
-          b: (chunks) => (
-            <b className="text-foreground font-semibold">{chunks}</b>
-          ),
-        })}
+        <PaceComparison pace={pace} today={today} format={format} />
       </p>
     </div>
+  );
+}
+
+export const bold = (chunks: React.ReactNode) => (
+  <b className="text-foreground font-semibold">{chunks}</b>
+);
+
+export function Headline({
+  value,
+  format,
+  unit,
+}: {
+  value: number;
+  format: (value: number) => string;
+  unit?: (count: number) => string;
+}) {
+  return (
+    <p className="mt-2 text-4xl font-extrabold tracking-tight tabular-nums">
+      {format(value)}
+      {unit && (
+        <span className="text-muted-foreground ml-1 text-base font-medium tracking-normal">
+          {unit(value)}
+        </span>
+      )}
+    </p>
+  );
+}
+
+export function PaceComparison({
+  pace,
+  today,
+  format,
+  wholeMonth = false,
+}: {
+  pace: Pace;
+  today: string;
+  format: (value: number) => string;
+  wholeMonth?: boolean;
+}) {
+  const t = useTranslations();
+  const locale = useLocale();
+  const { difference, direction } = paceSummary(pace);
+
+  return t.rich(
+    wholeMonth
+      ? `statistics.wholeMonth.${direction}`
+      : `home.pace.${direction}`,
+    {
+      amount: format(Math.abs(difference)),
+      month: paceLabels(today, locale).previousMonth,
+      b: bold,
+    },
   );
 }

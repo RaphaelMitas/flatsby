@@ -49,6 +49,7 @@ export const errors = {
   invalidReference: "Invalid reference to related data",
   fieldRequired: "{field} is required",
   invalidName: "Please enter a valid name",
+  monthNotShown: "That month is no longer shown",
   databaseFailed: "Database operation failed: {operation}",
   serviceUnavailable: "External service ({service}) is currently unavailable",
   unexpected: "An unexpected error occurred. Please try again later.",

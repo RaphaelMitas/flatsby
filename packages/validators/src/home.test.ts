@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { localDateIn } from "./calendar";
-import { monthPace, paceChart, paceSummary, paceWindow } from "./home";
+import { monthPace, paceAt, paceChart, paceSummary, paceWindow } from "./home";
 
 describe("monthPace", () => {
   it("puts each day in its month and drops what lies outside both", () => {
@@ -124,6 +124,45 @@ describe("paceChart", () => {
     expect(
       heights.every((y, i) => i === 0 || y <= (heights[i - 1] ?? y) + 0.001),
     ).toBe(true);
+  });
+});
+
+describe("paceAt", () => {
+  const size = { width: 290, height: 100 };
+  const pace = monthPace(
+    [
+      { day: "2026-10-31", total: 40 },
+      { day: "2026-11-02", total: 10 },
+      { day: "2026-11-10", total: 20 },
+    ],
+    "2026-11-10",
+  );
+
+  it("reads the running total of the day under the pointer", () => {
+    expect(paceAt(pace, "2026-11-10", size, 52)).toMatchObject({
+      now: { date: "2026-11-06", total: 10 },
+      before: { date: "2026-10-06", total: 0 },
+    });
+  });
+
+  it("puts the dot on the drawn curve, not on the straight line between days", () => {
+    const { now } = paceAt(pace, "2026-11-10", size, 52);
+    const lastCurve = paceChart(pace, "2026-11-10", size).now.split("C").at(-1);
+    const [, c1, , c2, , end] = (lastCurve ?? "").split(",").map(Number);
+    const start = 100 - (10 / 30) * 100;
+    const halfway = (start + 3 * (c1 ?? 0) + 3 * (c2 ?? 0) + (end ?? 0)) / 8;
+
+    expect(now?.x).toBe(50);
+    expect(now?.y).toBeCloseTo(halfway);
+    expect(now?.y).not.toBeCloseTo(start / 2);
+  });
+
+  it("has no day of this month after today and ends on last month's 30th", () => {
+    expect(paceAt(pace, "2026-11-10", size, 999)).toMatchObject({
+      x: 290,
+      now: null,
+      before: { date: "2026-10-30", total: 0 },
+    });
   });
 });
 
