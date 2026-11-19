@@ -1,7 +1,7 @@
 "use client";
 
 import type { Palette } from "@flatsby/validators/palette";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@flatsby/ui/card";
 import { Slider } from "@flatsby/ui/slider";
+import { toast } from "@flatsby/ui/toast";
 import {
   HUE_MAX,
   hueScale,
@@ -20,33 +21,31 @@ import {
   paletteIds,
 } from "@flatsby/validators/palette";
 
-import { applyPalette } from "~/app/_components/layout/palette";
+import { rootPaletteSelector } from "~/app/_components/layout/palette";
 import { setPalettePreference } from "./actions";
 
 export function AppearanceSettings(props: { palette: Palette }) {
-  const t = useTranslations("settings");
+  const t = useTranslations();
   const [palette, setPalette] = useState(props.palette);
-  const [, startTransition] = useTransition();
 
-  const preview = (next: Palette) => {
+  const save = (next: Palette) => {
     setPalette(next);
-    applyPalette(next);
-  };
-  const pick = (next: Palette) => {
-    preview(next);
-    startTransition(() => setPalettePreference(next));
+    setPalettePreference(next).catch(() => toast.error(t("errors.unexpected")));
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("items.appearance")}</CardTitle>
-        <CardDescription>{t("appearance.colorsDescription")}</CardDescription>
+        <CardTitle>{t("settings.items.appearance")}</CardTitle>
+        <CardDescription>
+          {t("settings.appearance.colorsDescription")}
+        </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6">
         <style>
-          {paletteIds
-            .map((id) =>
+          {[
+            paletteCss(palette, rootPaletteSelector),
+            ...paletteIds.map((id) =>
               paletteCss(
                 { ...palette, id },
                 {
@@ -54,11 +53,11 @@ export function AppearanceSettings(props: { palette: Palette }) {
                   dark: `.dark [data-palette="${id}"]`,
                 },
               ),
-            )
-            .join("")}
+            ),
+          ].join("")}
         </style>
         <fieldset className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          <legend className="sr-only">{t("appearance.colors")}</legend>
+          <legend className="sr-only">{t("settings.appearance.colors")}</legend>
           {paletteIds.map((id) => (
             <label
               key={id}
@@ -70,7 +69,7 @@ export function AppearanceSettings(props: { palette: Palette }) {
                 name="palette"
                 className="sr-only"
                 checked={palette.id === id}
-                onChange={() => pick({ ...palette, id })}
+                onChange={() => save({ ...palette, id })}
               />
               <div
                 data-palette={id}
@@ -86,7 +85,7 @@ export function AppearanceSettings(props: { palette: Palette }) {
                 </div>
               </div>
               <div className="bg-card flex items-center justify-between border-t px-3 py-2 text-sm font-medium">
-                {t(`appearance.palettes.${id}`)}
+                {t(`settings.appearance.palettes.${id}`)}
                 {palette.id === id && <Check className="text-primary size-4" />}
               </div>
             </label>
@@ -96,37 +95,37 @@ export function AppearanceSettings(props: { palette: Palette }) {
           <div className="grid gap-4 md:max-w-md">
             <div className="grid gap-3">
               <p className="text-sm leading-none font-medium">
-                {t("appearance.accent")}
+                {t("settings.appearance.accent")}
               </p>
               <Slider
-                aria-label={t("appearance.accent")}
+                aria-label={t("settings.appearance.accent")}
                 max={HUE_MAX}
                 value={[palette.hue]}
                 trackStyle={{
                   backgroundImage: `linear-gradient(to right, ${hueScale.join(", ")})`,
                 }}
                 onValueChange={([hue = palette.hue]) =>
-                  preview({ ...palette, hue })
+                  setPalette({ ...palette, hue })
                 }
                 onValueCommit={([hue = palette.hue]) =>
-                  pick({ ...palette, hue })
+                  save({ ...palette, hue })
                 }
               />
             </div>
             <div className="grid gap-3">
               <p className="text-sm leading-none font-medium">
-                {t("appearance.tint")}
+                {t("settings.appearance.tint")}
               </p>
               <Slider
-                aria-label={t("appearance.tint")}
+                aria-label={t("settings.appearance.tint")}
                 max={1}
                 step={0.01}
                 value={[palette.tint]}
                 onValueChange={([tint = palette.tint]) =>
-                  preview({ ...palette, tint })
+                  setPalette({ ...palette, tint })
                 }
                 onValueCommit={([tint = palette.tint]) =>
-                  pick({ ...palette, tint })
+                  save({ ...palette, tint })
                 }
               />
             </div>
