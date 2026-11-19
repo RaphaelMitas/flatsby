@@ -2,11 +2,17 @@
 
 import type {
   Statistics,
+  StatisticsAction,
   StatisticsRange,
 } from "@flatsby/validators/statistics";
 import { useState } from "react";
 import Link from "next/link";
-import { keepPreviousData, skipToken, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  skipToken,
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query";
 import { ArrowLeft, Check, ChevronDown } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -50,8 +56,18 @@ export function StatisticsContent() {
   const t = useTranslations();
   const { currentGroup } = useGroupContext();
   const today = useToday();
+  const trpc = useTRPC();
   const [chosen, setChosen] = useState<StatisticsRange>();
   const range = chosen ?? (today ? monthOf(today) : undefined);
+  const used = useMutation(trpc.stats.statisticsUsed.mutationOptions());
+  const count = (action: StatisticsAction, counted = range) => {
+    if (currentGroup && counted)
+      used.mutate({ groupId: currentGroup.id, action, range: counted });
+  };
+  const choose = (action: StatisticsAction, next: StatisticsRange) => {
+    count(action, next);
+    setChosen(next);
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-prose flex-col gap-6 p-4">
@@ -62,7 +78,11 @@ export function StatisticsContent() {
             {t("common.back")}
           </Link>
         </Button>
-        <RangeTitle range={range} today={today} onChange={setChosen} />
+        <RangeTitle
+          range={range}
+          today={today}
+          onChange={(next) => choose("range", next)}
+        />
         <p className="text-muted-foreground mt-1">{currentGroup?.name}</p>
       </div>
 
@@ -71,7 +91,8 @@ export function StatisticsContent() {
           key={currentGroup.id}
           groupId={currentGroup.id}
           range={range}
-          onRange={setChosen}
+          onMonth={(month) => choose("month", month)}
+          onUsed={count}
         />
       )}
     </div>
@@ -131,11 +152,13 @@ function RangeTitle({
 function StatisticsBody({
   groupId,
   range,
-  onRange,
+  onMonth,
+  onUsed,
 }: {
   groupId: number;
   range: StatisticsRange | undefined;
-  onRange: (range: StatisticsRange) => void;
+  onMonth: (month: string) => void;
+  onUsed: (action: StatisticsAction) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -186,7 +209,7 @@ function StatisticsBody({
   const money = (cents: number) =>
     formatCurrencyFromCents({ cents, currency, locale });
   const { spending } = stats;
-  const picker = { range, period: stats, onPick: onRange };
+  const picker = { range, period: stats, onPick: onMonth };
 
   return (
     <div
@@ -197,13 +220,19 @@ function StatisticsBody({
         isPlaceholderData && "opacity-50",
       )}
     >
-      <ShareHero stats={stats} money={money} fadeIn={fadeIn} />
+      <ShareHero
+        stats={stats}
+        money={money}
+        fadeIn={fadeIn}
+        onScrub={() => onUsed("scrub")}
+      />
       {spending.categories.length > 0 && (
         <CategoriesCard
           spending={spending}
           from={stats.from}
           to={stats.to}
           money={money}
+          onOpen={() => onUsed("category")}
         />
       )}
       <MonthByMonthCard
@@ -211,7 +240,11 @@ function StatisticsBody({
         picker={picker}
         money={money}
       />
-      <ShoppingStatsCard stats={stats} picker={picker} />
+      <ShoppingStatsCard
+        stats={stats}
+        picker={picker}
+        onFilter={() => onUsed("shoppingFilter")}
+      />
       <ChoresStatsCard stats={stats} picker={picker} />
     </div>
   );
@@ -221,10 +254,12 @@ function ShareHero({
   stats: { spending, to, wholeMonth },
   money,
   fadeIn,
+  onScrub,
 }: {
   stats: Statistics;
   money: (cents: number) => string;
   fadeIn: boolean;
+  onScrub: () => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -295,7 +330,13 @@ function ShareHero({
             labelled
             wholeMonth={wholeMonth}
             fadeIn={fadeIn}
-            scrub={{ point, onMove: setScrubX }}
+            scrub={{
+              point,
+              onMove: (x) => {
+                if (scrubX === null && x !== null) onScrub();
+                setScrubX(x);
+              },
+            }}
           />
         </>
       )}

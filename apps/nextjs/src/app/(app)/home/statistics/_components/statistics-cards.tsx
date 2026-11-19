@@ -38,11 +38,13 @@ export function CategoriesCard({
   from,
   to,
   money,
+  onOpen,
 }: {
   spending: Statistics["spending"];
   from: string;
   to: string;
   money: (cents: number) => string;
+  onOpen: () => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -80,7 +82,9 @@ export function CategoriesCard({
         onLit={setLit}
         onPick={(key) => {
           const picked = listed.find(({ category }) => category === key);
-          if (picked) router.push(picked.href);
+          if (!picked) return;
+          onOpen();
+          router.push(picked.href);
         }}
       />
       <div className="mt-2 flex flex-col">
@@ -91,6 +95,7 @@ export function CategoriesCard({
               key={category}
               href={href}
               data-testid={`statistics-category-${category}`}
+              onClick={onOpen}
               onPointerEnter={() => setLit(category)}
               onPointerLeave={() => setLit(null)}
               className={cn(
@@ -170,9 +175,11 @@ export function MonthByMonthCard({
 export function ShoppingStatsCard({
   stats: { shopping, to, wholeMonth },
   picker,
+  onFilter,
 }: {
   stats: Statistics;
   picker: MonthPicker;
+  onFilter: () => void;
 }) {
   const t = useTranslations();
   const [picked, setPicked] = useState<string | null>(null);
@@ -185,7 +192,10 @@ export function ShoppingStatsCard({
   }));
   const filtered = segments.find(({ key }) => key === picked);
   const lit = filtered?.key ?? hovered;
-  const toggle = (key: string) => setPicked(picked === key ? null : key);
+  const toggle = (key: string) => {
+    if (picked !== key) onFilter();
+    setPicked(picked === key ? null : key);
+  };
 
   return (
     <CountCard

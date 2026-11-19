@@ -84,6 +84,7 @@ function groupIdOf(value: unknown): number | undefined {
 const UNLOGGED_MUTATIONS = new Set([
   "user.setAnalyticsOptOut",
   "stats.homeCardOpened",
+  "stats.statisticsUsed",
 ]);
 
 const timingMiddleware = t.middleware(

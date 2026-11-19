@@ -2,13 +2,14 @@ import type { GroupWithAccess } from "@flatsby/api";
 import type { Pace } from "@flatsby/validators/home";
 import type {
   Statistics,
+  StatisticsAction,
   StatisticsRange,
 } from "@flatsby/validators/statistics";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
 import { useCountUp } from "@flatsby/api/hooks/useCountUp";
@@ -106,7 +107,18 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
   const failed = !data && (query.isError || query.data?.success === false);
   const stale = query.isPlaceholderData;
   const preset = presetOf(range);
-  const picker = data && { range, period: data, onPick: setChosen };
+  const used = useMutation(trpc.stats.statisticsUsed.mutationOptions());
+  const count = (action: StatisticsAction, counted = range) =>
+    used.mutate({ groupId: group.id, action, range: counted });
+  const choose = (action: StatisticsAction, next: StatisticsRange) => {
+    count(action, next);
+    setChosen(next);
+  };
+  const picker = data && {
+    range,
+    period: data,
+    onPick: (month: string) => choose("month", month),
+  };
   const money = (cents: number) =>
     formatCurrencyFromCents({ cents, currency: group.currency, locale });
 
@@ -124,7 +136,7 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
             title: t(`statistics.ranges.${key}`),
           }))}
           selectedId={range}
-          onSelect={({ id }) => setChosen(id)}
+          onSelect={({ id }) => choose("range", id)}
           trigger={
             <View className="mt-4 flex-row items-center gap-2">
               <Text className="text-foreground text-4xl font-extrabold tracking-tight">
@@ -166,9 +178,19 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
           </View>
         ) : (
           <View className={cn(stale && "opacity-50")}>
-            <Hero data={data} showsPace={!preset} money={money} />
+            <Hero
+              data={data}
+              showsPace={!preset}
+              money={money}
+              onScrub={() => count("scrub")}
+            />
             {(!data || data.spending.categories.length > 0) && (
-              <WhereItWent data={data} money={money} disabled={stale} />
+              <WhereItWent
+                data={data}
+                money={money}
+                disabled={stale}
+                onOpen={() => count("category")}
+              />
             )}
             <HomeCard
               title={t("statistics.monthByMonth")}
@@ -189,7 +211,11 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
                 barTestID="statistics-spending"
               />
             </HomeCard>
-            <ShoppingCard data={data} picker={picker} />
+            <ShoppingCard
+              data={data}
+              picker={picker}
+              onFilter={() => count("shoppingFilter")}
+            />
             <CountCard
               title={t("statistics.chores")}
               counts={data?.chores}
@@ -241,17 +267,17 @@ function GroupStatistics({ group }: { group: GroupWithAccess }) {
 
 function Hero({
   data,
-  showsPace,
-  money,
+  ...hero
 }: {
   data: Statistics | undefined;
   showsPace: boolean;
   money: (cents: number) => string;
+  onScrub: () => void;
 }) {
   const t = useTranslations();
+  const { showsPace } = hero;
 
-  if (data)
-    return <ShareHero data={data} showsPace={showsPace} money={money} />;
+  if (data) return <ShareHero data={data} {...hero} />;
 
   return (
     <View className="mt-8">
@@ -288,10 +314,12 @@ function ShareHero({
   data: { spending, to, wholeMonth },
   showsPace,
   money,
+  onScrub,
 }: {
   data: Statistics;
   showsPace: boolean;
   money: (cents: number) => string;
+  onScrub: () => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -365,7 +393,10 @@ function ShareHero({
           labelled
           wholeMonth={wholeMonth}
           drawIn={false}
-          onScrub={setPoint}
+          onScrub={(next) => {
+            if (!point && next) onScrub();
+            setPoint(next);
+          }}
         />
       )}
     </View>
@@ -376,10 +407,12 @@ function WhereItWent({
   data,
   money,
   disabled,
+  onOpen,
 }: {
   data: Statistics | undefined;
   money: (cents: number) => string;
   disabled: boolean;
+  onOpen: () => void;
 }) {
   const t = useTranslations();
   const router = useRouter();
@@ -405,11 +438,13 @@ function WhereItWent({
     );
 
   const { categories } = data.spending;
-  const open = (category: string) =>
+  const open = (category: string) => {
+    onOpen();
     router.navigate({
       pathname: "/(tabs)/expenses",
       params: { category, from: data.from, to: data.to },
     });
+  };
 
   return (
     <HomeCard title={t("statistics.whereItWent")} className="mt-6">
@@ -586,9 +621,11 @@ function CountHeadline({
 function ShoppingCard({
   data,
   picker,
+  onFilter,
 }: {
   data: Statistics | undefined;
   picker: MonthPicker | undefined;
+  onFilter: () => void;
 }) {
   const t = useTranslations();
   const [picked, setPicked] = useState<string | null>(null);
@@ -603,8 +640,10 @@ function ShoppingCard({
     };
   });
   const filtered = shown.find(({ category }) => category === picked);
-  const toggle = (category: string) =>
+  const toggle = (category: string) => {
+    if (picked !== category) onFilter();
     setPicked(picked === category ? null : category);
+  };
 
   return (
     <CountCard

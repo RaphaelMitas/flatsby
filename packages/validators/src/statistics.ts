@@ -39,6 +39,13 @@ export const statisticsInputSchema = z.object({
   timeZone: ianaTimeZoneSchema.catch(DEFAULT_TIME_ZONE),
 });
 
+export const statisticsUsedSchema = z.object({
+  groupId: z.number(),
+  action: z.enum(["month", "range", "scrub", "shoppingFilter", "category"]),
+  range: statisticsRangeSchema,
+});
+export type StatisticsAction = z.infer<typeof statisticsUsedSchema>["action"];
+
 const totalSchema = { total: z.number() };
 const spendingTotalsSchema = { share: z.number(), household: z.number() };
 

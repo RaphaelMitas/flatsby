@@ -39,6 +39,7 @@ import {
   statisticsInputSchema,
   statisticsPeriod,
   statisticsSchema,
+  statisticsUsedSchema,
   statisticsWindow,
 } from "@flatsby/validators/statistics";
 
@@ -312,6 +313,17 @@ export const statsRouter = createTRPCRouter({
         }),
       ),
     ),
+
+  statisticsUsed: protectedProcedure
+    .input(statisticsUsedSchema)
+    .mutation(({ ctx, input }) => {
+      captureUserEvent({
+        user: ctx.session.user,
+        event: "statistics_used",
+        headers: ctx.headers,
+        additionalProperties: input,
+      });
+    }),
 
   homeCardOpened: protectedProcedure
     .input(homeCardOpenedSchema)
