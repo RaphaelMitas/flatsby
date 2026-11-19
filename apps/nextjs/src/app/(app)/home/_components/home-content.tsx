@@ -34,11 +34,11 @@ export function HomeContent() {
             {!season.HomeBackdrop && (
               <PeekingCat variant="home" className="mr-8 ml-auto h-8 w-16" />
             )}
-            <ExpensesCard groupId={groupId} today={today} />
+            <PinboardCard groupId={groupId} />
           </div>
+          <ExpensesCard groupId={groupId} today={today} />
           <ShoppingCard groupId={groupId} today={today} />
           <CalendarCard groupId={groupId} today={today} />
-          <PinboardCard groupId={groupId} />
         </div>
       )}
     </div>
