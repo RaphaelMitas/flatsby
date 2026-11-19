@@ -12,7 +12,7 @@ type PaletteId = (typeof paletteIds)[number];
 
 export const HUE_MAX = 360;
 
-export const paletteSchema = z.object({
+const paletteSchema = z.object({
   id: z.enum(paletteIds),
   hue: z.number().min(0).max(HUE_MAX),
   tint: z.number().min(0).max(1),
@@ -21,7 +21,7 @@ export type Palette = z.infer<typeof paletteSchema>;
 
 export const defaultPalette: Palette = { id: "default", hue: 300, tint: 0.5 };
 
-export function parsePalette(stored: string | null): Palette {
+export function parsePalette(stored: string | null | undefined): Palette {
   if (!stored) return defaultPalette;
   try {
     return paletteSchema.parse(JSON.parse(stored));
@@ -33,7 +33,7 @@ export function parsePalette(stored: string | null): Palette {
 export const colorModes = ["light", "dark"] as const;
 export type ColorMode = (typeof colorModes)[number];
 
-export const paletteTokenNames = [
+const paletteTokenNames = [
   "background",
   "foreground",
   "card",

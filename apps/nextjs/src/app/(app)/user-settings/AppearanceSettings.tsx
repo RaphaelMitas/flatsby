@@ -21,11 +21,11 @@ import {
   paletteIds,
 } from "@flatsby/validators/palette";
 
-import { savePalette } from "~/app/_components/layout/palette";
+import { currentPalette, savePalette } from "~/app/_components/layout/palette";
 
 export function AppearanceSettings(props: { palette: Palette }) {
   const t = useTranslations("settings");
-  const [palette, setPalette] = useState(props.palette);
+  const [palette, setPalette] = useState(() => currentPalette(props.palette));
 
   const pick = (next: Palette) => {
     setPalette(next);

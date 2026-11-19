@@ -21,9 +21,7 @@ export const viewport = rootViewport;
 
 export default async function AppLayout(props: { children: React.ReactNode }) {
   const { marketing, legal, ...messages } = await getMessages();
-  const palette = parsePalette(
-    (await cookies()).get(paletteCookie)?.value ?? null,
-  );
+  const palette = parsePalette((await cookies()).get(paletteCookie)?.value);
   return (
     <RootShell
       lang={await getLocale()}

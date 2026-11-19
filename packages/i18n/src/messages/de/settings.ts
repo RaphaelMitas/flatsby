@@ -76,7 +76,7 @@ export const settings = {
       forest: "Wald",
       ocean: "Ozean",
       blossom: "Blüte",
-      custom: "Eigene",
+      custom: "Individuell",
     },
   },
   profile: {

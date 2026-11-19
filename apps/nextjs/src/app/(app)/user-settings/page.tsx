@@ -34,7 +34,7 @@ export default async function Page() {
   const t = await getTranslations("settings.page");
   const cookieStore = await cookies();
   const preference = cookieStore.get(localeCookie)?.value;
-  const palette = parsePalette(cookieStore.get(paletteCookie)?.value ?? null);
+  const palette = parsePalette(cookieStore.get(paletteCookie)?.value);
   return (
     <HydrateClient>
       <div className="flex flex-col p-4 md:pt-16">

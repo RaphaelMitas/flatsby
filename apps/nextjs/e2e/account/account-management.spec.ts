@@ -41,7 +41,7 @@ test.describe("Account Management", () => {
     ).not.toBeChecked();
   });
 
-  test("a picked palette recolors the app and survives a reload", async ({
+  test("a picked palette recolors the app and survives leaving the page", async ({
     authPage,
   }) => {
     await authPage.goto("/user-settings");
@@ -58,6 +58,13 @@ test.describe("Account Management", () => {
     await sand.click();
     await expect.poll(background).not.toBe(defaultBackground);
     const sandBackground = await background();
+
+    await authPage.getByRole("link", { name: "Calendar" }).click();
+    await authPage.waitForURL(/\/calendar/);
+    await authPage.goBack();
+    await expect(
+      authPage.getByTestId("palette-sand").getByRole("radio"),
+    ).toBeChecked();
 
     await authPage.reload();
     await expect.poll(background).toBe(sandBackground);
