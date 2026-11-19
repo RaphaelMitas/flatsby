@@ -10,6 +10,7 @@ import {
   paletteIds,
   paletteTokens,
   parsePalette,
+  TINT_MAX,
 } from "./palette";
 
 const themeColors = (palette: Palette, mode: ColorMode) => ({
@@ -123,7 +124,7 @@ describe("paletteTokens", () => {
   it("keeps text readable at every custom hue and tint", () => {
     const failures = Array.from({ length: HUE_MAX }, (_, hue) => hue).flatMap(
       (hue) =>
-        [0, 0.2, 0.4, 0.7, 1].flatMap((tint) =>
+        [0, 0.1, 0.25, 0.4, TINT_MAX].flatMap((tint) =>
           unreadablePairs({ id: "custom", hue, tint }),
         ),
     );

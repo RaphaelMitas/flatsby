@@ -9,6 +9,7 @@ import {
   hueScale,
   paletteIds,
   paletteTokens,
+  TINT_MAX,
 } from "@flatsby/validators/palette";
 
 import { ChoiceButtons } from "~/components/settings/ChoiceButtons";
@@ -140,6 +141,8 @@ export default function AppearanceScreen() {
               <Slider
                 accessibilityLabel={t("appearance.tint")}
                 value={palette.tint}
+                minimumValue={0}
+                maximumValue={TINT_MAX}
                 minimumTrackTintColor={tokens.primary}
                 thumbTintColor={tokens.primary}
                 onValueChange={(tint) => setPalette({ ...palette, tint })}

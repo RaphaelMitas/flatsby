@@ -19,6 +19,7 @@ import {
   hueScale,
   paletteCss,
   paletteIds,
+  TINT_MAX,
 } from "@flatsby/validators/palette";
 
 import { setPalettePreference } from "./actions";
@@ -117,7 +118,7 @@ export function AppearanceSettings(props: { palette: Palette }) {
               </p>
               <Slider
                 aria-label={t("settings.appearance.tint")}
-                max={1}
+                max={TINT_MAX}
                 step={0.01}
                 value={[palette.tint]}
                 onValueChange={([tint = palette.tint]) =>

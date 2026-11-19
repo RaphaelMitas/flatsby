@@ -11,15 +11,16 @@ export const paletteIds = [
 type PaletteId = (typeof paletteIds)[number];
 
 export const HUE_MAX = 360;
+export const TINT_MAX = 0.5;
 
 export const paletteSchema = z.object({
   id: z.enum(paletteIds),
   hue: z.number().min(0).max(HUE_MAX),
-  tint: z.number().min(0).max(1),
+  tint: z.number().min(0).max(TINT_MAX),
 });
 export type Palette = z.infer<typeof paletteSchema>;
 
-export const defaultPalette: Palette = { id: "default", hue: 300, tint: 0.5 };
+export const defaultPalette: Palette = { id: "default", hue: 300, tint: 0.25 };
 
 export const paletteCookie = "palette";
 
@@ -245,7 +246,6 @@ function derivedTokens(
     mode === "light"
       ? {
           background: at(1 - 0.02 * tint, 0.014 * tint),
-          card: at(1 - 0.008 * tint, 0.007 * tint),
           foreground: at(0.16, 0.005 + 0.025 * tint),
           mutedForeground: at(0.51, 0.014 + 0.012 * tint),
           muted: at(0.967 - 0.03 * tint, 0.002 + 0.02 * tint),
@@ -254,7 +254,6 @@ function derivedTokens(
         }
       : {
           background: at(0.141 + 0.03 * tint, 0.005 + 0.018 * tint),
-          card: at(0.141 + 0.065 * tint, 0.005 + 0.02 * tint),
           foreground: at(0.985, 0.012 * tint),
           mutedForeground: at(0.72, 0.014 + 0.012 * tint),
           muted: at(0.274 + 0.01 * tint, 0.006 + 0.02 * tint),
@@ -267,9 +266,9 @@ function derivedTokens(
   return {
     background: surfaces.background,
     foreground: surfaces.foreground,
-    card: surfaces.card,
+    card: surfaces.background,
     "card-foreground": surfaces.foreground,
-    popover: surfaces.card,
+    popover: surfaces.background,
     "popover-foreground": surfaces.foreground,
     primary,
     "primary-foreground": primaryForeground,
