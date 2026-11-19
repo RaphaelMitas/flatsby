@@ -26,14 +26,14 @@ export function GroupsDashboardElement({
     <button
       data-testid={`group-card-${groupId}`}
       type="button"
-      className="group bg-muted md:hover:bg-primary h-auto w-full items-center gap-4 rounded-lg p-4 text-left shadow-sm disabled:opacity-50"
+      className="group bg-muted md:hover:bg-foreground h-auto w-full items-center gap-4 rounded-lg p-4 text-left shadow-sm disabled:opacity-50"
       onClick={() => onSelect(groupId)}
       disabled={disabled}
     >
       <div className="flex items-center gap-3">
         <UserAvatar name={groupName} image={avatarSrc} size="md" />
         <div className="flex-1">
-          <h3 className="md:group-hover:text-primary-foreground text-sm font-semibold tracking-tight">
+          <h3 className="md:group-hover:text-background text-sm font-semibold tracking-tight">
             {groupName}
           </h3>
           <p className="text-muted-foreground text-xs">

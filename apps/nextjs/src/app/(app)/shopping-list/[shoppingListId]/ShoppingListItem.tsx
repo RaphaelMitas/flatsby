@@ -182,8 +182,7 @@ const ShoppingListItem = ({
           key={item.id}
           className={cn(
             "group bg-muted flex w-full items-center rounded-lg pr-4",
-            !item.isPending &&
-              "md:hover:bg-primary hover:text-primary-foreground",
+            !item.isPending && "md:hover:bg-foreground hover:text-background",
           )}
         >
           {showEditForm ? (
@@ -205,14 +204,14 @@ const ShoppingListItem = ({
                   onCheckedChange={(checked) =>
                     handleCheckboxChange(checked === true)
                   }
-                  className="md:group-hover:bg-primary-foreground md:group-hover:text-primary cursor-pointer before:absolute before:-inset-y-6 before:-right-4 before:-left-6 before:content-[''] disabled:cursor-not-allowed disabled:opacity-100"
+                  className="md:group-hover:bg-background md:group-hover:text-foreground cursor-pointer before:absolute before:-inset-y-6 before:-right-4 before:-left-6 before:content-[''] disabled:cursor-not-allowed disabled:opacity-100"
                 />
               </div>
               <Popover>
                 <PopoverTrigger className="flex flex-1 justify-between gap-2 truncate p-3 pl-0">
                   <div
                     className={cn(
-                      "md:group-hover:text-primary-foreground flex-1 truncate text-left text-sm font-medium",
+                      "md:group-hover:text-background flex-1 truncate text-left text-sm font-medium",
                       item.completed && "text-muted-foreground line-through",
                     )}
                   >
@@ -282,7 +281,7 @@ const ShoppingListItem = ({
                   }
                   size={24}
                   className={cn(
-                    "md:group-hover:text-primary-foreground md:group-hover:hover:text-info min-w-max",
+                    "md:group-hover:text-background md:group-hover:hover:text-info min-w-max",
                     item.isPending ? "opacity-50" : "cursor-pointer",
                   )}
                   onClick={
@@ -297,7 +296,7 @@ const ShoppingListItem = ({
                   }
                   size={24}
                   className={cn(
-                    "md:group-hover:text-primary-foreground md:group-hover:hover:text-error min-w-max",
+                    "md:group-hover:text-background md:group-hover:hover:text-error min-w-max",
                     item.isPending ? "opacity-50" : "cursor-pointer",
                   )}
                   onClick={item.isPending ? undefined : handleDeleteItem}

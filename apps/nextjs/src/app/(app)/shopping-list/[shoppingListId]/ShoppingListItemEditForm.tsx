@@ -70,7 +70,7 @@ export const ShoppingListItemEditForm = ({
           </div>
           <div className="mt-auto flex gap-2">
             <Button
-              className="md:group-hover:text-primary-foreground md:group-hover:hover:text-primary flex-1"
+              className="md:group-hover:text-background md:group-hover:hover:text-foreground flex-1"
               variant="ghost"
               type="reset"
               disabled={isSubmitting}
@@ -83,7 +83,7 @@ export const ShoppingListItemEditForm = ({
             </Button>
             <Button
               data-testid="shopping-list-item-edit-save"
-              className="md:group-hover:bg-primary-foreground md:group-hover:text-primary flex-1"
+              className="md:group-hover:bg-background md:group-hover:text-foreground flex-1"
               type="submit"
               disabled={isSubmitting}
             >

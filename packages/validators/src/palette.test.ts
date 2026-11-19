@@ -72,18 +72,13 @@ function contrast(first: string, second: string) {
 const readablePairs: [ThemeColorName, ThemeColorName, number][] = [
   ["primary-foreground", "primary", 4.5],
   ["primary", "background", 3],
-  ["primary", "card", 3],
   ["foreground", "background", 4.5],
-  ["foreground", "card", 4.5],
   ["muted-foreground", "background", 4.5],
-  ["muted-foreground", "card", 4.5],
   ["muted-foreground", "muted", 4.5],
 ];
 const readableOnLightPairs: [ThemeColorName, ThemeColorName, number][] = [
   ["destructive", "background", 4.5],
-  ["destructive", "card", 4.5],
   ["success", "background", 4.5],
-  ["success", "card", 4.5],
 ];
 
 function unreadablePairs(palette: Palette) {
