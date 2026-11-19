@@ -29,7 +29,7 @@ import { AnalyticsSync } from "~/components/analytics/AnalyticsSync";
 import { CacheRefreshPill } from "~/components/CacheRefreshPill";
 import { InstallReferrer } from "~/components/InstallReferrer";
 import { UpdateNudge } from "~/components/UpdateNudge";
-import { ThemeProvider } from "~/lib/ui/theme";
+import { ThemeProvider, useTheme } from "~/lib/ui/theme";
 import { useThemedScreenOptions } from "~/lib/utils";
 import { useSession } from "~/utils/auth/auth-client";
 import { IntlProvider } from "~/utils/intl-provider";
@@ -108,6 +108,7 @@ const StackLayout = () => {
   const [sessionResolved, setSessionResolved] = useState(!isPending);
   if (!isPending && !sessionResolved) setSessionResolved(true);
   const { hydrated } = useShoppingStore();
+  const { storedTheme } = useTheme();
   const isRestoring = useIsRestoring();
   const userId = data?.user.id;
 
@@ -115,7 +116,7 @@ const StackLayout = () => {
     if (!isRestoring && sessionResolved && !userId) clearQueryCache();
   }, [isRestoring, sessionResolved, userId]);
 
-  if ((!sessionResolved && !data) || !hydrated || isRestoring) {
+  if ((!sessionResolved && !data) || !hydrated || isRestoring || !storedTheme) {
     return <View className="bg-background flex-1" />;
   }
 

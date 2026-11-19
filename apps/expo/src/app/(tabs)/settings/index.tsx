@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "use-intl";
 
 import { localeNames, locales } from "@flatsby/i18n/locale";
 
-import type { Theme } from "~/lib/ui/theme";
 import { EveningReminderItem } from "~/components/settings/EveningReminderItem";
 import { SettingsChoiceItem } from "~/components/settings/SettingsChoiceItem";
 import { SettingsItem } from "~/components/settings/SettingsItem";
@@ -28,7 +27,7 @@ import { useSelectedGroup } from "~/utils/useSelectedGroup";
 export default function SettingsIndex() {
   const t = useTranslations();
   const locale = useLocale();
-  const { storedTheme, setTheme } = useTheme();
+  const { palette } = useTheme();
   const { preference, setPreference } = useLocalePreference();
   const analyticsConsent = useAnalyticsConsent();
   const { clearSelectedGroup } = useShoppingStore();
@@ -44,12 +43,6 @@ export default function SettingsIndex() {
     clearSelectedGroup();
     await signOut();
   };
-
-  const themeLabels = {
-    system: t("settings.theme.system"),
-    light: t("settings.theme.light"),
-    dark: t("settings.theme.dark"),
-  } satisfies Record<Theme, string>;
 
   return (
     <SafeAreaView>
@@ -84,18 +77,14 @@ export default function SettingsIndex() {
           </Link>
         </SettingsSection>
         <SettingsSection title={t("settings.sections.app")}>
-          <SettingsChoiceItem
-            title={t("settings.items.theme")}
-            value={themeLabels[storedTheme ?? "system"]}
-            iconName="palette"
-            selected={storedTheme}
-            onSelect={setTheme}
-            choices={[
-              { value: "system", label: themeLabels.system, icon: "sun-moon" },
-              { value: "light", label: themeLabels.light, icon: "sun" },
-              { value: "dark", label: themeLabels.dark, icon: "moon" },
-            ]}
-          />
+          <Link href="/settings/appearance" asChild>
+            <SettingsItem
+              testID="settings-appearance"
+              title={t("settings.items.appearance")}
+              value={t(`settings.appearance.palettes.${palette.id}`)}
+              iconName="palette"
+            />
+          </Link>
           <SettingsChoiceItem
             title={t("settings.language.title")}
             value={localeNames[locale]}

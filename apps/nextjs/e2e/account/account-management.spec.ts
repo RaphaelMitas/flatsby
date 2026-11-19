@@ -41,6 +41,28 @@ test.describe("Account Management", () => {
     ).not.toBeChecked();
   });
 
+  test("a picked palette recolors the app and survives a reload", async ({
+    authPage,
+  }) => {
+    await authPage.goto("/user-settings");
+    const background = () =>
+      authPage.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--background",
+        ),
+      );
+    const defaultBackground = await background();
+
+    const sand = authPage.getByTestId("palette-sand");
+    await waitForHydration(sand);
+    await sand.click();
+    await expect.poll(background).not.toBe(defaultBackground);
+    const sandBackground = await background();
+
+    await authPage.reload({ waitUntil: "commit" });
+    await expect.poll(background).toBe(sandBackground);
+  });
+
   test("two-step email confirmation", async ({ authPage, testUser }) => {
     await authPage.goto("/user-settings");
 

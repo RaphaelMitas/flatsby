@@ -54,9 +54,14 @@ export const rootViewport: Viewport = {
   ],
 };
 
-export function RootShell(props: { lang: string; children: React.ReactNode }) {
+export function RootShell(props: {
+  lang: string;
+  head?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <html className="h-full" lang={props.lang} suppressHydrationWarning>
+      <head>{props.head}</head>
       <body
         className={cn(
           "bg-background h-full min-h-full overflow-hidden font-sans antialiased",

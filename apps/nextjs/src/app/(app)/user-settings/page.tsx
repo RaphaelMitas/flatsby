@@ -18,6 +18,7 @@ import {
   trpc,
 } from "~/trpc/server";
 import { AnalyticsSettings } from "./AnalyticsSettings";
+import { AppearanceSettings } from "./AppearanceSettings";
 import DeleteUser from "./DeleteUser";
 import ExportUserData from "./ExportUserData";
 import { LanguageSettings } from "./LanguageSettings";
@@ -48,6 +49,7 @@ export default async function Page() {
           <LanguageSettings
             preference={preference && isLocale(preference) ? preference : null}
           />
+          <AppearanceSettings />
           <AnalyticsSettings />
           <SupportFlatsby />
           <Card>
