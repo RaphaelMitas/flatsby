@@ -86,15 +86,11 @@ export const pinboardRouter = createTRPCRouter({
       Effect.gen(function* () {
         yield* requireMember(input.groupId);
         const database = yield* Database;
+        const { groupId: _groupId, id: _id, ...content } = input;
         return yield* database.findOneOrFail("pin", async (db) => {
           const [updated] = await db
             .update(pins)
-            .set({
-              title: input.title,
-              body: input.body,
-              icon: input.icon,
-              wifi: input.wifi,
-            })
+            .set(content)
             .where(pinIn(input))
             .returning({ id: pins.id });
           return updated;

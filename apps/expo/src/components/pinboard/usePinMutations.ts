@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 
 import { pinboardMutation, pinboardPatches } from "@flatsby/api/pinboardCache";
-import { pinDraftOf } from "@flatsby/validators/pinboard";
+import { pinFormOf } from "@flatsby/validators/pinboard";
 
 import { trpc } from "~/utils/api";
 
@@ -24,7 +24,7 @@ export function usePinMutations(groupId: number) {
     Alert.alert(t("common.error"), message ?? t("pinboard.saveFailed"));
     router.push({
       pathname: "/(tabs)/home/pinboard/form",
-      params: pinDraftOf(input),
+      params: pinFormOf(input),
     });
   };
 

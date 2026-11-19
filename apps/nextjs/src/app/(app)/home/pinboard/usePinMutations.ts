@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 
 import { pinboardMutation, pinboardPatches } from "@flatsby/api/pinboardCache";
 import { toast } from "@flatsby/ui/toast";
-import { pinDraftOf } from "@flatsby/validators/pinboard";
+import { pinFormOf } from "@flatsby/validators/pinboard";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -28,7 +28,7 @@ export function usePinMutations(
     input: CreatePinInput | UpdatePinInput,
   ) => {
     toast.error(message ?? t("pinboard.saveFailed"));
-    backToForm(pinDraftOf(input));
+    backToForm(pinFormOf(input));
   };
 
   return {

@@ -18,9 +18,8 @@ export const pinboard = {
   },
   form: {
     title: "Titel",
-    titlePlaceholder: "WLAN",
     body: "Text",
-    bodyPlaceholder: "Netzwerkname und Passwort",
+    bodyPlaceholder: "Papier wird dienstags abgeholt",
     icon: "Symbol",
     create: "Anpinnen",
     note: "Notiz",

@@ -96,7 +96,7 @@ export function Pinboard() {
           <PinCard
             key={pin.id}
             pin={pin}
-            onEdit={() => openDraft({ ...pinFormOf(pin), id: pin.id })}
+            onEdit={() => openDraft(pinFormOf(pin))}
             onShowCode={() => setCodeFor(pin)}
           />
         ))
@@ -131,7 +131,9 @@ export function Pinboard() {
             className="text-center sm:max-w-xs"
           >
             <DialogHeader>
-              <DialogTitle className="text-center">{codeFor.title}</DialogTitle>
+              <DialogTitle className="text-center leading-tight wrap-break-word">
+                {codeFor.title}
+              </DialogTitle>
               <DialogDescription className="text-center">
                 {codeFor.wifi.ssid}
               </DialogDescription>

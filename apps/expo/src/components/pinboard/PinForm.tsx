@@ -121,7 +121,7 @@ export function PinForm({ groupId, pinId, draft }: PinFormProps) {
                 value={field.value}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
-                placeholder={t("pinboard.form.titlePlaceholder")}
+                placeholder={t("pinboard.starters.bins")}
                 error={!!fieldState.error}
                 maxLength={MAX_PIN_TITLE_LENGTH}
                 autoFocus={pinId === undefined && !startsWithTitle}

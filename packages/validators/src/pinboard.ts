@@ -43,7 +43,7 @@ const bodyRequired = {
   message: msg("pinboard.validation.bodyRequired"),
 };
 
-export const pinWifiSchema = z.object({
+const pinWifiSchema = z.object({
   ssid: z.string().trim().min(1).max(MAX_WIFI_SSID_LENGTH),
   password: z.string().max(MAX_WIFI_PASSWORD_LENGTH),
 });
@@ -97,12 +97,17 @@ export const pinContentOf = ({
   wifi: wifiOf({ icon: pin.icon, ssid, password }),
 });
 
-export const pinFormOf = (pin?: Partial<PinContent>): PinFormValues => ({
+export type PinDraft = PinFormValues & { id?: number };
+
+export const pinFormOf = (
+  pin?: Partial<PinContent> & { id?: number },
+): PinDraft => ({
   title: pin?.title ?? "",
   body: pin?.body ?? "",
   icon: pin?.icon ?? "pin",
   ssid: pin?.wifi?.ssid ?? "",
   password: pin?.wifi?.password ?? "",
+  ...(pin?.id !== undefined && { id: pin.id }),
 });
 
 export const createPinSchema = pinContentSchema
@@ -117,15 +122,6 @@ export type UpdatePinInput = z.infer<typeof updatePinSchema>;
 
 export const pinSchema = pinContentSchema.extend({ id: z.number() });
 export type Pin = z.infer<typeof pinSchema>;
-
-export type PinDraft = PinFormValues & { id?: number };
-
-export const pinDraftOf = (
-  input: CreatePinInput | UpdatePinInput,
-): PinDraft => ({
-  ...pinFormOf(input),
-  ...("id" in input && { id: input.id }),
-});
 
 export const pinStarters = [
   { icon: "wifi", title: msg("pinboard.starters.wifi") },

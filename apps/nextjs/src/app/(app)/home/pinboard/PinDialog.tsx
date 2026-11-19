@@ -114,7 +114,7 @@ export function PinDialog({
                       <Input
                         {...field}
                         data-testid="pin-form-title"
-                        placeholder={t("pinboard.form.titlePlaceholder")}
+                        placeholder={t("pinboard.starters.bins")}
                         maxLength={MAX_PIN_TITLE_LENGTH}
                       />
                     </FormControl>
