@@ -10,7 +10,7 @@ export const settings = {
     legal: "Legal",
   },
   items: {
-    theme: "Theme",
+    appearance: "Appearance",
     changeGroup: "Change Group",
     profileSubtitle: "Your name and PayPal.me",
     analytics: "Analytics",
@@ -59,6 +59,21 @@ export const settings = {
     system: "System",
     toggle: "Toggle theme",
     current: "Theme: {theme}",
+  },
+  appearance: {
+    mode: "Mode",
+    colors: "Colors",
+    colorsDescription: "The colors Flatsby uses on this device.",
+    accent: "Accent color",
+    tint: "Background tint",
+    palettes: {
+      default: "Flatsby",
+      sand: "Sand",
+      forest: "Forest",
+      ocean: "Ocean",
+      blossom: "Blossom",
+      custom: "Custom",
+    },
   },
   profile: {
     displayName: "Display Name",

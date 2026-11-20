@@ -18,19 +18,11 @@ tags:
 # merge their children into one accessibility label, so neither scrolling to
 # the row nor asserting on the rows in between works.
 - tapOn: "Settings"
-- openLink: flatsby://settings/danger
-- retry:
-    maxRetries: 2
-    commands:
-      - runFlow:
-          when:
-            visible: "Open in .*Flatsby.*"
-          commands:
-            - tapOn: "Open"
-      - extendedWaitUntil:
-          visible:
-            id: "delete-user-danger-zone-title"
-          timeout: 15000
+- runFlow:
+    file: ../../subflows/open-link.yaml
+    env:
+      LINK: flatsby://settings/danger
+      MARKER_ID: "delete-user-danger-zone-title"
 - assertVisible:
     id: "delete-user-confirm-button"
 - assertVisible: ".*This action cannot be undone.*"

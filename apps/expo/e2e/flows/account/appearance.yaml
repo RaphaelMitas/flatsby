@@ -1,0 +1,31 @@
+appId: ${APP_ID}
+tags:
+  - account
+---
+# A picked palette is still selected after the app restarts.
+- runFlow: ../../subflows/e2e-login.yaml
+- tapOn: "Settings"
+- runFlow:
+    file: ../../subflows/open-link.yaml
+    env:
+      LINK: flatsby://settings/appearance
+      MARKER_ID: "palette-custom"
+
+- assertNotVisible:
+    id: "palette-sliders"
+- tapOn:
+    id: "palette-custom"
+- extendedWaitUntil:
+    visible:
+      id: "palette-sliders"
+    timeout: 15000
+
+- runFlow:
+    file: ../../subflows/relaunch.yaml
+    env:
+      MARKER_ID: "group-dashboard-title"
+- runFlow:
+    file: ../../subflows/open-link.yaml
+    env:
+      LINK: flatsby://settings/appearance
+      MARKER_ID: "palette-sliders"

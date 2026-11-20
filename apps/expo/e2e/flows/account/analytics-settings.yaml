@@ -5,19 +5,11 @@ tags:
 # The consent switch in settings opens the consent sheet.
 - runFlow: ../../subflows/e2e-login.yaml
 - tapOn: "Settings"
-- openLink: flatsby://settings/analytics
-- retry:
-    maxRetries: 2
-    commands:
-      - runFlow:
-          when:
-            visible: "Open in .*Flatsby.*"
-          commands:
-            - tapOn: "Open"
-      - extendedWaitUntil:
-          visible:
-            id: "analytics-usage"
-          timeout: 15000
+- runFlow:
+    file: ../../subflows/open-link.yaml
+    env:
+      LINK: flatsby://settings/analytics
+      MARKER_ID: "analytics-usage"
 
 - tapOn:
     id: "analytics-screens"

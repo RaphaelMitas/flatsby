@@ -68,7 +68,7 @@ export default function DangerScreen() {
               </Text>
             </View>
           </AlertTitle>
-          <AlertDescription className="text-primary">
+          <AlertDescription>
             {t("settings.danger.deleteAccountDescription")}
           </AlertDescription>
 

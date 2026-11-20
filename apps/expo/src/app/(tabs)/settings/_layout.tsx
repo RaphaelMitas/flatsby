@@ -26,6 +26,12 @@ export default function SettingsLayout() {
           }}
         />
         <Stack.Screen
+          name="appearance"
+          options={{
+            title: t("settings.items.appearance"),
+          }}
+        />
+        <Stack.Screen
           name="legal"
           options={{
             title: t("settings.sections.legal"),

@@ -1,0 +1,20 @@
+appId: ${APP_ID}
+---
+# Open a deep link and wait for MARKER_ID, confirming the "Open in Flatsby?"
+# prompt when iOS shows it.
+#
+# env: LINK (e.g. flatsby://settings/analytics), MARKER_ID (element the opened
+# screen shows)
+- openLink: ${LINK}
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible: "Open in .*Flatsby.*"
+          commands:
+            - tapOn: "Open"
+      - extendedWaitUntil:
+          visible:
+            id: ${MARKER_ID}
+          timeout: 15000

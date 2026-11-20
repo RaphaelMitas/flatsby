@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@flatsby/ui/card";
+import { paletteCookie, parsePalette } from "@flatsby/validators/palette";
 
 import { SupportFlatsby } from "~/app/_components/SupportFlatsby";
 import {
@@ -18,6 +19,7 @@ import {
   trpc,
 } from "~/trpc/server";
 import { AnalyticsSettings } from "./AnalyticsSettings";
+import { AppearanceSettings } from "./AppearanceSettings";
 import DeleteUser from "./DeleteUser";
 import ExportUserData from "./ExportUserData";
 import { LanguageSettings } from "./LanguageSettings";
@@ -29,7 +31,9 @@ export default async function Page() {
   await getCurrentUserWithGroups();
   prefetch(trpc.user.getCurrentUser.queryOptions());
   const t = await getTranslations("settings.page");
-  const preference = (await cookies()).get(localeCookie)?.value;
+  const cookieStore = await cookies();
+  const preference = cookieStore.get(localeCookie)?.value;
+  const palette = parsePalette(cookieStore.get(paletteCookie)?.value);
   return (
     <HydrateClient>
       <div className="flex flex-col p-4 md:pt-16">
@@ -48,6 +52,7 @@ export default async function Page() {
           <LanguageSettings
             preference={preference && isLocale(preference) ? preference : null}
           />
+          <AppearanceSettings palette={palette} />
           <AnalyticsSettings />
           <SupportFlatsby />
           <Card>

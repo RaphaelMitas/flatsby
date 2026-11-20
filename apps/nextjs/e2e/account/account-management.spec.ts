@@ -41,6 +41,42 @@ test.describe("Account Management", () => {
     ).not.toBeChecked();
   });
 
+  test("a picked palette recolors the app and survives leaving the page", async ({
+    authPage,
+  }) => {
+    await authPage.goto("/user-settings");
+    const background = () =>
+      authPage.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--background",
+        ),
+      );
+    const defaultBackground = await background();
+
+    const sand = authPage.getByTestId("palette-sand");
+    await waitForHydration(sand);
+    const saved = authPage.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().endsWith("/user-settings"),
+    );
+    await sand.click();
+    await expect.poll(background).not.toBe(defaultBackground);
+    await saved;
+    const sandBackground = await background();
+
+    await authPage.getByRole("link", { name: "Calendar" }).click();
+    await authPage.waitForURL(/\/calendar/);
+    await expect.poll(background).toBe(sandBackground);
+    await authPage.goBack();
+    await expect(
+      authPage.getByTestId("palette-sand").getByRole("radio"),
+    ).toBeChecked();
+
+    await authPage.reload();
+    await expect.poll(background).toBe(sandBackground);
+  });
+
   test("two-step email confirmation", async ({ authPage, testUser }) => {
     await authPage.goto("/user-settings");
 

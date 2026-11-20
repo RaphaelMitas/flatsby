@@ -19,8 +19,8 @@ export function ExpenseFormRow({
 }) {
   return (
     <View className="flex-row items-center gap-3 px-4 py-3">
-      <View className="bg-primary/10 h-8 w-8 items-center justify-center rounded-full">
-        <Icon name={icon} size={16} color="primary" />
+      <View className="bg-muted h-8 w-8 items-center justify-center rounded-full">
+        <Icon name={icon} size={16} color="foreground" />
       </View>
       <Text className="text-foreground flex-1 text-base font-medium">
         {title}

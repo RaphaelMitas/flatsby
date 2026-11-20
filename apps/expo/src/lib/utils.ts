@@ -1,109 +1,29 @@
+import type { ColorMode, PaletteTokenName } from "@flatsby/validators/palette";
 import type { ClassValue } from "clsx";
-import { useColorScheme } from "react-native";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+
+import { fixedColors } from "@flatsby/validators/palette";
+
+import { useTheme } from "~/lib/ui/theme";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const lightColors = {
-  background: "hsl(0, 0%, 100%)",
-  foreground: "hsl(240, 10%, 3.9%)",
-  "cat-detail": "hsl(0, 0%, 100%)",
-  card: "hsl(0, 0%, 100%)",
-  "card-foreground": "hsl(240, 10%, 3.9%)",
-  popover: "hsl(0, 0%, 100%)",
-  "popover-foreground": "hsl(240, 10%, 3.9%)",
-  primary: "hsl(240, 5.9%, 10%)",
-  "primary-foreground": "hsl(0, 0%, 98%)",
-  secondary: "hsl(240, 4.8%, 95.9%)",
-  "secondary-foreground": "hsl(240, 5.9%, 10%)",
-  muted: "hsl(240, 4.8%, 95.9%)",
-  "muted-foreground": "hsl(240, 3.8%, 46.1%)",
-  accent: "hsl(240, 4.8%, 95.9%)",
-  "accent-foreground": "hsl(240, 5.9%, 10%)",
-  destructive: "hsl(0, 72.2%, 50.6%)",
-  "destructive-foreground": "hsl(0, 0%, 98%)",
-  success: "hsl(120, 100%, 25.1%)",
-  "success-foreground": "hsl(0, 0%, 98%)",
-  warning: "hsl(45.4, 93.4%, 47.5%)",
-  "warning-foreground": "hsl(0, 0%, 98%)",
-  error: "hsl(0, 72.2%, 50.6%)",
-  "error-foreground": "hsl(0, 0%, 98%)",
-  info: "hsl(224.3, 76.3%, 48%)",
-  "info-foreground": "hsl(0, 0%, 98%)",
-  purple: "hsl(271, 91%, 65%)",
-  "purple-foreground": "hsl(0, 0%, 98%)",
-  border: "hsl(240, 5.9%, 90%)",
-  input: "hsl(240, 5.9%, 90%)",
-  ring: "hsl(240, 5.9%, 10%)",
-  "chart-1": "hsl(12 76% 61%)",
-  "chart-2": "hsl(173 58% 39%)",
-  "chart-3": "hsl(197 37% 24%)",
-  "chart-4": "hsl(43 74% 66%)",
-  "chart-5": "hsl(27 87% 67%)",
-} as const;
-
-const darkColors = {
-  background: "hsl(240, 10%, 3.9%)",
-  foreground: "hsl(0, 0%, 98%)",
-  "cat-detail": "hsl(0, 0%, 0%)",
-  card: "hsl(240, 10%, 3.9%)",
-  "card-foreground": "hsl(0, 0%, 98%)",
-  popover: "hsl(240, 10%, 3.9%)",
-  "popover-foreground": "hsl(0, 0%, 98%)",
-  primary: "hsl(0, 0%, 98%)",
-  "primary-foreground": "hsl(240, 5.9%, 10%)",
-  secondary: "hsl(240, 3.7%, 15.9%)",
-  "secondary-foreground": "hsl(0, 0%, 98%)",
-  muted: "hsl(240, 3.7%, 15.9%)",
-  "muted-foreground": "hsl(240, 5%, 64.9%)",
-  accent: "hsl(240, 3.7%, 15.9%)",
-  "accent-foreground": "hsl(0, 0%, 98%)",
-  destructive: "hsl(0, 72.2%, 50.6%)",
-  "destructive-foreground": "hsl(0, 0%, 98%)",
-  success: "hsl(142.1, 70.6%, 45.3%)",
-  "success-foreground": "hsl(0, 0%, 98%)",
-  warning: "hsl(60, 100%, 50.2%)",
-  "warning-foreground": "hsl(0, 0%, 98%)",
-  error: "hsl(0, 72.2%, 50.6%)",
-  "error-foreground": "hsl(0, 0%, 98%)",
-  info: "hsl(213.1, 93.9%, 67.8%)",
-  "info-foreground": "hsl(0, 0%, 98%)",
-  purple: "hsl(271, 91%, 65%)",
-  "purple-foreground": "hsl(0, 0%, 98%)",
-  border: "hsl(240, 3.7%, 15.9%)",
-  input: "hsl(240, 3.7%, 15.9%)",
-  ring: "hsl(240, 4.9%, 83.9%)",
-  "chart-1": "hsl(220 70% 50%)",
-  "chart-2": "hsl(160 60% 45%)",
-  "chart-3": "hsl(30 80% 55%)",
-  "chart-4": "hsl(280 65% 60%)",
-  "chart-5": "hsl(340 75% 55%)",
-} as const;
-
-export type ColorName = keyof typeof lightColors;
-
-const getColor = (
-  colorName: ColorName,
-  colorScheme?: "light" | "dark",
-): string => {
-  const colors = colorScheme === "dark" ? darkColors : lightColors;
-  return colors[colorName];
-};
+export type ColorName = PaletteTokenName | keyof typeof fixedColors.light;
 
 export const useThemeColors = (): {
   getColor: (colorName: ColorName) => string;
-  colorScheme: "light" | "dark";
+  colorScheme: ColorMode;
 } => {
-  const colorScheme = useColorScheme();
-  const themeColorScheme = colorScheme === "dark" ? "dark" : "light";
+  const { tokens, colorMode } = useTheme();
+  const colors = { ...tokens, ...fixedColors[colorMode] };
 
   return {
-    getColor: (colorName: ColorName) => getColor(colorName, themeColorScheme),
-    colorScheme: themeColorScheme,
+    getColor: (colorName: ColorName) => colors[colorName],
+    colorScheme: colorMode,
   };
 };
 

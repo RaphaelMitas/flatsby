@@ -107,7 +107,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
                 <Text
                   testID="group-card-name"
                   className={cn(
-                    "text-primary text-lg font-semibold",
+                    "text-foreground text-lg font-semibold",
                     isSelected && "text-primary-foreground",
                   )}
                 >

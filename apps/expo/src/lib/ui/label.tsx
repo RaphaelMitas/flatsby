@@ -4,7 +4,7 @@ import { Text } from "react-native";
 import { tv } from "tailwind-variants";
 
 const labelVariants = tv({
-  base: "text-sm font-medium leading-none text-primary",
+  base: "text-sm font-medium leading-none text-foreground",
 });
 
 interface LabelProps extends VariantProps<typeof labelVariants> {

@@ -23,7 +23,7 @@
     "@better-auth/expo": "catalog:better-auth",
     "@better-auth/passkey": "catalog:better-auth",
     "@expo/metro-runtime": "~58.0.14",
-    "@expo/ui": "~58.0.21",
+    "@expo/ui": "~58.0.29",
     "@flatsby/i18n": "workspace:*",
     "@flatsby/validators": "workspace:*",
     "@formatjs/intl-pluralrules": "^7.0.4",
