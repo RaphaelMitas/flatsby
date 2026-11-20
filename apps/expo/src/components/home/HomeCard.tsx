@@ -169,18 +169,7 @@ export function PaceHeadline({
   children?: ReactNode;
 }) {
   const t = useTranslations();
-
-  if (pace && today && isEmptyPace(pace))
-    return (
-      <View className="mt-2 gap-0.5">
-        <Text className="text-foreground text-base font-semibold">
-          {t(`home.firstDay.${firstDay}.title`)}
-        </Text>
-        <Text className="text-muted-foreground text-sm">
-          {t(`home.firstDay.${firstDay}.body`)}
-        </Text>
-      </View>
-    );
+  const empty = pace !== undefined && isEmptyPace(pace);
 
   return (
     <>
@@ -189,22 +178,35 @@ export function PaceHeadline({
           entering={fadeIn ? FadeIn.duration(300) : undefined}
           className="mt-2"
         >
-          <Headline
-            value={paceSummary(pace).total}
-            format={format}
-            unit={unit}
-          />
-          <PaceComparison
-            pace={pace}
-            today={today}
-            format={format}
-            className="text-muted-foreground text-sm"
-          />
+          {empty ? (
+            <View className="gap-0.5">
+              <Text className="text-foreground text-base font-semibold">
+                {t(`home.firstDay.${firstDay}.title`)}
+              </Text>
+              <Text className="text-muted-foreground text-sm">
+                {t(`home.firstDay.${firstDay}.body`)}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <Headline
+                value={paceSummary(pace).total}
+                format={format}
+                unit={unit}
+              />
+              <PaceComparison
+                pace={pace}
+                today={today}
+                format={format}
+                className="text-muted-foreground text-sm"
+              />
+            </>
+          )}
         </Animated.View>
       ) : (
         <HeadlineSkeleton />
       )}
-      {children}
+      {!empty && children}
     </>
   );
 }
