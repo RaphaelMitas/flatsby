@@ -170,15 +170,7 @@ export function PaceHeadline({
 }) {
   const t = useTranslations();
 
-  if (!pace || !today)
-    return (
-      <>
-        <HeadlineSkeleton />
-        {children}
-      </>
-    );
-
-  if (isEmptyPace(pace))
+  if (pace && today && isEmptyPace(pace))
     return (
       <View className="mt-2 gap-0.5">
         <Text className="text-foreground text-base font-semibold">
@@ -192,18 +184,26 @@ export function PaceHeadline({
 
   return (
     <>
-      <Animated.View
-        entering={fadeIn ? FadeIn.duration(300) : undefined}
-        className="mt-2"
-      >
-        <Headline value={paceSummary(pace).total} format={format} unit={unit} />
-        <PaceComparison
-          pace={pace}
-          today={today}
-          format={format}
-          className="text-muted-foreground text-sm"
-        />
-      </Animated.View>
+      {pace && today ? (
+        <Animated.View
+          entering={fadeIn ? FadeIn.duration(300) : undefined}
+          className="mt-2"
+        >
+          <Headline
+            value={paceSummary(pace).total}
+            format={format}
+            unit={unit}
+          />
+          <PaceComparison
+            pace={pace}
+            today={today}
+            format={format}
+            className="text-muted-foreground text-sm"
+          />
+        </Animated.View>
+      ) : (
+        <HeadlineSkeleton />
+      )}
       {children}
     </>
   );

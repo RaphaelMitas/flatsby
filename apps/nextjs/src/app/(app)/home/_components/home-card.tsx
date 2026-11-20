@@ -115,16 +115,7 @@ export function PaceNumbers({
 }) {
   const t = useTranslations();
 
-  if (!pace || !today)
-    return (
-      <>
-        <Skeleton className="mt-2 h-10 w-32" />
-        <Skeleton className="mt-1 h-4 w-48" />
-        {children}
-      </>
-    );
-
-  if (isEmptyPace(pace))
+  if (pace && today && isEmptyPace(pace))
     return (
       <div data-testid={`home-first-day-${firstDay}`} className="mt-2">
         <p className="font-semibold">{t(`home.firstDay.${firstDay}.title`)}</p>
@@ -136,12 +127,23 @@ export function PaceNumbers({
 
   return (
     <>
-      <div className={cn(fadeIn && "animate-in fade-in duration-300")}>
-        <Headline value={paceSummary(pace).total} format={format} unit={unit} />
-        <p className="text-muted-foreground text-sm">
-          <PaceComparison pace={pace} today={today} format={format} />
-        </p>
-      </div>
+      {pace && today ? (
+        <div className={cn(fadeIn && "animate-in fade-in duration-300")}>
+          <Headline
+            value={paceSummary(pace).total}
+            format={format}
+            unit={unit}
+          />
+          <p className="text-muted-foreground text-sm">
+            <PaceComparison pace={pace} today={today} format={format} />
+          </p>
+        </div>
+      ) : (
+        <>
+          <Skeleton className="mt-2 h-10 w-32" />
+          <Skeleton className="mt-1 h-4 w-48" />
+        </>
+      )}
       {children}
     </>
   );

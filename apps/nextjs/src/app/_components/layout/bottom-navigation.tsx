@@ -20,7 +20,9 @@ export function BottomNavigation() {
   const pathname = usePathname();
   const { hasCurrentGroup } = useGroupContext();
 
-  const isHomePage = pathname.startsWith("/home") || pathname === "/group";
+  const isHomePage =
+    pathname.startsWith("/home") ||
+    (pathname.startsWith("/group") && !pathname.startsWith("/group/settings"));
   const isShoppingPage = pathname.startsWith("/shopping-list");
   const isExpensesPage = pathname.startsWith("/expenses");
   const isCalendarPage = pathname.startsWith("/calendar");
