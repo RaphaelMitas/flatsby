@@ -1,0 +1,24 @@
+appId: ${APP_ID}
+---
+# Shared subflow: on the pinboard, deletes the pin titled ${PIN_TITLE}.
+# An optimistic pin can't be edited until the save comes back with a real id.
+- extendedWaitUntil:
+    visible:
+      id: "pin-edit-${PIN_TITLE}"
+      enabled: true
+    timeout: 15000
+- runFlow:
+    file: tap-until.yaml
+    env:
+      TARGET_ID: "pin-edit-${PIN_TITLE}"
+      MARKER_ID: "pin-form-title"
+- scrollUntilVisible:
+    element:
+      id: "pin-form-delete"
+- runFlow:
+    file: tap-until.yaml
+    env:
+      TARGET_ID: "pin-form-delete"
+      MARKER_ID: "delete-confirmation-confirm"
+- tapOn:
+    id: "delete-confirmation-confirm"

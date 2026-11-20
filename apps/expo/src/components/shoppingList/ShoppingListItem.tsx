@@ -2,7 +2,7 @@ import type { CategoryId } from "@flatsby/validators/categories";
 import type { ShoppingListItem as ShoppingListItemType } from "@flatsby/validators/shopping-list";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useRef, useState } from "react";
-import { Pressable, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import ReanimatedSwipeable, {
   SwipeDirection,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
+import { Button } from "~/lib/ui/button";
 import { CenteredModal } from "~/lib/ui/centered-modal";
 import { cn } from "~/lib/utils";
 import { shoppingListMutations } from "~/utils/api";
@@ -184,14 +185,39 @@ const ShoppingListItem = ({
           </View>
         </View>
 
-        <TouchableOpacity
-          className="bg-muted mt-4 rounded p-3"
+        <View className="mt-4 flex-row gap-3">
+          <Button
+            testID="shopping-list-item-details-edit"
+            title={t("common.edit")}
+            variant="outline"
+            icon="pencil"
+            className="flex-1"
+            onPress={() => {
+              setShowDetails(false);
+              handleEdit();
+            }}
+          />
+          <Button
+            testID="shopping-list-item-details-delete"
+            title={t("common.delete")}
+            variant="outline"
+            icon="trash-2"
+            iconColor="destructive"
+            textClassName="text-destructive"
+            className="flex-1"
+            onPress={() => {
+              setShowDetails(false);
+              setShowDeleteModal(true);
+            }}
+          />
+        </View>
+        <Button
+          testID="shopping-list-item-details-close"
+          title={t("common.close")}
+          variant="secondary"
+          className="mt-3"
           onPress={() => setShowDetails(false)}
-        >
-          <Text className="text-muted-foreground text-center text-sm">
-            {t("common.close")}
-          </Text>
-        </TouchableOpacity>
+        />
       </CenteredModal>
 
       <DeleteConfirmationModal

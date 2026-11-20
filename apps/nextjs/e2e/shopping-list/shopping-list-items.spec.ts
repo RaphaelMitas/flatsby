@@ -122,4 +122,30 @@ test.describe("Shopping List Items", () => {
         .filter({ hasText: itemName }),
     ).not.toBeVisible({ timeout: 10000 });
   });
+
+  test("Narrow screen: the item details offer edit and delete without a swipe", async ({
+    authPage,
+  }) => {
+    await createShoppingList(authPage);
+    await authPage.setViewportSize({ width: 390, height: 844 });
+
+    const originalName = `Narrow ${Date.now()}`;
+    await addShoppingListItem(authPage, originalName, "other", {
+      waitForCommit: true,
+    });
+
+    await authPage.getByText(originalName, { exact: true }).click();
+    await authPage.getByTestId(/^shopping-list-item-details-edit-\d+$/).click();
+    const editForm = authPage.getByTestId("shopping-list-item-edit-form");
+    const newName = `Renamed ${Date.now()}`;
+    await editForm.getByTestId("shopping-list-item-input").fill(newName);
+    await editForm.getByTestId("shopping-list-item-edit-save").click();
+    await expect(authPage.getByText(newName, { exact: true })).toBeVisible();
+
+    await authPage.getByText(newName, { exact: true }).click();
+    await authPage
+      .getByTestId(/^shopping-list-item-details-delete-\d+$/)
+      .click();
+    await expect(authPage.getByText(newName, { exact: true })).toHaveCount(0);
+  });
 });

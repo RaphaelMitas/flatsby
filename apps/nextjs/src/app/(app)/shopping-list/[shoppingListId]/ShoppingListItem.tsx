@@ -26,6 +26,7 @@ import {
   updateShoppingListItemInCache,
 } from "@flatsby/api/shoppingListItemsCache";
 import { cn } from "@flatsby/ui";
+import { Button } from "@flatsby/ui/button";
 import { getCategoryData } from "@flatsby/ui/categories";
 import { Checkbox } from "@flatsby/ui/checkbox";
 import {
@@ -270,6 +271,30 @@ const ShoppingListItem = ({
                       </div>
                     </div>
                   </PopoverClose>
+                  {!item.isPending && (
+                    <div className="mt-4 flex gap-2 md:hidden">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        data-testid={`shopping-list-item-details-edit-${item.id}`}
+                        onClick={() => setShowEditForm(true)}
+                      >
+                        <Pencil />
+                        {t("common.edit")}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive flex-1"
+                        data-testid={`shopping-list-item-details-delete-${item.id}`}
+                        onClick={handleDeleteItem}
+                      >
+                        <Trash />
+                        {t("common.delete")}
+                      </Button>
+                    </div>
+                  )}
                 </PopoverContent>
               </Popover>
               <div className="ml-2 hidden gap-2 md:flex">

@@ -42,9 +42,16 @@ tags:
     visible:
       id: "onboarding-title"
     timeout: 30000
+# An error leaves as soon as its field changes, the group name follows the name
+- tapOn:
+    id: "onboarding-create"
+- assertVisible: "User name cannot be empty"
+- assertVisible: "Group name is required"
 - tapOn:
     id: "onboarding-name-input"
 - inputText: "Code User"
+- assertNotVisible: "User name cannot be empty"
+- assertNotVisible: "Group name is required"
 - tapOn:
     id: "onboarding-flatmates-input"
 - inputText: "Lena"

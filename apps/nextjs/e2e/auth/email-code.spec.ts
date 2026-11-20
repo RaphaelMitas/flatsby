@@ -21,7 +21,12 @@ test.describe("Email code sign-in", () => {
     const nameInput = page.getByTestId("onboarding-name-input");
     await expect(nameInput).toHaveValue("");
     await waitForHydration(page.getByTestId("onboarding-create"));
+    await page.getByTestId("onboarding-create").click();
+    await expect(page.getByText("User name cannot be empty")).toBeVisible();
+    await expect(page.getByText("Group name is required")).toBeVisible();
     await nameInput.fill("Code User");
+    await expect(page.getByText("User name cannot be empty")).toHaveCount(0);
+    await expect(page.getByText("Group name is required")).toHaveCount(0);
     await expect(page.getByTestId("onboarding-group-input")).toHaveValue(
       "Code's group",
     );
