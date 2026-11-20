@@ -16,7 +16,7 @@ import { cn } from "@flatsby/ui";
 import { Card } from "@flatsby/ui/card";
 import { Skeleton } from "@flatsby/ui/skeleton";
 import { deviceTimeZone } from "@flatsby/validators/calendar";
-import { paceLabels, paceSummary } from "@flatsby/validators/home";
+import { isEmptyPace, paceLabels, paceSummary } from "@flatsby/validators/home";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -102,28 +102,48 @@ export function PaceNumbers({
   format,
   unit,
   fadeIn,
+  firstDay,
+  children,
 }: {
   pace: Pace | undefined;
   today: string | undefined;
   format: (value: number) => string;
   unit?: (count: number) => string;
   fadeIn: boolean;
+  firstDay: "expenses" | "shopping" | "calendar";
+  children?: React.ReactNode;
 }) {
+  const t = useTranslations();
+
   if (!pace || !today)
     return (
       <>
         <Skeleton className="mt-2 h-10 w-32" />
         <Skeleton className="mt-1 h-4 w-48" />
+        {children}
       </>
     );
 
+  if (isEmptyPace(pace))
+    return (
+      <div data-testid={`home-first-day-${firstDay}`} className="mt-2">
+        <p className="font-semibold">{t(`home.firstDay.${firstDay}.title`)}</p>
+        <p className="text-muted-foreground text-sm">
+          {t(`home.firstDay.${firstDay}.body`)}
+        </p>
+      </div>
+    );
+
   return (
-    <div className={cn(fadeIn && "animate-in fade-in duration-300")}>
-      <Headline value={paceSummary(pace).total} format={format} unit={unit} />
-      <p className="text-muted-foreground text-sm">
-        <PaceComparison pace={pace} today={today} format={format} />
-      </p>
-    </div>
+    <>
+      <div className={cn(fadeIn && "animate-in fade-in duration-300")}>
+        <Headline value={paceSummary(pace).total} format={format} unit={unit} />
+        <p className="text-muted-foreground text-sm">
+          <PaceComparison pace={pace} today={today} format={format} />
+        </p>
+      </div>
+      {children}
+    </>
   );
 }
 

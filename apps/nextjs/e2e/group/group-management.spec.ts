@@ -371,6 +371,7 @@ test.describe("Group Management", () => {
     await authPage.goto("/home");
     await expect(authPage.getByTestId("home-card-shopping")).toBeVisible();
     await expect(authPage.getByTestId("home-card-calendar")).toBeVisible();
+    await expect(authPage.getByTestId("home-first-day-expenses")).toBeVisible();
     const expenses = authPage.getByTestId("home-card-expenses");
     await waitForHydration(expenses);
     await expenses.click();
@@ -381,6 +382,10 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, uniqueGroupName());
     const { description } = await createTestExpense(authPage);
     await authPage.goto("/home");
+    await expect(authPage.getByTestId("home-card-expenses")).toBeVisible();
+    await expect(authPage.getByTestId("home-first-day-expenses")).toHaveCount(
+      0,
+    );
     const statistics = authPage.getByTestId("home-statistics");
     await waitForHydration(statistics);
     await statistics.click();

@@ -87,16 +87,6 @@ export default function GroupSettingsIndex() {
           </Link>
         </SettingsSection>
 
-        <SettingsSection title={t("group.settings.changeGroup")}>
-          <Link href="/settings/manage-groups" asChild>
-            <SettingsItem
-              testID="group-settings-change-group"
-              title={t("group.settings.changeGroup")}
-              subtitle={t("group.settings.changeGroupSubtitle")}
-              iconName="arrow-left-right"
-            />
-          </Link>
-        </SettingsSection>
         <SettingsSection title={t("navigation.dangerZone")}>
           <SettingsItem
             testID="group-settings-delete"

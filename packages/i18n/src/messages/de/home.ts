@@ -15,6 +15,20 @@ export const home = {
   itemsBought: "{count, plural, one {Artikel gekauft} other {Artikel gekauft}}",
   choresDone:
     "{count, plural, one {Aufgabe erledigt} other {Aufgaben erledigt}}",
+  firstDay: {
+    expenses: {
+      title: "Noch nichts ausgegeben",
+      body: "Deine erste Ausgabe erscheint hier, und ab nächstem Monat der Vergleich.",
+    },
+    shopping: {
+      title: "Noch nichts gekauft",
+      body: "Was ihr abhakt, wird hier gezählt.",
+    },
+    calendar: {
+      title: "Noch keine Aufgaben erledigt",
+      body: "Trag wiederkehrende Aufgaben in den Kalender ein und wechselt euch ab.",
+    },
+  },
   pace: {
     less: "<b>{amount} weniger</b> als um diese Zeit im {month}",
     more: "<b>{amount} mehr</b> als um diese Zeit im {month}",

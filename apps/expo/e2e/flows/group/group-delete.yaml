@@ -6,46 +6,7 @@ tags:
 # expenses" from apps/nextjs/e2e/group/group-management.spec.ts.
 - runFlow: ../../subflows/e2e-login.yaml
 
-- runFlow:
-    file: ../../subflows/create-group.yaml
-    env:
-      GROUP_NAME: "Delete Me Group"
-# Creating selected the group, so reach the group list through its settings
-- tapOn:
-    id: "home-group-settings"
-- extendedWaitUntil:
-    visible:
-      id: "group-settings-change-group"
-    timeout: 15000
-- tapOn:
-    id: "group-settings-change-group"
-- extendedWaitUntil:
-    visible:
-      id: "group-dashboard-title"
-    timeout: 15000
-# A swipe can pass without opening the row, like a tap that misses (see tap-until.yaml).
-- retry:
-    maxRetries: 2
-    commands:
-      - swipe:
-          from:
-            text: "Delete Me Group"
-          direction: LEFT
-      - extendedWaitUntil:
-          visible:
-            id: "delete-confirmation-input"
-          timeout: 15000
-- runFlow:
-    file: ../../subflows/confirm-delete.yaml
-    env:
-      CONFIRM_TEXT: "Delete Me Group"
-- extendedWaitUntil:
-    notVisible: "Delete Me Group"
-    timeout: 15000
-- assertVisible:
-    id: "group-dashboard-title"
-
-# A group with an expense must delete too, here through group settings
+# A group with an expense deletes through its settings
 - runFlow:
     file: ../../subflows/create-group.yaml
     env:

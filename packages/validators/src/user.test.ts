@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { asksForName, inboxOf } from "./user";
+import { asksForName, inboxOf, justCreated } from "./user";
 
 const createdAt = new Date("2026-10-29T10:00:00Z");
 const user = (name: string) => ({ name, email: "mia@posteo.de", createdAt });
@@ -19,6 +19,18 @@ describe("asksForName", () => {
   it("leaves an older account alone on a later sign-in", () => {
     expect(
       asksForName(user("mia"), createdAt.getTime() + 24 * 60 * 60 * 1000),
+    ).toBe(false);
+  });
+});
+
+describe("justCreated", () => {
+  it("counts an account made in this sign-in as just created", () => {
+    expect(justCreated({ createdAt }, createdAt.getTime() + 2000)).toBe(true);
+  });
+
+  it("treats an account from an earlier day as returning", () => {
+    expect(
+      justCreated({ createdAt }, createdAt.getTime() + 24 * 60 * 60 * 1000),
     ).toBe(false);
   });
 });

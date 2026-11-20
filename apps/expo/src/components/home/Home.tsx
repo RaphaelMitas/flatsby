@@ -263,6 +263,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
               pace={pace?.spending}
               today={pace?.today}
               fadeIn={startedEmpty}
+              firstDay="expenses"
               format={(cents) =>
                 formatCurrencyFromCents({
                   cents,
@@ -270,14 +271,15 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
                   locale,
                 })
               }
-            />
-            <PaceChart
-              pace={pace?.spending}
-              today={pace?.today}
-              height={80}
-              labelled
-              drawIn={startedEmpty}
-            />
+            >
+              <PaceChart
+                pace={pace?.spending}
+                today={pace?.today}
+                height={80}
+                labelled
+                drawIn={startedEmpty}
+              />
+            </PaceHeadline>
           </HomeCard>
           <CatOverlay pose={pose} speech={speech} />
         </View>
@@ -295,15 +297,17 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             pace={pace?.itemsBought}
             today={pace?.today}
             fadeIn={startedEmpty}
+            firstDay="shopping"
             format={String}
             unit={(items) => t("home.itemsBought", { count: items })}
-          />
-          <PaceChart
-            pace={pace?.itemsBought}
-            today={pace?.today}
-            height={44}
-            drawIn={startedEmpty}
-          />
+          >
+            <PaceChart
+              pace={pace?.itemsBought}
+              today={pace?.today}
+              height={44}
+              drawIn={startedEmpty}
+            />
+          </PaceHeadline>
           {lastList && (
             <View className="mt-4 min-h-9 flex-row items-center gap-3">
               {openCount > 0 && <CategoryStack counts={categoryCounts} />}
@@ -335,6 +339,7 @@ function HomeScreen({ group }: { group: GroupWithAccess }) {
             pace={pace?.choresDone}
             today={pace?.today}
             fadeIn={startedEmpty}
+            firstDay="calendar"
             format={String}
             unit={(chores) => t("home.choresDone", { count: chores })}
           />

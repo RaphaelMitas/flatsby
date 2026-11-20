@@ -14,7 +14,7 @@ import {
   SIGN_IN_CODE_LENGTH,
   SIGN_IN_CODE_TTL_MINUTES,
 } from "@flatsby/validators/login";
-import { asksForName } from "@flatsby/validators/user";
+import { asksForName, justCreated } from "@flatsby/validators/user";
 import { useSignInCode } from "@flatsby/validators/useSignInCode";
 
 import { signInCode } from "~/auth/client";
@@ -53,7 +53,7 @@ export default function EmailCode({
         signedIn.current = true;
         sendLoginEvent({ ...attempt.event, event: "login_succeeded" });
         const next =
-          readPasskeyDevice() === "unknown"
+          readPasskeyDevice() === "unknown" && !justCreated(user)
             ? `/auth/passkey?next=${encodeURIComponent(callbackURL)}`
             : callbackURL;
         const joining = callbackURL.startsWith(`${INVITE_PATH}/`);

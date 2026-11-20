@@ -40,7 +40,6 @@ export function SidebarGroupSwitcher() {
   const { currentGroup, groups, switchGroup, hasCurrentGroup } =
     useGroupContext();
 
-  const isGroupPage = pathname === "/group";
   const isGroupSettingsPage = pathname === "/group/settings";
   const isGroupCreatePage = pathname === "/group/create";
 
@@ -74,14 +73,6 @@ export function SidebarGroupSwitcher() {
               ))}
 
               {groups.length > 0 && <DropdownMenuSeparator />}
-
-              <DropdownMenuItem asChild>
-                <Link href="/group">
-                  <Users className="mr-2 size-4" />
-                  <span>{t("allGroups")}</span>
-                  {isGroupPage && <Check className="ml-auto size-4" />}
-                </Link>
-              </DropdownMenuItem>
 
               <DropdownMenuItem onSelect={() => setJoinOpen(true)}>
                 <KeyRound className="mr-2 size-4" />

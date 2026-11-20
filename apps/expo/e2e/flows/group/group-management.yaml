@@ -3,7 +3,7 @@ tags:
   - group
 ---
 # Mirrors apps/nextjs/e2e/group/group-management.spec.ts:
-# create group via UI, change group name, switch groups from home.
+# create group via UI, change group name, switch groups from settings.
 - runFlow: ../../subflows/e2e-login.yaml
 
 # Create a group via the UI
@@ -38,16 +38,14 @@ tags:
       text: "Maestro Group Updated"
     timeout: 15000
 
-# Switch back to the fixture group from the home's group switcher
+# Switch back to the fixture group from Settings, which opens Home's group switcher
 - runFlow:
-    file: ../../subflows/tap-tab.yaml
+    file: ../../subflows/open-link.yaml
     env:
-      TAB_ID: "tab-home"
-      TAB_LABEL: "Home"
-      TAB_X: "10%"
-      MARKER_ID: "home-group-picker"
+      LINK: flatsby://settings
+      MARKER_ID: "settings-change-group"
 - tapOn:
-    id: "home-group-picker"
+    id: "settings-change-group"
 - extendedWaitUntil:
     visible:
       id: "group-switcher"

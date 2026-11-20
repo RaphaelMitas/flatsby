@@ -4,7 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useLocale, useTranslations } from "use-intl";
 
-import { paceLabels, paceSummary } from "@flatsby/validators/home";
+import { isEmptyPace, paceLabels, paceSummary } from "@flatsby/validators/home";
 
 import Icon from "~/lib/ui/custom/icons/Icon";
 import { Skeleton } from "~/lib/ui/skeleton";
@@ -157,27 +157,54 @@ export function PaceHeadline({
   format,
   unit,
   fadeIn,
+  firstDay,
+  children,
 }: {
   pace: Pace | undefined;
   today: string | undefined;
   format: (value: number) => string;
   unit?: (count: number) => string;
   fadeIn: boolean;
+  firstDay: "expenses" | "shopping" | "calendar";
+  children?: ReactNode;
 }) {
-  if (!pace || !today) return <HeadlineSkeleton />;
+  const t = useTranslations();
+
+  if (!pace || !today)
+    return (
+      <>
+        <HeadlineSkeleton />
+        {children}
+      </>
+    );
+
+  if (isEmptyPace(pace))
+    return (
+      <View className="mt-2 gap-0.5">
+        <Text className="text-foreground text-base font-semibold">
+          {t(`home.firstDay.${firstDay}.title`)}
+        </Text>
+        <Text className="text-muted-foreground text-sm">
+          {t(`home.firstDay.${firstDay}.body`)}
+        </Text>
+      </View>
+    );
 
   return (
-    <Animated.View
-      entering={fadeIn ? FadeIn.duration(300) : undefined}
-      className="mt-2"
-    >
-      <Headline value={paceSummary(pace).total} format={format} unit={unit} />
-      <PaceComparison
-        pace={pace}
-        today={today}
-        format={format}
-        className="text-muted-foreground text-sm"
-      />
-    </Animated.View>
+    <>
+      <Animated.View
+        entering={fadeIn ? FadeIn.duration(300) : undefined}
+        className="mt-2"
+      >
+        <Headline value={paceSummary(pace).total} format={format} unit={unit} />
+        <PaceComparison
+          pace={pace}
+          today={today}
+          format={format}
+          className="text-muted-foreground text-sm"
+        />
+      </Animated.View>
+      {children}
+    </>
   );
 }

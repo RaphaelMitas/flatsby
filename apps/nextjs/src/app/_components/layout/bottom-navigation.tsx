@@ -20,24 +20,20 @@ export function BottomNavigation() {
   const pathname = usePathname();
   const { hasCurrentGroup } = useGroupContext();
 
-  const isGroupPage = pathname === "/group" || pathname.startsWith("/group/");
+  const isHomePage = pathname.startsWith("/home");
   const isShoppingPage = pathname.startsWith("/shopping-list");
   const isExpensesPage = pathname.startsWith("/expenses");
   const isCalendarPage = pathname.startsWith("/calendar");
   const isSettingsPage = pathname.startsWith("/user-settings");
 
-  const isGroupActive = isGroupPage && !pathname.startsWith("/group/settings");
-  const isShoppingActive = isShoppingPage;
-  const isExpensesActive = isExpensesPage;
-
   return (
     <div className="bg-background fixed right-0 bottom-0 left-0 z-50 h-16 border-t md:hidden">
       <nav className="flex justify-around py-2">
         <Link
-          href="/group"
+          href="/home"
           className={cn(
             "hover:text-foreground flex flex-col items-center gap-1",
-            isGroupActive ? "text-foreground" : "text-muted-foreground",
+            isHomePage ? "text-foreground" : "text-muted-foreground",
           )}
           prefetch={false}
         >
@@ -48,7 +44,7 @@ export function BottomNavigation() {
           href={hasCurrentGroup ? "/shopping-list" : "/group"}
           className={cn(
             "hover:text-foreground flex flex-col items-center gap-1",
-            isShoppingActive ? "text-foreground" : "text-muted-foreground",
+            isShoppingPage ? "text-foreground" : "text-muted-foreground",
           )}
           prefetch={false}
         >
@@ -59,7 +55,7 @@ export function BottomNavigation() {
           href={hasCurrentGroup ? "/expenses" : "/group"}
           className={cn(
             "hover:text-foreground flex flex-col items-center gap-1",
-            isExpensesActive ? "text-foreground" : "text-muted-foreground",
+            isExpensesPage ? "text-foreground" : "text-muted-foreground",
           )}
           prefetch={false}
         >

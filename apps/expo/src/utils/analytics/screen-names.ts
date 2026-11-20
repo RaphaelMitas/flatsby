@@ -20,7 +20,6 @@ const names: Record<string, string> = {
   "settings/account": "Account Settings",
   "settings/profile": "Profile",
   "settings/passkeys": "Passkeys",
-  "settings/manage-groups": "Manage Groups",
   "settings/danger": "Danger Zone",
   "settings/legal": "Legal",
   "auth/login": "Login",

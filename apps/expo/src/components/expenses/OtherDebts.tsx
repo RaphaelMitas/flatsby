@@ -63,11 +63,11 @@ export function OtherDebts({ debts, person, onSettle }: OtherDebtsProps) {
             </Text>
             <Button
               testID="debt-others-record"
-              accessibilityLabel={t("recordPayment", {
+              accessibilityLabel={t("settleUpPayment", {
                 from: from.name,
                 to: to.name,
               })}
-              title={t("record")}
+              title={t("settleUp")}
               size="sm"
               variant="outline"
               onPress={() => onSettle(debt)}

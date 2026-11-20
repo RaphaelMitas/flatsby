@@ -34,8 +34,6 @@ export const group = {
     creating: "Creating your group…",
   },
   settings: {
-    changeGroup: "Change Group",
-    changeGroupSubtitle: "Change selected group or create a new one",
     details: "Group Details",
     detailsSubtitle: "Edit your group details",
     importExpenses: "Import Expenses",

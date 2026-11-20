@@ -42,9 +42,13 @@ export interface SignedInUser {
 export const typedName = (user: { name: string; email: string }) =>
   user.name === defaultUserName(user.email) ? "" : user.name;
 
+export const justCreated = (
+  user: Pick<SignedInUser, "createdAt">,
+  now = Date.now(),
+) => now - new Date(user.createdAt).getTime() < JUST_CREATED_MS;
+
 export const asksForName = (user: SignedInUser, now = Date.now()) =>
-  now - new Date(user.createdAt).getTime() < JUST_CREATED_MS &&
-  user.name === defaultUserName(user.email);
+  justCreated(user, now) && user.name === defaultUserName(user.email);
 
 export const userSchema = z.object({
   id: z.string(),
