@@ -412,7 +412,7 @@ export function settleOutstandingLabel(
   person: PersonLookup,
   t: Translate,
 ): string {
-  if (source === "simplified") return t("debts.simplifiedPayment");
+  if (source === "simplified") return t("debts.mode.simplified");
   const from = person(debt.fromGroupMemberId).name;
   const to = person(debt.toGroupMemberId).name;
   if (debt.toGroupMemberId === meId) {

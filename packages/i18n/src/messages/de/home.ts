@@ -26,7 +26,7 @@ export const home = {
     },
     calendar: {
       title: "Noch keine Aufgaben erledigt",
-      body: "Trag wiederkehrende Aufgaben in den Kalender ein und wechselt euch ab.",
+      body: "Erledigte Aufgaben werden hier gezählt.",
     },
   },
   pace: {

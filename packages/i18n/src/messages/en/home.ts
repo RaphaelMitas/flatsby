@@ -23,7 +23,7 @@ export const home = {
     },
     calendar: {
       title: "No chores done yet",
-      body: "Put recurring chores in the calendar and take turns.",
+      body: "Chores you tick off are counted here.",
     },
   },
   pace: {

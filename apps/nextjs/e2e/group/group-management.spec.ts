@@ -382,7 +382,7 @@ test.describe("Group Management", () => {
     await createAndSelectGroup(authPage, uniqueGroupName());
     const { description } = await createTestExpense(authPage);
     await authPage.goto("/home");
-    await expect(authPage.getByTestId("home-card-expenses")).toBeVisible();
+    await expect(authPage.getByTestId("home-card-expenses")).toContainText("€");
     await expect(authPage.getByTestId("home-first-day-expenses")).toHaveCount(
       0,
     );

@@ -3,7 +3,8 @@ tags:
   - group
 ---
 # Mirrors "delete group", "deleted group inaccessible" and "delete group with
-# expenses" from apps/nextjs/e2e/group/group-management.spec.ts.
+# expenses" from apps/nextjs/e2e/group/group-management.spec.ts, then deletes
+# the last group from Home's group list with a swipe.
 - runFlow: ../../subflows/e2e-login.yaml
 
 # A group with an expense deletes through its settings
@@ -62,3 +63,24 @@ tags:
     visible: "E2E Test Group.*"
     timeout: 30000
 - assertNotVisible: "Spent Group"
+- copyTextFrom:
+    id: "group-card-name"
+# A swipe can pass without opening the row, like a tap that misses (see tap-until.yaml).
+- retry:
+    maxRetries: 2
+    commands:
+      - swipe:
+          from:
+            id: "group-card-name"
+          direction: LEFT
+      - extendedWaitUntil:
+          visible:
+            id: "delete-confirmation-input"
+          timeout: 15000
+- runFlow:
+    file: ../../subflows/confirm-delete.yaml
+    env:
+      CONFIRM_TEXT: ${maestro.copiedText}
+- extendedWaitUntil:
+    notVisible: "E2E Test Group.*"
+    timeout: 15000

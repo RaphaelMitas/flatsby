@@ -39,5 +39,5 @@ tags:
     id: "passkey-offer-later"
 - extendedWaitUntil:
     visible:
-      id: "home-group-picker"
+      id: "group-dashboard-title"
     timeout: 30000

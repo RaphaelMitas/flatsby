@@ -31,9 +31,9 @@ tags:
 - scrollUntilVisible:
     element: "€12[.,]00"
     direction: DOWN
-- assertVisible: "Settle up Max paying Lena"
+- assertVisible: "Settle up: Max pays Lena"
 - assertVisible: "€25[.,]00"
-- assertVisible: "Settle up Sophie paying Max"
+- assertVisible: "Settle up: Sophie pays Max"
 
 - scrollUntilVisible:
     element:
@@ -43,7 +43,7 @@ tags:
     id: "debt-mode-simplified"
 - assertVisible: "€55[.,]50"
 - assertVisible: "€7[.,]50"
-- assertNotVisible: "Settle up Sophie paying Max"
+- assertNotVisible: "Settle up: Sophie pays Max"
 - assertVisible:
     id: "debt-row-toggle"
     text: ".*pays you.*"
