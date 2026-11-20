@@ -55,5 +55,6 @@ tags:
     notVisible:
       id: "group-switcher"
     timeout: 15000
-- assertVisible: "E2E Test Group.*"
-- assertNotVisible: "Maestro Group Updated"
+# iOS reads the Settings group row as one label with its icon and member count
+- assertVisible: ".*E2E Test Group.*"
+- assertNotVisible: ".*Maestro Group Updated.*"
