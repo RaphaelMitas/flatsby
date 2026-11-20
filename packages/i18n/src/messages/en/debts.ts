@@ -46,7 +46,6 @@ export const debts = {
   selectPayer: "Select who is paying",
   selectRecipient: "Select who is receiving",
   currency: "Currency",
-  amount: "Amount",
   markAsPaid: "Mark as paid",
   updateSettlement: "Update Settlement",
   markedAsPaid: "Marked as paid",

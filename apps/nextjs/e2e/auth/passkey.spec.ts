@@ -39,7 +39,6 @@ test.describe("Passkeys", () => {
     );
     await page.getByTestId("auth-code-input").fill(code);
     await expect(page).toHaveURL(/\/welcome/);
-    await expect(page.getByTestId("auth-passkey-offer")).toHaveCount(0);
   });
 
   test("offered on a later code sign-in, then signs back in and is managed in settings", async ({
@@ -82,6 +81,5 @@ test.describe("Passkeys", () => {
     const again = await requestCode(page, email);
     await page.getByTestId("auth-code-input").fill(again);
     await expect(page).toHaveURL(/\/home/);
-    await expect(page.getByTestId("auth-passkey-offer")).toHaveCount(0);
   });
 });

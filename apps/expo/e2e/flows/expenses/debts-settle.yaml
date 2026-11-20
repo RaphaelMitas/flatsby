@@ -59,6 +59,9 @@ tags:
 - assertVisible: "Sophie owes you directly"
 - assertVisible:
     id: "settlement-currency-locked"
+- assertVisible:
+    id: "settlement-submit-button"
+    text: "Mark as paid"
 - tapOn:
     id: "settlement-submit-button"
 

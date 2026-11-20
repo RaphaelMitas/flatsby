@@ -454,7 +454,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               name="amountInCents"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("debts.amount")}</FormLabel>
+                  <FormLabel>{t("expenses.amount")}</FormLabel>
                   <FormControl>
                     <div className="flex items-center gap-2">
                       {isBlank ? (

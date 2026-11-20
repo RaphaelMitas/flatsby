@@ -82,5 +82,10 @@ tags:
     env:
       CONFIRM_TEXT: ${maestro.copiedText}
 - extendedWaitUntil:
-    notVisible: "E2E Test Group.*"
+    visible:
+      id: "onboarding-title"
     timeout: 15000
+- runFlow:
+    file: ../../subflows/relaunch.yaml
+    env:
+      MARKER_ID: "onboarding-title"

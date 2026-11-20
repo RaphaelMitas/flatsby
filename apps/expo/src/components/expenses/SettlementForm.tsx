@@ -576,7 +576,7 @@ export function SettlementForm({
                 name="amountInCents"
                 render={({ field }) => (
                   <View className="flex-1 gap-2">
-                    <Label>{t("debts.amount")}</Label>
+                    <Label>{t("expenses.amount")}</Label>
                     <CurrencyInput
                       value={field.value}
                       onChange={field.onChange}

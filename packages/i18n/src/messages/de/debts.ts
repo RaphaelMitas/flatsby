@@ -48,7 +48,6 @@ export const debts = {
   selectPayer: "Wähle, wer zahlt",
   selectRecipient: "Wähle, wer das Geld bekommt",
   currency: "Währung",
-  amount: "Betrag",
   markAsPaid: "Als bezahlt markieren",
   updateSettlement: "Ausgleich aktualisieren",
   markedAsPaid: "Als bezahlt markiert",
