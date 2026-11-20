@@ -9,7 +9,7 @@ import {
   SIGN_IN_CODE_LENGTH,
   SIGN_IN_CODE_TTL_MINUTES,
 } from "@flatsby/validators/login";
-import { asksForName } from "@flatsby/validators/user";
+import { asksForName, justCreated } from "@flatsby/validators/user";
 import { useSignInCode } from "@flatsby/validators/useSignInCode";
 
 import type { SignInStep } from "~/utils/auth/post-login-path";
@@ -51,7 +51,7 @@ export default function CodeScreen() {
         posthog.capture("login_succeeded", attempt);
         const steps: SignInStep[] = [];
         if (asksForName(user) && peekPostLoginPath()) steps.push("name");
-        if (offersPasskey) steps.push("passkey");
+        if (offersPasskey && !justCreated(user)) steps.push("passkey");
         queueSignInSteps(steps);
       },
     });

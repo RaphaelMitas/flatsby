@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Linking } from "react-native";
 import { Link, Stack } from "expo-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -5,11 +6,14 @@ import { useLocale, useTranslations } from "use-intl";
 
 import { localeNames, locales } from "@flatsby/i18n/locale";
 
+import type { SwitcherSheetHandle } from "~/components/switcher/Switcher";
 import { EveningReminderItem } from "~/components/settings/EveningReminderItem";
 import { SettingsChoiceItem } from "~/components/settings/SettingsChoiceItem";
 import { SettingsItem } from "~/components/settings/SettingsItem";
 import { SettingsSection } from "~/components/settings/SettingsSection";
+import { GroupSwitcherSheet } from "~/components/switcher/GroupSwitcher";
 import { AppScrollView } from "~/lib/components/keyboard-aware-scroll-view";
+import Icon from "~/lib/ui/custom/icons/Icon";
 import { SafeAreaView } from "~/lib/ui/safe-area";
 import { useTheme } from "~/lib/ui/theme";
 import { useAnalyticsConsent } from "~/utils/analytics/consent";
@@ -34,6 +38,7 @@ export default function SettingsIndex() {
   const { group: currentGroup, name: groupName } = useSelectedGroup();
   const updateNudge = updateNudgeFrequency.useValue();
   const updateNudgeChoices = useUpdateNudgeChoices();
+  const groupSwitcher = useRef<SwitcherSheetHandle>(null);
 
   const { data: user } = useSuspenseQuery(
     trpc.user.getCurrentUser.queryOptions(),
@@ -69,12 +74,19 @@ export default function SettingsIndex() {
               iconName="users"
             />
           </Link>
-          <Link href="/settings/manage-groups" asChild>
-            <SettingsItem
-              title={t("settings.items.changeGroup")}
-              iconName="arrow-left-right"
-            />
-          </Link>
+          <SettingsItem
+            testID="settings-change-group"
+            title={t("settings.items.changeGroup")}
+            iconName="arrow-left-right"
+            onPress={() => groupSwitcher.current?.present()}
+            rightContent={
+              <Icon
+                name="chevrons-up-down"
+                size={16}
+                color="muted-foreground"
+              />
+            }
+          />
         </SettingsSection>
         <SettingsSection title={t("settings.sections.app")}>
           <Link href="/settings/appearance" asChild>
@@ -149,6 +161,7 @@ export default function SettingsIndex() {
           />
         </SettingsSection>
       </AppScrollView>
+      <GroupSwitcherSheet ref={groupSwitcher} />
     </SafeAreaView>
   );
 }

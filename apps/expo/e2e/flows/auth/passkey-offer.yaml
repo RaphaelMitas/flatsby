@@ -1,0 +1,43 @@
+appId: ${APP_ID}
+tags:
+  - auth
+---
+# Mirrors the passkey offer tests in apps/nextjs/e2e/auth/passkey.spec.ts:
+# a code sign-in to an older account offers the passkey, a sign-up does not
+# (email-code.yaml).
+- runFlow:
+    file: ../../subflows/e2e-login.yaml
+    env:
+      E2E_SIGNED_OUT: "1"
+- evalScript: "${output.codeEmail = 'returning-' + Date.now() + '-' + Math.floor(Math.random() * 1e6) + '@flatsby.test'}"
+- runScript:
+    file: returning-account.js
+    env:
+      EMAIL: ${output.codeEmail}
+- tapOn:
+    id: "sign-in-email-input"
+- inputText: ${output.codeEmail}
+- tapOn:
+    id: "sign-in-email-button"
+- extendedWaitUntil:
+    visible:
+      id: "code-screen"
+    timeout: 30000
+- runScript:
+    file: sign-in-code.js
+    env:
+      EMAIL: ${output.codeEmail}
+- tapOn:
+    id: "code-input"
+- inputText: ${output.signInCode}
+# The system passkey sheet needs the real domain, so the flow declines the offer
+- extendedWaitUntil:
+    visible:
+      id: "passkey-offer-screen"
+    timeout: 30000
+- tapOn:
+    id: "passkey-offer-later"
+- extendedWaitUntil:
+    visible:
+      id: "group-dashboard-title"
+    timeout: 30000

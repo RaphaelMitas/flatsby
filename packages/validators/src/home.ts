@@ -73,6 +73,9 @@ export function monthPace(
 export const sum = (values: number[]) =>
   values.reduce((total, value) => total + value, 0);
 
+export const isEmptyPace = ({ current, previous }: Pace) =>
+  sum(current) === 0 && sum(previous) === 0;
+
 export const directionOf = (difference: number): "less" | "more" | "same" =>
   difference < 0 ? "less" : difference > 0 ? "more" : "same";
 

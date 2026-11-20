@@ -434,7 +434,6 @@ export function SettlementForm({
     groupMembers.find((member) => member.id === watchedToMemberId)?.user
       .paypalHandle ?? null;
   const payerIsMe = watchedFromMemberId === meId;
-  const payingWithPaypal = payerIsMe && watchedAmount > 0 && !!receiverPaypal;
 
   const errorMessage =
     failureOf(createSettlementMutation, t("expenses.genericError")) ??
@@ -577,7 +576,7 @@ export function SettlementForm({
                 name="amountInCents"
                 render={({ field }) => (
                   <View className="flex-1 gap-2">
-                    <Label>{t("debts.settlementAmount")}</Label>
+                    <Label>{t("expenses.amount")}</Label>
                     <CurrencyInput
                       value={field.value}
                       onChange={field.onChange}
@@ -630,12 +629,10 @@ export function SettlementForm({
                   isPending
                     ? isEditMode
                       ? t("common.updating")
-                      : t("debts.recording")
+                      : t("common.saving")
                     : isEditMode
                       ? t("debts.updateSettlement")
-                      : payingWithPaypal
-                        ? t("debts.pay.paidRecord")
-                        : t("debts.recordSettlement")
+                      : t("debts.markAsPaid")
                 }
                 onPress={form.handleSubmit(onSubmit)}
                 disabled={isPending}

@@ -154,7 +154,7 @@ export function DebtSummaryView({ groupId }: DebtSummaryViewProps) {
         >
           <Icon name="plus" size={16} color="muted-foreground" />
           <Text className="text-muted-foreground text-sm">
-            {t("debts.recordAnotherPayment")}
+            {t("debts.settleUpAnother")}
           </Text>
         </Pressable>
       </View>

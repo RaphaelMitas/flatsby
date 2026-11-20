@@ -27,8 +27,17 @@ import { auth } from "~/auth/server";
 import { env } from "~/env";
 import { E2E_EMAIL_DOMAIN } from "../email-domain";
 
-async function upsertE2EUser(name: string, customEmail?: string) {
+const RETURNING_ACCOUNT_AGE_MS = 30 * 60 * 1000;
+
+async function upsertE2EUser(
+  name: string,
+  customEmail?: string,
+  returning = false,
+) {
   const now = new Date();
+  const createdAt = returning
+    ? new Date(now.getTime() - RETURNING_ACCOUNT_AGE_MS)
+    : now;
   let userId = `e2e-${randomUUID()}`;
   const email = customEmail ?? `${userId}@${E2E_EMAIL_DOMAIN}`;
 
@@ -43,7 +52,7 @@ async function upsertE2EUser(name: string, customEmail?: string) {
     userId = existingUser.id;
     await db
       .update(users)
-      .set({ name, createdAt: now, updatedAt: now })
+      .set({ name, createdAt, updatedAt: now })
       .where(eq(users.id, userId));
     await db
       .update(groupMembers)
@@ -55,7 +64,7 @@ async function upsertE2EUser(name: string, customEmail?: string) {
       name,
       email,
       emailVerified: true,
-      createdAt: now,
+      createdAt,
       updatedAt: now,
       termsAcceptedAt: now,
       termsVersion: "1.1",
@@ -623,7 +632,11 @@ export async function POST(request: Request) {
       ? emailParam
       : undefined;
 
-  const { userId, email } = await upsertE2EUser(name, customEmail);
+  const { userId, email } = await upsertE2EUser(
+    name,
+    customEmail,
+    searchParams.has("returning"),
+  );
 
   let group: { id: number };
   if (seed === "store") {

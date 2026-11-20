@@ -168,13 +168,13 @@ function DirectDebtRow({
                 variant="outline"
                 size="sm"
                 data-testid="direct-debt-settle"
-                aria-label={t("recordCurrencyWith", {
+                aria-label={t("settleUpCurrencyWith", {
                   currency: debt.currency,
                   name,
                 })}
                 onClick={() => onSettle(debt)}
               >
-                {t("record")}
+                {t("settleUp")}
               </Button>
             </div>
           ))}

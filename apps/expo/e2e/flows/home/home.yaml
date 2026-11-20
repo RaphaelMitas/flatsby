@@ -19,6 +19,10 @@ tags:
     visible:
       id: "home-card-expenses"
     timeout: 15000
+# The fixture group has nothing yet, so the cards say what will appear
+- extendedWaitUntil:
+    visible: ".*Nothing spent yet.*"
+    timeout: 15000
 - assertVisible:
     id: "home-group-settings"
 - scrollUntilVisible:

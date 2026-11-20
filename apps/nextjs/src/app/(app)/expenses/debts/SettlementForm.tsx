@@ -268,11 +268,11 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
         },
         rollback: restoreSnapshot(queryClient),
         onFailure: (message) =>
-          toast.error(t("debts.recordFailed"), {
+          toast.error(t("debts.markAsPaidFailed"), {
             description: message ?? t("errors.unexpected"),
           }),
         onSuccess: () => {
-          toast.success(t("debts.recordSuccess"));
+          toast.success(t("debts.markedAsPaid"));
           onClose();
         },
         onSettled: () => {
@@ -337,7 +337,6 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
     !!receiver &&
     groupMembers.some((member) => member.id === fromGroupMemberId);
   const payerIsMe = fromGroupMemberId === meId;
-  const payingWithPaypal = payerIsMe && amountInCents > 0 && !!receiverPaypal;
   const failure = failureOf(
     createSettlementMutation,
     t("expenses.genericError"),
@@ -455,7 +454,7 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
               name="amountInCents"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("debts.settlementAmount")}</FormLabel>
+                  <FormLabel>{t("expenses.amount")}</FormLabel>
                   <FormControl>
                     <div className="flex items-center gap-2">
                       {isBlank ? (
@@ -526,12 +525,10 @@ export function SettlementForm({ prefill, onClose }: SettlementFormProps) {
                 {isPending ? (
                   <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    {t("debts.recording")}
+                    {t("common.saving")}
                   </>
-                ) : payingWithPaypal ? (
-                  t("debts.pay.paidRecord")
                 ) : (
-                  t("debts.recordSettlement")
+                  t("debts.markAsPaid")
                 )}
               </Button>
             </div>

@@ -62,17 +62,19 @@ export function ShoppingCard({
         fadeIn={fadeIn}
         format={String}
         unit={(count) => t("home.itemsBought", { count })}
-      />
-      {pace ? (
-        <PaceChart
-          pace={pace.itemsBought}
-          today={pace.today}
-          className="h-12"
-          fadeIn={fadeIn}
-        />
-      ) : (
-        <Skeleton className="mt-2 h-12" />
-      )}
+        firstDay="shopping"
+      >
+        {pace ? (
+          <PaceChart
+            pace={pace.itemsBought}
+            today={pace.today}
+            className="h-12"
+            fadeIn={fadeIn}
+          />
+        ) : (
+          <Skeleton className="mt-2 h-12" />
+        )}
+      </PaceNumbers>
       {shownList ? (
         <div className="mt-4 flex min-h-8 items-center gap-3 text-sm">
           {shownList.uncheckedItemLength > 0 && (

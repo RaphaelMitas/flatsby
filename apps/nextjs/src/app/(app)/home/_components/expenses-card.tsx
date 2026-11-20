@@ -47,18 +47,20 @@ export function ExpensesCard({
         format={(cents) =>
           formatCurrencyFromCents({ cents, currency: currency ?? "", locale })
         }
-      />
-      {spending && pace ? (
-        <PaceChart
-          pace={spending}
-          today={pace.today}
-          className="h-22"
-          labelled
-          fadeIn={fadeIn}
-        />
-      ) : (
-        <Skeleton className="mt-2 h-28" />
-      )}
+        firstDay="expenses"
+      >
+        {spending && pace ? (
+          <PaceChart
+            pace={spending}
+            today={pace.today}
+            className="h-22"
+            labelled
+            fadeIn={fadeIn}
+          />
+        ) : (
+          <Skeleton className="mt-2 h-28" />
+        )}
+      </PaceNumbers>
     </HomeCard>
   );
 }

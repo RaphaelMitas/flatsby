@@ -116,7 +116,7 @@ test.describe("Debt & Settlements", () => {
     await openSeededDebts(page, baseURL);
 
     const settle = page.getByRole("button", {
-      name: "Record EUR payment with Lena",
+      name: "Settle up EUR with Lena",
     });
     await waitForHydration(settle);
     await settle.click();
@@ -126,7 +126,7 @@ test.describe("Debt & Settlements", () => {
       form.getByTestId("settle-pay-card").getByTestId("settle-paypal-button"),
     ).toHaveAttribute("href", "https://paypal.me/lenaschneider/30.00EUR");
     await expect(form.getByTestId("settlement-record-button")).toHaveText(
-      "I've paid, record it",
+      "Mark as paid",
     );
   });
 
@@ -137,7 +137,7 @@ test.describe("Debt & Settlements", () => {
     await openSeededDebts(page, baseURL);
 
     const settle = page.getByRole("button", {
-      name: "Record EUR payment with Sophie",
+      name: "Settle up EUR with Sophie",
     });
     await waitForHydration(settle);
     await settle.click();

@@ -13,7 +13,6 @@ export const group = {
     title: "Gruppe erstellen",
   },
   dashboard: {
-    goToGroup: "Zur Gruppe",
     selectGroup: "Gruppe auswählen",
     title: "Deine Gruppen",
   },
@@ -36,8 +35,6 @@ export const group = {
     creating: "Gruppe wird angelegt …",
   },
   settings: {
-    changeGroup: "Gruppe wechseln",
-    changeGroupSubtitle: "Andere Gruppe auswählen oder neue erstellen",
     details: "Gruppendetails",
     detailsSubtitle: "Details deiner Gruppe bearbeiten",
     importExpenses: "Ausgaben importieren",

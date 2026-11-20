@@ -1,7 +1,28 @@
 import { describe, expect, it } from "vitest";
 
 import { localDateIn } from "./calendar";
-import { monthPace, paceAt, paceChart, paceSummary, paceWindow } from "./home";
+import {
+  isEmptyPace,
+  monthPace,
+  paceAt,
+  paceChart,
+  paceSummary,
+  paceWindow,
+} from "./home";
+
+describe("isEmptyPace", () => {
+  it("is empty while neither this month nor last month has anything", () => {
+    expect(isEmptyPace({ current: [0, 0], previous: [0, 0, 0] })).toBe(true);
+  });
+
+  it("is not empty once last month has something, even after today's date", () => {
+    expect(isEmptyPace({ current: [0, 0], previous: [0, 0, 4] })).toBe(false);
+  });
+
+  it("is not empty from the first entry this month", () => {
+    expect(isEmptyPace({ current: [0, 1], previous: [0, 0, 0] })).toBe(false);
+  });
+});
 
 describe("monthPace", () => {
   it("puts each day in its month and drops what lies outside both", () => {

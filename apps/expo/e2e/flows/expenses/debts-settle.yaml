@@ -25,15 +25,15 @@ tags:
 - assertVisible:
     id: "debt-hero-amount"
     text: ".*€30[.,]50"
-- assertVisible: "Record EUR payment with Max"
-- assertVisible: "Record USD payment with Max"
+- assertVisible: "Settle up EUR with Max"
+- assertVisible: "Settle up USD with Max"
 
 - scrollUntilVisible:
     element: "€12[.,]00"
     direction: DOWN
-- assertVisible: "Record Max paying Lena"
+- assertVisible: "Settle up: Max pays Lena"
 - assertVisible: "€25[.,]00"
-- assertVisible: "Record Sophie paying Max"
+- assertVisible: "Settle up: Sophie pays Max"
 
 - scrollUntilVisible:
     element:
@@ -43,7 +43,7 @@ tags:
     id: "debt-mode-simplified"
 - assertVisible: "€55[.,]50"
 - assertVisible: "€7[.,]50"
-- assertNotVisible: "Record Sophie paying Max"
+- assertNotVisible: "Settle up: Sophie pays Max"
 - assertVisible:
     id: "debt-row-toggle"
     text: ".*pays you.*"
@@ -51,7 +51,7 @@ tags:
 - tapOn:
     id: "debt-mode-actual"
 
-- tapOn: "Record EUR payment with Sophie"
+- tapOn: "Settle up EUR with Sophie"
 - extendedWaitUntil:
     visible:
       id: "settlement-submit-button"
@@ -59,6 +59,9 @@ tags:
 - assertVisible: "Sophie owes you directly"
 - assertVisible:
     id: "settlement-currency-locked"
+- assertVisible:
+    id: "settlement-submit-button"
+    text: "Mark as paid"
 - tapOn:
     id: "settlement-submit-button"
 
@@ -67,16 +70,16 @@ tags:
       id: "debt-summary-title"
     timeout: 15000
 - extendedWaitUntil:
-    notVisible: "Record EUR payment with Sophie"
+    notVisible: "Settle up EUR with Sophie"
     timeout: 20000
 - assertVisible:
     id: "debt-hero-amount"
     text: ".*€12[.,]50"
-- assertVisible: "Record EUR payment with Max"
+- assertVisible: "Settle up EUR with Max"
 
 # The settle form is a KeyboardAwareScrollView, which Maestro's swipes don't
 # reliably move on hosted simulators, so these steps stay above the fold.
-- tapOn: "Record EUR payment with Lena"
+- tapOn: "Settle up EUR with Lena"
 - extendedWaitUntil:
     visible:
       id: "settle-paypal-button"
@@ -90,7 +93,7 @@ tags:
     visible:
       id: "debt-summary-title"
     timeout: 15000
-- tapOn: "Record USD payment with Max"
+- tapOn: "Settle up USD with Max"
 - extendedWaitUntil:
     visible:
       id: "settle-paypal-button"

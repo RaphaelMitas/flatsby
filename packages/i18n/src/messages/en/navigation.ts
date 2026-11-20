@@ -14,7 +14,6 @@ export const navigation = {
   termsOfService: "Terms of Service",
   account: "Account",
   allExpenses: "All Expenses",
-  allGroups: "All Groups",
   groupDetails: "Group Details",
   groups: "Groups",
   logOut: "Log out",

@@ -91,6 +91,11 @@ tags:
       TAB_LABEL: "Home"
       TAB_X: "10%"
       MARKER_ID: "home-statistics"
+# From the first expense on, the expenses card shows its number again
+- extendedWaitUntil:
+    visible: ".*€[0-9].*"
+    timeout: 15000
+- assertNotVisible: ".*Nothing spent yet.*"
 - runFlow:
     file: ../../subflows/tap-until.yaml
     env:

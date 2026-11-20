@@ -12,6 +12,20 @@ export const home = {
   open: "{count} open",
   itemsBought: "{count, plural, one {item bought} other {items bought}}",
   choresDone: "{count, plural, one {chore done} other {chores done}}",
+  firstDay: {
+    expenses: {
+      title: "Nothing spent yet",
+      body: "Your first expense shows up here, and from next month how it compares.",
+    },
+    shopping: {
+      title: "Nothing bought yet",
+      body: "Items you check off are counted here.",
+    },
+    calendar: {
+      title: "No chores done yet",
+      body: "Chores you tick off are counted here.",
+    },
+  },
   pace: {
     less: "<b>{amount} less</b> than this time in {month}",
     more: "<b>{amount} more</b> than this time in {month}",

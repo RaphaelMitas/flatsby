@@ -138,7 +138,7 @@ export function DebtSummaryView() {
         data-testid="record-payment-button"
       >
         <Plus />
-        {t("debts.recordAnotherPayment")}
+        {t("debts.settleUpAnother")}
       </Button>
 
       {settling && (

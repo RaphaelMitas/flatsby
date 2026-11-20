@@ -47,6 +47,7 @@ export function CalendarCard({
         fadeIn={fadeIn}
         format={String}
         unit={(count) => t("home.choresDone", { count })}
+        firstDay="calendar"
       />
       {today ? (
         <div className="mt-4 grid grid-cols-7 text-center">
