@@ -31,7 +31,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const swipeableRef = useRef<SwipeableMethods>(null);
   const router = useRouter();
-  const { selectedGroupId, setSelectedGroup } = useShoppingStore();
+  const { setSelectedGroup } = useShoppingStore();
   const isOptimistic = group.id === PENDING_ID;
 
   const { swipeableProps, guardPress } = useSwipeActions({
@@ -59,12 +59,7 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
     setShowDeleteModal(false);
   };
 
-  const handleGroupSelect = () => {
-    setSelectedGroup(group.id, group.name);
-    router.navigate("/(tabs)/home");
-  };
-
-  const isSelected = selectedGroupId === group.id;
+  const handleGroupSelect = () => setSelectedGroup(group.id, group.name);
 
   return (
     <>
@@ -91,7 +86,6 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
         <View
           className={cn(
             "bg-muted flex flex-row rounded-lg p-4",
-            isSelected && "bg-primary",
             isOptimistic && "animate-pulse",
           )}
         >
@@ -106,34 +100,21 @@ const GroupsDashboardElement: React.FC<Props> = ({ group }) => {
               <View className="flex-1">
                 <Text
                   testID="group-card-name"
-                  className={cn(
-                    "text-foreground text-lg font-semibold",
-                    isSelected && "text-primary-foreground",
-                  )}
+                  className="text-foreground text-lg font-semibold"
                 >
                   {group.name}
                 </Text>
-                <Text
-                  className={cn(
-                    "text-muted-foreground mt-1 text-sm",
-                    isSelected && "text-muted",
-                  )}
-                >
+                <Text className="text-muted-foreground mt-1 text-sm">
                   {t("group.memberCount", { count: group.memberCount })}
                 </Text>
               </View>
               <Button
                 testID="group-select-button"
-                title={
-                  isSelected
-                    ? t("group.dashboard.goToGroup")
-                    : t("group.dashboard.selectGroup")
-                }
+                title={t("group.dashboard.selectGroup")}
                 variant="outline"
                 size="md"
                 disabled={isOptimistic}
                 onPress={guardPress(handleGroupSelect)}
-                icon={isSelected ? "chevron-right" : undefined}
               />
             </View>
           </View>

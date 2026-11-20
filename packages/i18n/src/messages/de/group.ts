@@ -13,7 +13,6 @@ export const group = {
     title: "Gruppe erstellen",
   },
   dashboard: {
-    goToGroup: "Zur Gruppe",
     selectGroup: "Gruppe auswählen",
     title: "Deine Gruppen",
   },
