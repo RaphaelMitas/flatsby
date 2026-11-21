@@ -661,7 +661,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         if: steps.guard.outputs.skip != 'true'
         with:
-          ruby-version: "4.0.9"
+          ruby-version: "4.0.10"
 
       - name: Install fastlane
         if: steps.guard.outputs.skip != 'true'
@@ -895,7 +895,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         if: steps.guard.outputs.skip != 'true'
         with:
-          ruby-version: "4.0.9"
+          ruby-version: "4.0.10"
 
       - name: Install fastlane
         if: steps.guard.outputs.skip != 'true'
