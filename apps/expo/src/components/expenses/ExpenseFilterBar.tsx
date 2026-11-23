@@ -6,8 +6,9 @@ import type {
   MemberRole,
 } from "@flatsby/validators/expenses/list-filter";
 import type { ComponentRef, ReactNode } from "react";
+import type { TextInput } from "react-native";
 import { useRef, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "use-intl";
 
@@ -30,9 +31,10 @@ import type { DayRangeDraft } from "./DayRangeGrid";
 import { Button } from "~/lib/ui/button";
 import { Chip } from "~/lib/ui/chip";
 import Icon from "~/lib/ui/custom/icons/Icon";
+import { Input } from "~/lib/ui/input";
 import { Segmented } from "~/lib/ui/segmented";
 import { SheetModal } from "~/lib/ui/sheet-modal";
-import { cn, useThemeColors } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 import { trpc } from "~/utils/api";
 import { e2eAccessibilityOverride } from "~/utils/e2e";
 import { DayRangeGrid, draftRange, nextDraft } from "./DayRangeGrid";
@@ -60,7 +62,6 @@ export function ExpenseFilterBar({
 }: ExpenseFilterBarProps) {
   const t = useTranslations();
   const locale = useLocale();
-  const { getColor } = useThemeColors();
   const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const sheetRef = useRef<BottomSheetModal>(null);
   const [focused, setFocused] = useState(false);
@@ -119,32 +120,32 @@ export function ExpenseFilterBar({
   return (
     <View>
       <View className="flex-row items-center gap-3">
-        <View className="bg-muted h-10 flex-1 flex-row items-center gap-2 rounded-lg px-3">
-          <Icon name="search" size={16} color="muted-foreground" />
-          <TextInput
-            ref={inputRef}
-            testID="expense-search-input"
-            value={filters.search}
-            onChangeText={filters.setSearch}
-            onFocus={() => focus(true)}
-            onBlur={() => focus(false)}
-            placeholder={t("expenses.filter.searchPlaceholder")}
-            placeholderTextColor={getColor("muted-foreground")}
-            returnKeyType="search"
-            autoCorrect={false}
-            className="text-foreground flex-1 py-0"
-          />
-          {filters.search !== "" && (
-            <Pressable
-              testID="expense-search-clear"
-              accessibilityLabel={t("expenses.filter.clearSearch")}
-              hitSlop={8}
-              onPress={() => filters.setSearch("")}
-            >
-              <Icon name="circle-x" size={16} color="muted-foreground" />
-            </Pressable>
-          )}
-        </View>
+        <Input
+          ref={inputRef}
+          testID="expense-search-input"
+          size="sm"
+          className="flex-1"
+          value={filters.search}
+          onChangeText={filters.setSearch}
+          onFocus={() => focus(true)}
+          onBlur={() => focus(false)}
+          placeholder={t("expenses.filter.searchPlaceholder")}
+          returnKeyType="search"
+          autoCorrect={false}
+          leading={<Icon name="search" size={16} color="muted-foreground" />}
+          trailing={
+            filters.search !== "" ? (
+              <Pressable
+                testID="expense-search-clear"
+                accessibilityLabel={t("expenses.filter.clearSearch")}
+                hitSlop={8}
+                onPress={() => filters.setSearch("")}
+              >
+                <Icon name="circle-x" size={16} color="muted-foreground" />
+              </Pressable>
+            ) : null
+          }
+        />
         {focused && (
           <Pressable
             testID="expense-search-cancel"
