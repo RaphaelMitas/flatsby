@@ -57,7 +57,7 @@ const Input = ({
       ref={ref}
       className={
         adorned
-          ? "text-foreground flex-1 py-0"
+          ? "text-foreground flex-1 self-stretch py-0"
           : inputVariants({ className, size, error, focused: isFocused })
       }
       onFocus={(e) => {
