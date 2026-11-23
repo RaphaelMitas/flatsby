@@ -226,10 +226,13 @@ export function captureError({
 
   if (!posthog) return;
 
-  posthog.captureException(cause, distinctId, {
-    $exception_source: "server",
-    operation,
-    ...additionalProperties,
+  posthog.captureException(cause, {
+    distinctId,
+    properties: {
+      $exception_source: "server",
+      operation,
+      ...additionalProperties,
+    },
   });
 }
 
@@ -333,10 +336,9 @@ export async function captureCookieless({
     event,
     properties: {
       ...buildPostHogProperties(headers, { url, referrer }),
-      $cookieless_mode: true,
       $ip: clientIp(headers),
-      $process_person_profile: false,
       ...additionalProperties,
     },
+    options: { cookieless_mode: true, process_person_profile: false },
   });
 }

@@ -66,7 +66,7 @@ describe("withoutQueryParams", () => {
 
     const sent: unknown[] = [];
     const client = new PostHog("phc_test", {
-      before_send: (event) => {
+      beforeSend: (event) => {
         sent.push(event);
         return null;
       },
