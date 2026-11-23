@@ -42,20 +42,20 @@ catalog:
   "@ai-sdk/provider": ^4.0.39
   "@biomejs/biome": 2.6.8
   "@effect/tsgo": 0.73.2
-  "@effect/vitest": 4.1.4
-  "@hookform/resolvers": ^7.0.7
+  "@effect/vitest": 4.1.5
+  "@hookform/resolvers": ^7.0.8
   "@playwright/test": ^1.65.1
   "@t3-oss/env-nextjs": ^0.13.11
   "@tailwindcss/postcss": ^4.3.5
-  "@tanstack/query-async-storage-persister": ^5.108.1
-  "@tanstack/react-query": ^5.108.1
-  "@tanstack/react-query-persist-client": ^5.108.1
+  "@tanstack/query-async-storage-persister": ^5.108.2
+  "@tanstack/react-query": ^5.108.2
+  "@tanstack/react-query-persist-client": ^5.108.2
   "@trpc/client": ^11.29.5
   "@trpc/server": ^11.29.5
   "@trpc/tanstack-react-query": ^11.29.5
   "@turbo/gen": ^2.11.13
   "@types/node": ^26.6.6
-  ai: ^7.0.177
+  ai: ^7.0.179
   babel-plugin-react-compiler: ^1.0.0
   jsqr: ^1.4.0
   next: ^16.4.6
@@ -74,9 +74,9 @@ catalog:
 
 catalogs:
   better-auth:
-    "@better-auth/expo": 1.7.26
-    "@better-auth/passkey": 1.7.26
-    better-auth: 1.7.26
+    "@better-auth/expo": 1.7.27
+    "@better-auth/passkey": 1.7.27
+    better-auth: 1.7.27
   react19:
     "@types/react": ~19.3.0
     "@types/react-dom": ~19.3.0
