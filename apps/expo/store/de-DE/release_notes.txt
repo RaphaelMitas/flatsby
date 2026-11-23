@@ -1,4 +1,5 @@
-• Eine Ausgabe hinzufügen passt jetzt auf einen Bildschirm: Betrag, Beschreibung, wer bezahlt hat, Kategorie, Datum und Aufteilung auf einen Blick statt in drei Schritten.
-• Beim Aufteilen nach eigenen Beträgen oder Prozenten siehst du beim Tippen, wie viel noch offen ist, und „Rest aufteilen“ verteilt es für dich.
-• Du bestimmst direkt in der Erinnerung, wie oft Flatsby dich an App-Updates erinnert.
+• Die neue Startseite vergleicht den Monat eures Haushalts mit dem letzten: Ausgaben, Einkäufe und Aufgaben.
+• Die Statistik zeigt deinen Anteil an den Ausgaben des Haushalts, je Kategorie und Monat.
+• Die Pinnwand hält fest, wonach jeder Mitbewohner einmal fragt. Ein WLAN-Eintrag zeigt einen QR-Code zum Verbinden und lässt sich aus dem Foto eines vorhandenen Codes ausfüllen.
+• Wähle die Farben von Flatsby aus einer Vorlage oder stell sie selbst ein.
 • Kleine Fehlerbehebungen und Verbesserungen.

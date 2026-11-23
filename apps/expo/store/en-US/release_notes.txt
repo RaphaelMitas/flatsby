@@ -1,4 +1,5 @@
-• Adding an expense is now one screen: amount, description, who paid, category, date and split at a glance, instead of three steps.
-• Splitting by custom amounts or percentages shows how much is left while you type, and "Split the rest" spreads it for you.
-• You decide how often Flatsby reminds you about app updates, right in the reminder.
+• A new home compares your household's month with last month: spending, shopping and chores.
+• Statistics show your share of what the household spent, by category and month.
+• The pinboard holds what every flatmate asks once. A WiFi entry shows a QR code to join, and you can fill it by scanning a photo of an existing code.
+• Pick the colors Flatsby uses, from a preset or your own.
 • Small fixes and improvements.
