@@ -229,7 +229,7 @@ export function captureError({
   posthog.captureException(cause, {
     distinctId,
     properties: {
-      $exception_source: "server",
+      exception_source: "server",
       operation,
       ...additionalProperties,
     },
