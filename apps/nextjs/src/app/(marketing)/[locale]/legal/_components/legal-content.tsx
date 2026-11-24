@@ -135,17 +135,19 @@ export function LegalItems<Key extends string>({
   );
 }
 
+const OPERATOR_ADDRESS = [
+  "Raphael Mitas",
+  "c/o IP-Management #13136",
+  "Ludwig-Erhard-Straße 18",
+  "20459 Hamburg",
+];
+
 export function OperatorAddress({ lines }: { lines: readonly string[] }) {
   return (
     <LegalAddress>
-      {/* i18n-ignore */}
-      Raphael Mitas
-      <br />
-      {/* i18n-ignore */}
-      Weiterstädter Str. 65
-      {lines.map((line) => (
+      {[...OPERATOR_ADDRESS, ...lines].map((line, index) => (
         <Fragment key={line}>
-          <br />
+          {index > 0 && <br />}
           {line}
         </Fragment>
       ))}

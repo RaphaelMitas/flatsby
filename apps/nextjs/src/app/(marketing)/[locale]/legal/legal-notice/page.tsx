@@ -37,7 +37,6 @@ export async function generateMetadata(props: LocaleParams): Promise<Metadata> {
 
 export default function LegalNoticePage() {
   const t = useTranslations("legal.legalNotice");
-  const addressLines = ["64291 Darmstadt", t("country")];
 
   return (
     <LegalShell path={PATH}>
@@ -49,14 +48,11 @@ export default function LegalNoticePage() {
         <CardContent>
           <LegalSection>
             <LegalHeading>{t("provider")}</LegalHeading>
-            <OperatorAddress lines={addressLines} />
+            <OperatorAddress lines={[t("country")]} />
           </LegalSection>
 
           <LegalSection>
             <LegalHeading>{t("contact.heading")}</LegalHeading>
-            <LegalParagraph>
-              {t.rich("contact.phone", { strong })}
-            </LegalParagraph>
             <LegalParagraph>
               {t.rich("contact.email", {
                 strong,
@@ -72,7 +68,7 @@ export default function LegalNoticePage() {
           <LegalSection>
             <LegalHeading>{t("responsible.heading")}</LegalHeading>
             <LegalParagraph>{t("responsible.body")}</LegalParagraph>
-            <OperatorAddress lines={addressLines} />
+            <OperatorAddress lines={[t("country")]} />
           </LegalSection>
 
           <LegalSection>
