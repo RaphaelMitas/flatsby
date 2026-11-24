@@ -226,6 +226,7 @@ export const legal = {
     provider: "Service Provider",
     contact: {
       heading: "Contact",
+      phone: "<strong>Phone:</strong> +49 15679 769941",
       email: "<strong>Email:</strong> <link>support@flatsby.com</link>",
     },
     responsible: {
