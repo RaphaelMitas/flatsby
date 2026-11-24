@@ -54,6 +54,9 @@ export default function LegalNoticePage() {
           <LegalSection>
             <LegalHeading>{t("contact.heading")}</LegalHeading>
             <LegalParagraph>
+              {t.rich("contact.phone", { strong })}
+            </LegalParagraph>
+            <LegalParagraph>
               {t.rich("contact.email", {
                 strong,
                 link: (chunks) => (
