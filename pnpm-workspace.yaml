@@ -50,9 +50,9 @@ catalog:
   "@tanstack/query-async-storage-persister": ^5.108.2
   "@tanstack/react-query": ^5.108.2
   "@tanstack/react-query-persist-client": ^5.108.2
-  "@trpc/client": ^11.29.5
-  "@trpc/server": ^11.29.5
-  "@trpc/tanstack-react-query": ^11.29.5
+  "@trpc/client": ^11.29.7
+  "@trpc/server": ^11.29.7
+  "@trpc/tanstack-react-query": ^11.29.7
   "@turbo/gen": ^2.11.13
   "@types/node": ^26.6.6
   ai: ^7.0.179
@@ -63,7 +63,7 @@ catalog:
   prettier: ^3.10.1
   react-hook-form: ^7.92.0
   react-qr-code: ^2.2.0
-  superjson: ^2.2.6
+  superjson: ^2.2.7
   tailwindcss: ^4.3.5
   turbo: ^2.11.13
   # exact: each @effect/tsgo release supports specific TypeScript versions
