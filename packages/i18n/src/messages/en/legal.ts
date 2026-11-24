@@ -97,7 +97,7 @@ export const legal = {
       children: "Children",
       changes: "Changes",
     },
-    city: "64291 Darmstadt, Germany",
+    country: "Germany",
     emailLine: "Email: support@flatsby.com",
     controller: "The controller is:",
     account: {
@@ -226,7 +226,6 @@ export const legal = {
     provider: "Service Provider",
     contact: {
       heading: "Contact",
-      phone: "<strong>Phone:</strong> +49 15679 769941",
       email: "<strong>Email:</strong> <link>support@flatsby.com</link>",
     },
     responsible: {

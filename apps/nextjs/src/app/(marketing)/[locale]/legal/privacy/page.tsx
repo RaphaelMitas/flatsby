@@ -83,7 +83,7 @@ export default function PrivacyPage() {
           <LegalSection id="data-controller">
             <LegalHeading>{heading("controller")}</LegalHeading>
             <LegalParagraph>{t("controller")}</LegalParagraph>
-            <OperatorAddress lines={[t("city"), t("emailLine")]} />
+            <OperatorAddress lines={[t("country"), t("emailLine")]} />
           </LegalSection>
 
           <LegalSection id="data-collected">
