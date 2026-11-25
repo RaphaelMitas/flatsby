@@ -41,7 +41,7 @@ auditConfig:
 catalog:
   "@ai-sdk/provider": ^4.0.39
   "@biomejs/biome": 2.6.8
-  "@effect/tsgo": 0.73.2
+  "@effect/tsgo": 0.73.4
   "@effect/vitest": 4.1.5
   "@hookform/resolvers": ^7.0.8
   "@playwright/test": ^1.65.1
