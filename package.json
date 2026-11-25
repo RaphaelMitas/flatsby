@@ -4,9 +4,9 @@
   "license": "MIT",
   "engines": {
     "node": "^26.13.1",
-    "pnpm": "^12.22.0"
+    "pnpm": "^12.23.0"
   },
-  "packageManager": "pnpm@12.22.0",
+  "packageManager": "pnpm@12.23.0",
   "scripts": {
     "build": "turbo run build",
     "ci:local": "node tooling/ci-local/src/main.ts",
