@@ -36,7 +36,7 @@
     "@trpc/tanstack-react-query": "catalog:",
     "better-auth": "catalog:better-auth",
     "geist": "^1.9.2",
-    "isbot": "^5.2.3",
+    "isbot": "^5.2.4",
     "jose": "^6.2.18",
     "jsqr": "catalog:",
     "next": "catalog:",
